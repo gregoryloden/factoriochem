@@ -378,6 +378,7 @@ def gen_item_group_icon():
 	cv2.imwrite("item_group.png", image, [cv2.IMWRITE_PNG_COMPRESSION, 9])
 	print("Item group written")
 
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 gen_all_atom_images(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_all_bond_images(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_item_group_icon()
