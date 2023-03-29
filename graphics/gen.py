@@ -74,6 +74,23 @@ def draw_alpha_on(image, draw):
 	image[:, :, 3][mask_section] = mask[mask_section]
 	return mask
 
+def overlay_image(back_image, back_left, back_top, front_image, front_left, front_top, width, height):
+	back_right = back_left + width
+	back_bottom = back_top + height
+	front_right = front_left + width
+	front_bottom = front_top + height
+	back_alpha = back_image[back_top:back_bottom, back_left:back_right, 3] / 255.0
+	front_alpha = front_image[front_top:front_bottom, front_left:front_right, 3] / 255.0
+	new_alpha = back_alpha + front_alpha * (1 - back_alpha)
+	back_image[back_top:back_bottom, back_left:back_right, 3] = new_alpha * 255
+	#prevent NaN issues on fully-transparent pixels
+	new_alpha[new_alpha == 0] = 1
+	for color in range(0, 3):
+		back_color = back_image[back_top:back_bottom, back_left:back_right, color]
+		front_color = front_image[front_top:front_bottom, front_left:front_right, color]
+		back_image[back_top:back_bottom, back_left:back_right, color] = \
+			back_color + (front_color * 1.0 - back_color) * front_alpha / new_alpha
+
 
 #Sub-image generation
 def get_circle_mip_datas(base_size, y_scale, x_scale, y, x, mips):
@@ -172,23 +189,6 @@ def get_text_data(symbol, base_size, mips):
 
 
 #Generate atom images
-def overlay_image(back_image, back_left, back_top, front_image, front_left, front_top, width, height):
-	back_right = back_left + width
-	back_bottom = back_top + height
-	front_right = front_left + width
-	front_bottom = front_top + height
-	back_alpha = back_image[back_top:back_bottom, back_left:back_right, 3] / 255.0
-	front_alpha = front_image[front_top:front_bottom, front_left:front_right, 3] / 255.0
-	new_alpha = back_alpha + front_alpha * (1 - back_alpha)
-	back_image[back_top:back_bottom, back_left:back_right, 3] = new_alpha * 255
-	#prevent NaN issues on fully-transparent pixels
-	new_alpha[new_alpha == 0] = 1
-	for color in range(0, 3):
-		back_color = back_image[back_top:back_bottom, back_left:back_right, color]
-		front_color = front_image[front_top:front_bottom, front_left:front_right, color]
-		back_image[back_top:back_bottom, back_left:back_right, color] = \
-			back_color + (front_color * 1.0 - back_color) * front_alpha / new_alpha
-
 def gen_single_atom_image(symbol, bonds, base_size, y_scale, x_scale, y, x, mips):
 	#set the base color for this atom
 	image = filled_mip_image(base_size, mips, COLOR_FOR_BONDS[bonds])
