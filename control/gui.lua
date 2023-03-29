@@ -11,19 +11,41 @@ function on_gui_opened(event)
 
 	local gui = game.get_player(event.player_index).gui
 	close_gui(gui)
-	local frame = gui.relative.add({
+	local outer = gui.relative.add({
 		type = "frame",
-		caption = "frame",
+		caption = {"factoriochem-poc.reaction"},
 		name = "molecule-rotater",
 		anchor = {
 			gui = defines.relative_gui_type.assembling_machine_gui,
 			position = defines.relative_gui_position.right
 		},
 	})
-	frame.add({
-		type = "label",
-		caption = "label",
+	local inner = outer.add({
+		type = "frame",
+		style = "b_inner_frame",
 	})
+	local reaction_table = inner.add({
+		type = "table",
+		name = "reaction-table",
+		column_count = 3,
+	})
+	for _, name in ipairs({"base", "", "result", "catalyst", "description", "bonus", "modifier", "", "remainder"}) do
+		if name == "" then
+			reaction_table.add({type = "empty-widget"})
+		elseif name == "description" then
+			reaction_table.add({
+				type = "label",
+				caption = " > Results > ",
+			})
+		else
+			reaction_table.add({
+				type = "sprite-button",
+				name = "molecule-"..name,
+				sprite = "item/O1-H|1H",
+				style = "factoriochem-poc-big-slot-button",
+			})
+		end
+	end
 end
 
 function on_gui_closed(event)
