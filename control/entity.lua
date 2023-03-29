@@ -38,17 +38,13 @@ function on_mined_entity(event)
 
 	local chests = global.molecule_manipulator_building_chests[entity.unit_number]
 	global.molecule_manipulator_building_chests[entity.unit_number] = nil
-	if event.player_index then
-		for _, chest in pairs(chests) do
-			local chest_inventory = chest.get_inventory(defines.inventory.chest)
-			for name, count in pairs(chest_inventory.get_contents()) do
-				event.buffer.insert({name = name, count = count})
-			end
-			chest_inventory.clear()
-			chest.mine()
+	for _, chest in pairs(chests) do
+		local chest_inventory = chest.get_inventory(defines.inventory.chest)
+		for name, count in pairs(chest_inventory.get_contents()) do
+			event.buffer.insert({name = name, count = count})
 		end
-	else
-		--TODO
+		chest_inventory.clear()
+		chest.mine()
 	end
 end
 
