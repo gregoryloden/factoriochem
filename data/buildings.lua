@@ -1,4 +1,4 @@
--- Molecule manipulation buildings
+-- Molecule reaction buildings
 local rotater_name = "molecule-rotater"
 local rotater_entity = table.deepcopy(data.raw["assembling-machine"]["assembling-machine-3"])
 rotater_entity.name = rotater_name
@@ -31,11 +31,11 @@ local rotater_recipe = {
 data:extend({rotater_entity, rotater_item, rotater_recipe})
 
 
--- Hidden chests for molecule manipulation buildings
+-- Hidden chests for molecule reaction buildings
 data:extend({
 	{
 		type = "container",
-		name = "molecule-manipulator-chest",
+		name = MOLECULE_REACTION_NAME.."-chest",
 		flags = {"hidden", "placeable-off-grid", "not-on-map", "not-deconstructable", "not-blueprintable"},
 		collision_mask = {},
 		inventory_size = 1,
