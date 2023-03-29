@@ -12,6 +12,8 @@ rotater_entity.fluid_boxes = {
 		hide_connection_info = true,
 	},
 }
+rotater_entity.fixed_recipe = "small-electric-pole"
+rotater_entity.module_specification = nil
 rotater_entity.fast_replaceable_group = nil
 
 local rotater_item = table.deepcopy(data.raw.item["assembling-machine-3"])
