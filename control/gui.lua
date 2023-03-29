@@ -64,14 +64,14 @@ function on_gui_opened(event)
 			children = {{
 				-- reaction frame
 				type = "frame",
-				style = "b_inner_frame",
+				style = "inside_shallow_frame_with_padding",
 				children = {
 					build_reaction_table_spec("reaction-", {type = "label", caption = " > Results > "}),
 				},
 			}, {
 				-- reaction demo frame
 				type = "frame",
-				style = "b_inner_frame",
+				style = "inside_shallow_frame_with_padding",
 				direction = "vertical",
 				children = {
 					{type = "label", caption = "Demo:"},
