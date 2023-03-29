@@ -7,7 +7,7 @@ rotater_entity.energy_source = {type = "void"}
 rotater_entity.crafting_speed = 1
 rotater_entity.fluid_boxes = {
 	{
-		pipe_connections = {{position = {-2, 0}}},
+		pipe_connections = {{position = {0, 2}}},
 		production_type = "input",
 		hide_connection_info = true,
 	},
@@ -15,6 +15,10 @@ rotater_entity.fluid_boxes = {
 rotater_entity.fixed_recipe = "small-electric-pole"
 rotater_entity.module_specification = nil
 rotater_entity.fast_replaceable_group = nil
+rotater_entity.selection_box[1][1] = rotater_entity.selection_box[1][1] - 1
+rotater_entity.selection_box[2][1] = rotater_entity.selection_box[2][1] + 1
+rotater_entity.collision_box[1][1] = rotater_entity.collision_box[1][1] - 1
+rotater_entity.collision_box[2][1] = rotater_entity.collision_box[2][1] + 1
 
 local rotater_item = table.deepcopy(data.raw.item["assembling-machine-3"])
 rotater_item.name = rotater_name
@@ -31,14 +35,24 @@ local rotater_recipe = {
 data:extend({rotater_entity, rotater_item, rotater_recipe})
 
 
--- Hidden chests for molecule reaction buildings
+-- Hidden chests and loaders for molecule reaction buildings
+local hidden_entity_flags = {"hidden", "not-deconstructable", "not-blueprintable", "player-creation"}
 data:extend({
 	{
 		type = "container",
 		name = MOLECULE_REACTION_NAME.."-chest",
-		flags = {"hidden", "placeable-off-grid", "not-on-map", "not-deconstructable", "not-blueprintable"},
+		flags = hidden_entity_flags,
 		collision_mask = {},
 		inventory_size = 1,
 		picture = {filename = "__core__/graphics/empty.png", size = 1},
+		collision_box = {{-0.5, -0.5}, {0.5, 0.5}},
 	}
 })
+local reaction_loader = table.deepcopy(data.raw["loader-1x1"]["loader-1x1"])
+reaction_loader.name = MOLECULE_REACTION_NAME.."-loader"
+reaction_loader.structure.direction_in = {filename = "__core__/graphics/empty.png", size = 1}
+reaction_loader.structure.direction_out = {filename = "__core__/graphics/empty.png", size = 1}
+reaction_loader.flags = hidden_entity_flags
+reaction_loader.selection_box = nil
+reaction_loader.collision_mask = {"transport-belt-layer"}
+data:extend({reaction_loader})

@@ -165,7 +165,7 @@ local function gen_molecules(grid_i_i, grid_is)
 				icon = ATOM_ICON_ROOT..slot.atom.symbol.."/1100.png",
 				icon_size = ICON_SIZE,
 				icon_mipmaps = ICON_MIPMAPS,
-				stack_size = 1000,
+				stack_size = 1,
 			}
 		})
 		total_molecules = total_molecules + 1

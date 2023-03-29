@@ -78,7 +78,7 @@ local function on_gui_opened(event)
 	}
 	gui_add_recursive(gui.relative, gui_spec)
 
-	local chests = global.molecule_reaction_building_chests[entity.unit_number]
+	local chests = global.molecule_reaction_building_data[entity.unit_number].chests
 	local reaction_table = gui.relative[MOLECULE_REACTION_NAME].outer["reaction-frame"]["reaction-table"]
 	for _, reaction_name in ipairs(REACTION_ELEMENT_NAMES) do
 		chest_contents = chests[reaction_name].get_inventory(defines.inventory.chest).get_contents()
