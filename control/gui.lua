@@ -20,15 +20,9 @@ function on_gui_opened(event)
 			position = defines.relative_gui_position.right
 		},
 	})
-	local inner = outer.add({
-		type = "frame",
-		style = "b_inner_frame",
-	})
-	local reaction_table = inner.add({
-		type = "table",
-		name = "reaction-table",
-		column_count = 3,
-	})
+	local inner = outer.add({type = "flow", style = "inset_frame_container_vertical_flow", direction = "vertical"})
+	local reaction_frame = inner.add({type = "frame", style = "b_inner_frame"})
+	local reaction_table = reaction_frame.add({type = "table", name = "reaction-table", column_count = 3})
 	for _, name in ipairs({"base", "", "result", "catalyst", "description", "bonus", "modifier", "", "remainder"}) do
 		if name == "" then
 			reaction_table.add({type = "empty-widget"})
@@ -40,9 +34,29 @@ function on_gui_opened(event)
 		else
 			reaction_table.add({
 				type = "sprite-button",
-				name = "molecule-"..name,
-				sprite = "item/O1-H|1H",
+				name = "reaction-"..name,
 				style = "factoriochem-poc-big-slot-button",
+				sprite = "item/O1-H|1H",
+			})
+		end
+	end
+	local reaction_demo_frame = inner.add({type = "frame", style = "b_inner_frame", direction = "vertical"})
+	reaction_demo_frame.add({type = "label", caption = "Demo:"})
+	local reaction_demo_table = reaction_demo_frame.add({type = "table", name = "reaction-demo-table", column_count = 3})
+	for _, name in ipairs({"base", "", "result", "catalyst", "description", "bonus", "modifier", "", "remainder"}) do
+		if name == "" then
+			reaction_demo_table.add({type = "empty-widget"})
+		elseif name == "description" then
+			reaction_demo_table.add({
+				type = "label",
+				caption = " > Results > ",
+			})
+		else
+			reaction_demo_table.add({
+				type = "sprite-button",
+				name = "reaction-demo-"..name,
+				style = "factoriochem-poc-big-slot-button",
+				sprite = "item/O1-H|1H",
 			})
 		end
 	end
