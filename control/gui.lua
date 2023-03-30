@@ -1,11 +1,11 @@
 -- Constants
 local REACTION_PREFIX = "reaction-"
 local REACTION_DEMO_PREFIX = "reaction-demo-"
-local REACTION_TABLE_ELEMENT_NAME_MAP = {}
-local REACTION_DEMO_TABLE_ELEMENT_NAME_MAP = {}
-for _, name in ipairs(REACTION_ELEMENT_NAMES) do
-	REACTION_TABLE_ELEMENT_NAME_MAP[REACTION_PREFIX..name] = name
-	REACTION_DEMO_TABLE_ELEMENT_NAME_MAP[REACTION_DEMO_PREFIX..name] = name
+local REACTION_TABLE_COMPONENT_NAME_MAP = {}
+local REACTION_DEMO_TABLE_COMPONENT_NAME_MAP = {}
+for _, name in ipairs(REACTION_COMPONENT_NAMES) do
+	REACTION_TABLE_COMPONENT_NAME_MAP[REACTION_PREFIX..name] = name
+	REACTION_DEMO_TABLE_COMPONENT_NAME_MAP[REACTION_DEMO_PREFIX..name] = name
 end
 
 
@@ -25,23 +25,21 @@ local function gui_add_recursive(gui, element_spec)
 	for _, child_spec in ipairs(children_spec) do gui_add_recursive(element, child_spec) end
 end
 
-local function update_reaction_table_sprites(reaction_table, chests, reaction_element_names)
-	for _, element_name in ipairs(reaction_element_names) do
-		local element = reaction_table[REACTION_PREFIX..element_name]
-		local item = next(chests[element_name].get_inventory(defines.inventory.chest).get_contents())
-		if item then
-			element.sprite = "item/"..item
-		else
-			element.sprite = nil
-		end
+local function update_reaction_table_sprite(element, chest)
+	local item = next(chest.get_inventory(defines.inventory.chest).get_contents())
+	if item then
+		element.sprite = "item/"..item
+	else
+		element.sprite = nil
 	end
 end
 
 local function update_all_reaction_table_sprites(gui, entity_number)
-	update_reaction_table_sprites(
-		gui.relative[MOLECULE_REACTION_NAME].outer[REACTION_PREFIX.."frame"][REACTION_PREFIX.."table"],
-		global.molecule_reaction_building_data[entity_number].chests,
-		REACTION_ELEMENT_NAMES)
+	local reaction_table = gui.relative[MOLECULE_REACTION_NAME].outer[REACTION_PREFIX.."frame"][REACTION_PREFIX.."table"]
+	local chests = global.molecule_reaction_building_data[entity_number].chests
+	for _, component_name in ipairs(REACTION_COMPONENT_NAMES) do
+		update_reaction_table_sprite(reaction_table[REACTION_PREFIX..component_name], chests[component_name])
+	end
 end
 
 
@@ -138,27 +136,27 @@ local function on_gui_click(event)
 	local element = event.element
 	local player = game.get_player(event.player_index)
 
-	local reaction_table_element = REACTION_TABLE_ELEMENT_NAME_MAP[element.name]
-	if reaction_table_element then
+	local reaction_table_component = REACTION_TABLE_COMPONENT_NAME_MAP[element.name]
+	if reaction_table_component then
 		local player_inventory = player.get_main_inventory()
 		local chests = global.molecule_reaction_building_data[global.current_gui_entity[event.player_index]].chests
-		local chest_inventory = chests[reaction_table_element].get_inventory(defines.inventory.chest)
+		local chest_inventory = chests[reaction_table_component].get_inventory(defines.inventory.chest)
 		local chest_contents = chest_inventory.get_contents()
 		if next(chest_contents) then
 			for name, count in pairs(chest_contents) do
 				added = player_inventory.insert({name = name, count = count})
 				if added > 0 then chest_inventory.remove({name = name, count = added}) end
 			end
-			update_reaction_table_sprites(element.parent, chests, {reaction_table_element})
-		else
-			--TODO
+			update_reaction_table_sprite(element, chests[reaction_table_component])
+		elseif player.cursor_stack then
+			chest_inventory.find_empty_stack().transfer_stack(player.cursor_stack)
+			update_reaction_table_sprite(element, chests[reaction_table_component])
 		end
 		return
 	end
 
-	local reaction_demo_table_element = REACTION_DEMO_TABLE_ELEMENT_NAME_MAP[element.name]
-	if reaction_demo_table_element then
-		game.print("reaction demo table - "..reaction_demo_table_element)
+	local reaction_demo_table_component = REACTION_DEMO_TABLE_COMPONENT_NAME_MAP[element.name]
+	if reaction_demo_table_component then
 		return
 	end
 end
