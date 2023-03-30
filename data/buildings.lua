@@ -1,26 +1,28 @@
 -- Molecule reaction buildings
 local rotater_name = "molecule-rotater"
-local rotater_entity = table.deepcopy(data.raw["assembling-machine"]["assembling-machine-3"])
+local rotater_entity = table.deepcopy(data.raw["assembling-machine"]["assembling-machine-2"])
 rotater_entity.name = rotater_name
 rotater_entity.minable.result = rotater_name
 rotater_entity.energy_source = {type = "void"}
 rotater_entity.crafting_speed = 1
 rotater_entity.fluid_boxes = {
 	{
-		pipe_connections = {{position = {0, 2}}},
-		production_type = "input",
+		-- can't rotate an assembling machine without a fluidbox, so stick one by the outputs area
+		pipe_connections = {{position = {0, -3}}},
+		production_type = "output",
 		hide_connection_info = true,
 	},
 }
 rotater_entity.fixed_recipe = "small-electric-pole"
 rotater_entity.module_specification = nil
+rotater_entity.next_upgrade = nil
 rotater_entity.fast_replaceable_group = nil
-rotater_entity.selection_box[1][1] = rotater_entity.selection_box[1][1] - 1
-rotater_entity.selection_box[2][1] = rotater_entity.selection_box[2][1] + 1
-rotater_entity.collision_box[1][1] = rotater_entity.collision_box[1][1] - 1
-rotater_entity.collision_box[2][1] = rotater_entity.collision_box[2][1] + 1
+rotater_entity.selection_box[1][2] = rotater_entity.selection_box[1][2] - 1
+rotater_entity.selection_box[2][2] = rotater_entity.selection_box[2][2] + 1
+rotater_entity.collision_box[1][2] = rotater_entity.collision_box[1][2] - 1
+rotater_entity.collision_box[2][2] = rotater_entity.collision_box[2][2] + 1
 
-local rotater_item = table.deepcopy(data.raw.item["assembling-machine-3"])
+local rotater_item = table.deepcopy(data.raw.item["assembling-machine-2"])
 rotater_item.name = rotater_name
 rotater_item.place_result = rotater_name
 

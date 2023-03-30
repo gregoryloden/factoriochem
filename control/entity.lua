@@ -5,9 +5,9 @@ local function on_built_entity(event)
 
 	entity.destructible = false
 	entity.rotatable = false
+
 	local building_data = {chests = {}, loaders = {}}
-	function build_sub_entities(name, offset_x, offset_y)
-		local is_output = offset_x > 0
+	function build_sub_entities(name, offset_x, offset_y, is_output)
 		if entity.direction == defines.direction.south then
 			offset_x, offset_y = -offset_x, -offset_y
 		elseif entity.direction == defines.direction.east then
@@ -25,17 +25,17 @@ local function on_built_entity(event)
 		building_data.chests[name] = chest
 
 		if entity.direction == defines.direction.north or entity.direction == defines.direction.south then
-			offset_x = offset_x * 2
-		else
 			offset_y = offset_y * 2
+		else
+			offset_x = offset_x * 2
 		end
-		local loader_direction = defines.direction.east
+		local loader_direction = defines.direction.north
 		if offset_y < -1 then
 			loader_direction = defines.direction.south
+		elseif offset_x < -1 then
+			loader_direction = defines.direction.east
 		elseif offset_x > 1 then
 			loader_direction = defines.direction.west
-		elseif offset_y > 1 then
-			loader_direction = defines.direction.north
 		end
 		local loader = entity.surface.create_entity({
 			name = MOLECULE_REACTION_NAME.."-loader",
@@ -47,12 +47,12 @@ local function on_built_entity(event)
 		loader.destructible = false
 		building_data.loaders[name] = loader
 	end
-	build_sub_entities(BASE_NAME, -1, -1)
-	build_sub_entities(CATALYST_NAME, -1, 0)
-	build_sub_entities(MODIFIER_NAME, -1, 1)
-	build_sub_entities(RESULT_NAME, 1, -1)
-	build_sub_entities(BONUS_NAME, 1, 0)
-	build_sub_entities(REMAINDER_NAME, 1, 1)
+	build_sub_entities(BASE_NAME, -1, 1, false)
+	build_sub_entities(CATALYST_NAME, 0, 1, false)
+	build_sub_entities(MODIFIER_NAME, 1, 1, false)
+	build_sub_entities(RESULT_NAME, -1, -1, true)
+	build_sub_entities(BONUS_NAME, 0, -1, true)
+	build_sub_entities(REMAINDER_NAME, 1, -1, true)
 	global.molecule_reaction_building_data[entity.unit_number] = building_data
 end
 
