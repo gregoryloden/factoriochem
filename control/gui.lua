@@ -138,7 +138,7 @@ local function on_gui_click(event)
 		if next(chest_contents) then
 			for name, count in pairs(chest_contents) do
 				added = player_inventory.insert({name = name, count = count})
-				chest_inventory.remove({name = name, count = added})
+				if added > 0 then chest_inventory.remove({name = name, count = added}) end
 			end
 			update_reaction_table_sprites(element.parent, chests, {reaction_table_element})
 		else
