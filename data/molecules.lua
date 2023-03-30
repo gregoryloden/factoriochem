@@ -77,8 +77,39 @@ local ATOM_COL_SEPARATOR = "-"
 local GRAPHICS_ROOT = "__FactorioChem-PoC__/graphics/"
 local ATOM_ICON_ROOT = GRAPHICS_ROOT.."atoms/"
 local BOND_ICON_ROOT = GRAPHICS_ROOT.."bonds/"
+local ATOMS_SUBGROUP_PREFIX = "atoms-"
+local MOLECULES_SUBGROUP = "molecules"
 local ITEM_GROUP_SIZE = 128
 local ITEM_GROUP_MIPMAPS = 2
+
+
+-- Item groups and subgroups
+data:extend({
+	{
+		type = "item-group",
+		name = MOLECULES_GROUP_NAME,
+		icon = GRAPHICS_ROOT.."item_group.png",
+		icon_size = ITEM_GROUP_SIZE,
+		icon_mipmaps = ITEM_GROUP_MIPMAPS,
+		order = "e-a",
+	},
+	{
+		type = "item-subgroup",
+		name = MOLECULES_SUBGROUP,
+		group = MOLECULES_GROUP_NAME,
+		order = "b",
+	},
+})
+for row_n, _ in ipairs(ATOM_ROWS) do
+	data:extend({
+		{
+			type = "item-subgroup",
+			name = ATOMS_SUBGROUP_PREFIX..row_n,
+			group = MOLECULES_GROUP_NAME,
+			order = "a"
+		},
+	})
+end
 
 
 -- Atom generation
@@ -136,6 +167,7 @@ end
 
 -- Molecule generation
 local current_atom_count = 0
+local current_shape_n = 0
 local total_molecules = 0
 
 local function assign_valid_atoms(grid_is)
@@ -160,7 +192,7 @@ local function gen_molecules(grid_i_i, grid_is)
 			{
 				type = "item",
 				name = "atom-"..atom_number_hex,
-				subgroup = "atoms-"..slot.atom.row,
+				subgroup = ATOMS_SUBGROUP_PREFIX..slot.atom.row,
 				localised_description = {"item-description.atom-00", slot.atom.number, slot.atom.bonds},
 				icon = ATOM_ICON_ROOT..slot.atom.symbol.."/1100.png",
 				icon_size = ICON_SIZE,
@@ -224,12 +256,12 @@ local function gen_molecules(grid_i_i, grid_is)
 		data:extend({
 			{
 				type = "item",
-				name = molecule_name,
-				subgroup = "molecules",
+				name = "molecule-"..molecule_name,
+				subgroup = MOLECULES_SUBGROUP,
+				order = current_atom_count..string.format("%03X", current_shape_n),
 				localised_name = molecule_name,
 				icons = icons,
 				stack_size = 1,
-				flags = {"hidden"},
 			}
 		})
 		total_molecules = total_molecules + 1
@@ -415,32 +447,7 @@ local function gen_molecule_bonds(grid_i_i, grid_is)
 end
 
 
--- Finally, go through all possible molecule shapes and generate molecules for each shape
-data:extend({
-	{
-		type = "item-group",
-		name = "molecules",
-		icon = GRAPHICS_ROOT.."item_group.png",
-		icon_size = ITEM_GROUP_SIZE,
-		icon_mipmaps = ITEM_GROUP_MIPMAPS,
-		order = "e-a",
-	},
-	{
-		type = "item-subgroup",
-		name = "molecules",
-		group = "molecules",
-	},
-})
-for row_n, _ in ipairs(ATOM_ROWS) do
-	data:extend({
-		{
-			type = "item-subgroup",
-			name = "atoms-"..row_n,
-			group = "molecules",
-		},
-	})
-end
-
+-- Molecule shape generation
 local function is_top_left(shape_n)
 	local top_row_mask = 1
 	local left_col_mask = 1
@@ -484,6 +491,8 @@ local function check_grid_connected(first_grid_i)
 	return connected_slot_count == current_atom_count
 end
 
+
+-- Finally, go through all possible molecule shapes and generate molecules for each shape
 local function try_gen_molecule_bonds(shape_n)
 	-- only accept shapes anchored to the top left
 	if not is_top_left(shape_n) then return end
@@ -508,6 +517,7 @@ local function try_gen_molecule_bonds(shape_n)
 
 	-- this is a valid shape, set the first bond depth and start searching for molecules
 	GRID[first_grid_i].bond_depth = 1
+	current_shape_n = shape_n
 	gen_molecule_bonds(1, array_with_contents({first_grid_i}))
 end
 
@@ -521,7 +531,7 @@ if debug then
 		{
 			type = "item-subgroup",
 			name = "molecules-debug",
-			group = "molecules",
+			group = MOLECULES_GROUP_NAME,
 		},
 		{
 			type = "item",

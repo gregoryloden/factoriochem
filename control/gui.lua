@@ -53,29 +53,42 @@ local function on_gui_opened(event)
 	close_gui(event.player_index, gui)
 	global.current_gui_entity[event.player_index] = entity.unit_number
 
-	function build_molecule_spec(name)
-		return {
+	function build_molecule_spec(name_prefix, component_name, is_reactant)
+		local spec = {
 			type = "sprite-button",
-			name = name,
-			style = "factoriochem-poc-big-slot-button",
-			tooltip = {"factoriochem-poc.reaction-table-element-tooltip"}
+			name = name_prefix..component_name,
+			style = "factoriochem-poc-big-slot-button"
 		}
+		if not is_reactant then
+		elseif name_prefix == REACTION_PREFIX then
+			spec.tooltip = {"factoriochem-poc.reaction-table-element-tooltip"}
+		elseif name_prefix == REACTION_DEMO_PREFIX then
+			spec.tooltip = {"factoriochem-poc.reaction-demo-table-element-tooltip"}
+			spec.type = "choose-elem-button"
+			spec.elem_type = "item"
+			local filters = {}
+			for _, subgroup in ipairs(game.item_group_prototypes[MOLECULES_GROUP_NAME].subgroups) do
+				table.insert(filters, {filter = "subgroup", subgroup = subgroup.name})
+			end
+			spec.elem_filters = filters
+		end
+		return spec
 	end
-	function build_reaction_table_spec(name_prefix, transition_spec)
+	function build_reaction_table_spec(name_prefix)
 		return {
 			type = "table",
 			name = name_prefix.."table",
 			column_count = 3,
 			children = {
-				build_molecule_spec(name_prefix..BASE_NAME),
+				build_molecule_spec(name_prefix, BASE_NAME, true),
 				{type = "empty-widget"},
-				build_molecule_spec(name_prefix..RESULT_NAME),
-				build_molecule_spec(name_prefix..CATALYST_NAME),
-				transition_spec,
-				build_molecule_spec(name_prefix..BONUS_NAME),
-				build_molecule_spec(name_prefix..MODIFIER_NAME),
+				build_molecule_spec(name_prefix, RESULT_NAME),
+				build_molecule_spec(name_prefix, CATALYST_NAME, true),
+				{type = "label", caption = {"factoriochem-poc.reaction-transition"}},
+				build_molecule_spec(name_prefix, BONUS_NAME),
+				build_molecule_spec(name_prefix, MODIFIER_NAME, true),
 				{type = "empty-widget"},
-				build_molecule_spec(name_prefix..REMAINDER_NAME),
+				build_molecule_spec(name_prefix, REMAINDER_NAME),
 			},
 		}
 
@@ -103,9 +116,7 @@ local function on_gui_opened(event)
 				direction = "vertical",
 				children = {
 					{type = "label", caption = {"factoriochem-poc.reaction-table-header"}},
-					build_reaction_table_spec(
-						REACTION_PREFIX,
-						{type = "label", caption = {"factoriochem-poc.reaction-transition"}}),
+					build_reaction_table_spec(REACTION_PREFIX),
 				},
 			}, {
 				-- reaction demo frame
@@ -114,9 +125,7 @@ local function on_gui_opened(event)
 				direction = "vertical",
 				children = {
 					{type = "label", caption = {"factoriochem-poc.reaction-demo-table-header"}},
-					build_reaction_table_spec(
-						REACTION_DEMO_PREFIX,
-						{type = "label", caption = {"factoriochem-poc.reaction-transition"}}),
+					build_reaction_table_spec(REACTION_DEMO_PREFIX),
 				},
 			}},
 		}},
