@@ -1,3 +1,4 @@
 require("constants")
-require("control.entity")
-require("control.gui")
+require("control/entity")
+require("control/gui")
+require("control/updates")

@@ -154,6 +154,10 @@ local function on_gui_click(event)
 	end
 end
 
+function gui_on_nth_tick(data)
+	-- TODO
+end
+
 script.on_event(defines.events.on_gui_opened, on_gui_opened)
 script.on_event(defines.events.on_gui_closed, on_gui_closed)
 script.on_event(defines.events.on_gui_click, on_gui_click)

@@ -71,6 +71,10 @@ local function on_mined_entity(event)
 	transfer_inventory.destroy()
 end
 
+function entity_on_nth_tick(data)
+	-- TODO
+end
+
 script.on_event(defines.events.on_built_entity, on_built_entity)
 script.on_event(defines.events.on_robot_built_entity, on_built_entity)
 script.on_event(defines.events.on_player_mined_entity, on_mined_entity)
