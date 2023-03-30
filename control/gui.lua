@@ -1,11 +1,11 @@
 -- Constants
-local REACTION_TABLE_PREFIX = "reaction-"
-local REACTION_DEMO_TABLE_PREFIX = "reaction-demo-"
+local REACTION_PREFIX = "reaction-"
+local REACTION_DEMO_PREFIX = "reaction-demo-"
 local REACTION_TABLE_ELEMENT_NAME_MAP = {}
 local REACTION_DEMO_TABLE_ELEMENT_NAME_MAP = {}
 for _, name in ipairs(REACTION_ELEMENT_NAMES) do
-	REACTION_TABLE_ELEMENT_NAME_MAP[REACTION_TABLE_PREFIX..name] = name
-	REACTION_DEMO_TABLE_ELEMENT_NAME_MAP[REACTION_DEMO_TABLE_PREFIX..name] = name
+	REACTION_TABLE_ELEMENT_NAME_MAP[REACTION_PREFIX..name] = name
+	REACTION_DEMO_TABLE_ELEMENT_NAME_MAP[REACTION_DEMO_PREFIX..name] = name
 end
 
 
@@ -27,7 +27,7 @@ end
 
 local function update_reaction_table_sprites(reaction_table, chests, reaction_element_names)
 	for _, element_name in ipairs(reaction_element_names) do
-		local element = reaction_table[REACTION_TABLE_PREFIX..element_name]
+		local element = reaction_table[REACTION_PREFIX..element_name]
 		local item = next(chests[element_name].get_inventory(defines.inventory.chest).get_contents())
 		if item then
 			element.sprite = "item/"..item
@@ -35,6 +35,13 @@ local function update_reaction_table_sprites(reaction_table, chests, reaction_el
 			element.sprite = nil
 		end
 	end
+end
+
+local function update_all_reaction_table_sprites(gui, entity_number)
+	update_reaction_table_sprites(
+		gui.relative[MOLECULE_REACTION_NAME].outer[REACTION_PREFIX.."frame"][REACTION_PREFIX.."table"],
+		global.molecule_reaction_building_data[entity_number].chests,
+		REACTION_ELEMENT_NAMES)
 end
 
 
@@ -49,7 +56,12 @@ local function on_gui_opened(event)
 	global.current_gui_entity[event.player_index] = entity.unit_number
 
 	function build_molecule_spec(name)
-		return {type = "sprite-button", name = name, style = "factoriochem-poc-big-slot-button"}
+		return {
+			type = "sprite-button",
+			name = name,
+			style = "factoriochem-poc-big-slot-button",
+			tooltip = {"factoriochem-poc.reaction-table-element-tooltip"}
+		}
 	end
 	function build_reaction_table_spec(name_prefix, transition_spec)
 		return {
@@ -88,13 +100,13 @@ local function on_gui_opened(event)
 			children = {{
 				-- reaction frame
 				type = "frame",
-				name = REACTION_TABLE_PREFIX.."frame",
+				name = REACTION_PREFIX.."frame",
 				style = "inside_shallow_frame_with_padding",
 				direction = "vertical",
 				children = {
 					{type = "label", caption = {"factoriochem-poc.reaction-table-header"}},
 					build_reaction_table_spec(
-						REACTION_TABLE_PREFIX,
+						REACTION_PREFIX,
 						{type = "label", caption = {"factoriochem-poc.reaction-transition"}}),
 				},
 			}, {
@@ -105,17 +117,14 @@ local function on_gui_opened(event)
 				children = {
 					{type = "label", caption = {"factoriochem-poc.reaction-demo-table-header"}},
 					build_reaction_table_spec(
-						REACTION_DEMO_TABLE_PREFIX,
+						REACTION_DEMO_PREFIX,
 						{type = "label", caption = {"factoriochem-poc.reaction-transition"}}),
 				},
 			}},
 		}},
 	}
 	gui_add_recursive(gui.relative, gui_spec)
-	update_reaction_table_sprites(
-		gui.relative[MOLECULE_REACTION_NAME].outer[REACTION_TABLE_PREFIX.."frame"][REACTION_TABLE_PREFIX.."table"],
-		global.molecule_reaction_building_data[entity.unit_number].chests,
-		REACTION_ELEMENT_NAMES)
+	update_all_reaction_table_sprites(gui, entity.unit_number)
 end
 
 local function on_gui_closed(event)
@@ -161,7 +170,9 @@ function gui_on_init()
 end
 
 function gui_on_nth_tick(data)
-	-- TODO
+	for player_index, entity_number in pairs(global.current_gui_entity) do
+		update_all_reaction_table_sprites(game.get_player(player_index).gui, entity_number)
+	end
 end
 
 script.on_event(defines.events.on_gui_opened, on_gui_opened)
