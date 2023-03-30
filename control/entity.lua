@@ -1,3 +1,4 @@
+-- Event handling
 local function on_built_entity(event)
 	local entity = event.created_entity
 	if not (entity and entity.valid) then return end
@@ -71,6 +72,12 @@ local function on_mined_entity(event)
 	transfer_inventory.destroy()
 end
 
+
+-- Global event handling
+function entity_on_init()
+	global.molecule_reaction_building_data = {}
+end
+
 function entity_on_nth_tick(data)
 	-- TODO
 end
@@ -79,5 +86,3 @@ script.on_event(defines.events.on_built_entity, on_built_entity)
 script.on_event(defines.events.on_robot_built_entity, on_built_entity)
 script.on_event(defines.events.on_player_mined_entity, on_mined_entity)
 script.on_event(defines.events.on_robot_mined_entity, on_mined_entity)
-
-script.on_init(function() global.molecule_reaction_building_data = {} end)

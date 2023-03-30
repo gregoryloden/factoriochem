@@ -10,10 +10,10 @@ end
 
 
 -- Utilities
-local function close_gui(gui)
+local function close_gui(player_index, gui)
 	if gui.relative[MOLECULE_REACTION_NAME] then
 		gui.relative[MOLECULE_REACTION_NAME].destroy()
-		global.current_gui_entity = nil
+		global.current_gui_entity[player_index] = nil
 	end
 end
 
@@ -45,8 +45,8 @@ local function on_gui_opened(event)
 	if entity.name ~= "molecule-rotater" then return end
 
 	local gui = game.get_player(event.player_index).gui
-	close_gui(gui)
-	global.current_gui_entity = entity
+	close_gui(event.player_index, gui)
+	global.current_gui_entity[event.player_index] = entity.unit_number
 
 	function build_molecule_spec(name)
 		return {type = "sprite-button", name = name, style = "factoriochem-poc-big-slot-button"}
@@ -122,7 +122,7 @@ local function on_gui_closed(event)
 	local entity = event.entity
 	if not (entity and entity.valid) then return end
 
-	close_gui(game.get_player(event.player_index).gui)
+	close_gui(event.player_index, game.get_player(event.player_index).gui)
 end
 
 local function on_gui_click(event)
@@ -132,7 +132,7 @@ local function on_gui_click(event)
 	local reaction_table_element = REACTION_TABLE_ELEMENT_NAME_MAP[element.name]
 	if reaction_table_element then
 		local player_inventory = player.get_main_inventory()
-		local chests = global.molecule_reaction_building_data[global.current_gui_entity.unit_number].chests
+		local chests = global.molecule_reaction_building_data[global.current_gui_entity[event.player_index]].chests
 		local chest_inventory = chests[reaction_table_element].get_inventory(defines.inventory.chest)
 		local chest_contents = chest_inventory.get_contents()
 		if next(chest_contents) then
@@ -152,6 +152,12 @@ local function on_gui_click(event)
 		game.print("reaction demo table - "..reaction_demo_table_element)
 		return
 	end
+end
+
+
+-- Global event handling
+function gui_on_init()
+	global.current_gui_entity = {}
 end
 
 function gui_on_nth_tick(data)

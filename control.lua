@@ -1,4 +1,12 @@
 require("constants")
 require("control/entity")
 require("control/gui")
-require("control/updates")
+
+script.on_init(function()
+	entity_on_init()
+	gui_on_init()
+end)
+script.on_nth_tick(10, function(data)
+	entity_on_nth_tick(data)
+	gui_on_nth_tick(data)
+end)
