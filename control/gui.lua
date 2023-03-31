@@ -3,7 +3,7 @@ local REACTION_PREFIX = "reaction-"
 local REACTION_DEMO_PREFIX = "reaction-demo-"
 local REACTION_TABLE_COMPONENT_NAME_MAP = {}
 local REACTION_DEMO_TABLE_COMPONENT_NAME_MAP = {}
-for _, name in ipairs(REACTION_COMPONENT_NAMES) do
+for _, name in ipairs(MOLECULE_REACTION_COMPONENT_NAMES) do
 	REACTION_TABLE_COMPONENT_NAME_MAP[REACTION_PREFIX..name] = name
 	REACTION_DEMO_TABLE_COMPONENT_NAME_MAP[REACTION_DEMO_PREFIX..name] = name
 end
@@ -25,10 +25,12 @@ local function gui_add_recursive(gui, element_spec)
 	for _, child_spec in ipairs(children_spec) do gui_add_recursive(element, child_spec) end
 end
 
-local function update_reaction_table_sprite(element, chest)
+local function update_reaction_table_sprite(element, chest, product)
 	local item = next(chest.get_inventory(defines.inventory.chest).get_contents())
 	if item then
 		element.sprite = "item/"..item
+	elseif product then
+		element.sprite = "item/"..product
 	else
 		element.sprite = nil
 	end
@@ -36,9 +38,12 @@ end
 
 local function update_all_reaction_table_sprites(gui, entity_number)
 	local reaction_table = gui.relative[MOLECULE_REACTION_NAME].outer[REACTION_PREFIX.."frame"][REACTION_PREFIX.."table"]
-	local chests = global.molecule_reaction_building_data[entity_number].chests
-	for _, component_name in ipairs(REACTION_COMPONENT_NAMES) do
-		update_reaction_table_sprite(reaction_table[REACTION_PREFIX..component_name], chests[component_name])
+	local building_data = global.molecule_reaction_building_data[entity_number]
+	local products = building_data.reaction.products
+	local chests = building_data.chests
+	for _, component_name in ipairs(MOLECULE_REACTION_COMPONENT_NAMES) do
+		update_reaction_table_sprite(
+			reaction_table[REACTION_PREFIX..component_name], chests[component_name], products[component_name])
 	end
 end
 

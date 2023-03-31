@@ -6,7 +6,7 @@ local function on_built_entity(event)
 	entity.destructible = false
 	entity.rotatable = false
 
-	local building_data = {chests = {}, loaders = {}}
+	local building_data = {entity = entity, chests = {}, loaders = {}, reaction = {reactants = {}, products = {}}}
 	function build_sub_entities(name, offset_x, offset_y, is_output)
 		if entity.direction == defines.direction.south then
 			offset_x, offset_y = -offset_x, -offset_y
@@ -62,12 +62,77 @@ local function on_mined_entity(event)
 
 	local data = global.molecule_reaction_building_data[entity.unit_number]
 	global.molecule_reaction_building_data[entity.unit_number] = nil
-	-- 33 slots should be enough to hold the contents of 6 loaders + 6 single-slot chests + 3 products, but do 60 to be safe
+	-- 33 slots should be enough to hold the contents of 6 loaders + 6 single-slot chests + 3 reactants/products, but do 60
+	--	to be safe
 	local transfer_inventory = game.create_inventory(60)
 	for _, chest in pairs(data.chests) do chest.mine({inventory = transfer_inventory}) end
 	for _, loader in pairs(data.loaders) do loader.mine({inventory = transfer_inventory}) end
 	for name, count in pairs(transfer_inventory.get_contents()) do event.buffer.insert({name = name, count = count}) end
 	transfer_inventory.destroy()
+	local reactants = data.reaction.reactants
+	if next(reactants) then
+		for _, reactant in pairs(reactants) do event.buffer.insert({name = reactant, count = 1}) end
+	else
+		for _, product in pairs(data.reaction.products) do event.buffer.insert({name = product, count = 1}) end
+	end
+	event.buffer.remove({name = MOLECULE_REACTION_REACTANTS_NAME, count = 2})
+end
+
+
+-- Updates
+local MOLECULE_REACTIONS = {
+	["molecule-rotater"] = function(data)
+		local base_inventory = data.chests["base"].get_inventory(defines.inventory.chest)
+		local catalyst_inventory = data.chests["catalyst"].get_inventory(defines.inventory.chest)
+		local modifier_inventory = data.chests["modifier"].get_inventory(defines.inventory.chest)
+		local base = next(base_inventory.get_contents())
+		local catalyst = next(catalyst_inventory.get_contents())
+		local modifier = next(modifier_inventory.get_contents())
+		if base and catalyst and modifier then
+			local reaction = data.reaction
+			reaction.reactants["base"] = base
+			reaction.reactants["catalyst"] = catalyst
+			reaction.reactants["modifier"] = modifier
+			reaction.products["result"] = base
+			reaction.products["bonus"] = catalyst
+			reaction.products["remainder"] = modifier
+			base_inventory.remove({name = base, count = 1})
+			catalyst_inventory.remove({name = catalyst, count = 1})
+			modifier_inventory.remove({name = modifier, count = 1})
+			return true
+		end
+		return false
+	end,
+}
+
+local function update_entity(data)
+	-- make sure the next reaction is ready
+	local entity = data.entity
+	local machine_inputs = entity.get_inventory(defines.inventory.assembling_machine_input)
+	local has_next_craft = next(machine_inputs.get_contents())
+	if has_next_craft or entity.crafting_progress > 0 and entity.crafting_progress < 0.9 then return end
+	local reaction = data.reaction
+
+	-- complete the reaction if needed
+	for reactant_name, _ in pairs(reaction.reactants) do reaction[reactant_name] = nil end
+
+	-- if there are products remaining to deliver, do so
+	local products_remaining = false
+	for product_name, product in pairs(reaction.products) do
+		local chest_inventory = data.chests[product_name].get_inventory(defines.inventory.chest)
+		if next(chest_inventory.get_contents()) then
+			products_remaining = true
+		else
+			chest_inventory.insert({name = product, count = 1})
+			reaction.products[product_name] = nil
+		end
+	end
+	if products_remaining then return end
+
+	-- now do building-specific handling to start a next reaction
+	if MOLECULE_REACTIONS[entity.name](data) then
+		machine_inputs.insert({name = MOLECULE_REACTION_REACTANTS_NAME, count = 1})
+	end
 end
 
 
@@ -77,7 +142,7 @@ function entity_on_init()
 end
 
 function entity_on_nth_tick(data)
-	-- TODO
+	for entity_number, data in pairs(global.molecule_reaction_building_data) do update_entity(data) end
 end
 
 script.on_event(defines.events.on_built_entity, on_built_entity)
