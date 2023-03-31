@@ -351,11 +351,9 @@ def gen_specific_molecule(molecule, base_size, mips):
 	y_scale = len(shape)
 	x_scale = max(len(row) for row in shape)
 	scale = max(y_scale, x_scale)
-	for y in range(len(shape)):
-		row = shape[y]
+	for (y, row) in enumerate(shape):
 		left_bonds = 0
-		for x in range(len(row)):
-			symbol = row[x]
+		for (x, symbol) in enumerate(row):
 			if symbol == "":
 				left_bonds = 0
 				continue
