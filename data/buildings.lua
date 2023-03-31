@@ -1,4 +1,17 @@
+-- Constants
+local MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME = "molecule-reaction-buildings"
+
+
 -- Molecule reaction buildings
+data:extend({
+	{
+		type = "item-subgroup",
+		name = MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME,
+		group = "production",
+		order = "e-a",
+	},
+})
+
 local rotater_name = "molecule-rotater"
 local rotater_entity = table.deepcopy(data.raw["assembling-machine"]["assembling-machine-2"])
 rotater_entity.name = rotater_name
@@ -25,6 +38,7 @@ rotater_entity.collision_box[2][2] = rotater_entity.collision_box[2][2] + 1
 local rotater_item = table.deepcopy(data.raw.item["assembling-machine-2"])
 rotater_item.name = rotater_name
 rotater_item.place_result = rotater_name
+rotater_item.subgroup = MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME
 
 local rotater_recipe = {
 	type = "recipe",

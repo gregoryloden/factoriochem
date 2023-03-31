@@ -1,7 +1,6 @@
 -- Event handling
 local function on_built_entity(event)
 	local entity = event.created_entity
-	if not (entity and entity.valid) then return end
 	if entity.name ~= "molecule-rotater" then return end
 
 	entity.destructible = false
@@ -59,12 +58,11 @@ end
 
 local function on_mined_entity(event)
 	local entity = event.entity
-	if not (entity and entity.valid) then return end
 	if entity.name ~= "molecule-rotater" then return end
 
 	local data = global.molecule_reaction_building_data[entity.unit_number]
 	global.molecule_reaction_building_data[entity.unit_number] = nil
-	-- 30 slots should be enough to hold the contents of 6 loaders + 6 single-slot chests, but do 60 to be safe
+	-- 33 slots should be enough to hold the contents of 6 loaders + 6 single-slot chests + 3 products, but do 60 to be safe
 	local transfer_inventory = game.create_inventory(60)
 	for _, chest in pairs(data.chests) do chest.mine({inventory = transfer_inventory}) end
 	for _, loader in pairs(data.loaders) do loader.mine({inventory = transfer_inventory}) end

@@ -46,7 +46,7 @@ end
 -- Event handling
 local function on_gui_opened(event)
 	local entity = event.entity
-	if not (entity and entity.valid) then return end
+	if not entity then return end
 	if entity.name ~= "molecule-rotater" then return end
 
 	local gui = game.get_player(event.player_index).gui
@@ -59,10 +59,9 @@ local function on_gui_opened(event)
 			name = name_prefix..component_name,
 			style = "factoriochem-poc-big-slot-button"
 		}
-		if not is_reactant then
-		elseif name_prefix == REACTION_PREFIX then
+		if name_prefix == REACTION_PREFIX then
 			spec.tooltip = {"factoriochem-poc.reaction-table-element-tooltip"}
-		elseif name_prefix == REACTION_DEMO_PREFIX then
+		elseif is_reactant and name_prefix == REACTION_DEMO_PREFIX then
 			spec.tooltip = {"factoriochem-poc.reaction-demo-table-element-tooltip"}
 			spec.type = "choose-elem-button"
 			spec.elem_type = "item"
@@ -135,9 +134,6 @@ local function on_gui_opened(event)
 end
 
 local function on_gui_closed(event)
-	local entity = event.entity
-	if not (entity and entity.valid) then return end
-
 	close_gui(event.player_index, game.get_player(event.player_index).gui)
 end
 

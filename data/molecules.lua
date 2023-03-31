@@ -79,7 +79,7 @@ local ITEM_GROUP_ICON_SIZE = 128
 local ITEM_GROUP_ICON_MIPMAPS = 2
 
 
--- Item groups and subgroups, plus dummy items
+-- Item groups and subgroups
 data:extend({
 	{
 		type = "item-group",
@@ -91,20 +91,10 @@ data:extend({
 	},
 	{
 		type = "item-subgroup",
-		name = MOLECULES_SUBGROUP,
+		name = MOLECULES_SUBGROUP_NAME,
 		group = MOLECULES_GROUP_NAME,
 		order = "b",
 	},
-	{
-		type = "item",
-		name = "molecule-reaction-reactants",
-		localised_name = {"item-name.molecule-reaction-reactants"},
-		icon = GRAPHICS_ROOT.."molecule-reaction-reactants.png",
-		icon_size = ITEM_ICON_SIZE,
-		icon_mipmaps = ITEM_ICON_MIPMAPS,
-		stack_size = 1,
-		flags = {"hidden"},
-	}
 })
 for row_n, _ in ipairs(ATOM_ROWS) do
 	data:extend({
@@ -273,7 +263,7 @@ local function gen_molecules(grid_i_i, grid_is)
 			{
 				type = "item",
 				name = "molecule-"..molecule_name,
-				subgroup = MOLECULES_SUBGROUP,
+				subgroup = MOLECULES_SUBGROUP_NAME,
 				order = current_atom_count..string.format("%03X", current_shape_n),
 				localised_name = molecule_name,
 				icons = icons,
