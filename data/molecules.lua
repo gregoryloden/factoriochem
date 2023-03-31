@@ -69,8 +69,8 @@ local GRID = empty_array()
 local GRID_WIDTH_M1 = GRID_WIDTH - 1
 local GRID_HEIGHT_M1 = GRID_HEIGHT - 1
 local MAX_SINGLE_BONDS = 2
-local ICON_SIZE = 64
-local ICON_MIPMAPS = 3
+local ITEM_ICON_SIZE = 64
+local ITEM_ICON_MIPMAPS = 3
 local MOLECULE_BUILDER = empty_array()
 local ATOM_ROW_SEPARATOR = "|"
 local ATOM_COL_SEPARATOR = "-"
@@ -79,8 +79,8 @@ local ATOM_ICON_ROOT = GRAPHICS_ROOT.."atoms/"
 local BOND_ICON_ROOT = GRAPHICS_ROOT.."bonds/"
 local ATOMS_SUBGROUP_PREFIX = "atoms-"
 local MOLECULES_SUBGROUP = "molecules"
-local ITEM_GROUP_SIZE = 128
-local ITEM_GROUP_MIPMAPS = 2
+local ITEM_GROUP_ICON_SIZE = 128
+local ITEM_GROUP_ICON_MIPMAPS = 2
 
 
 -- Item groups and subgroups
@@ -88,9 +88,9 @@ data:extend({
 	{
 		type = "item-group",
 		name = MOLECULES_GROUP_NAME,
-		icon = GRAPHICS_ROOT.."item_group.png",
-		icon_size = ITEM_GROUP_SIZE,
-		icon_mipmaps = ITEM_GROUP_MIPMAPS,
+		icon = GRAPHICS_ROOT.."item-group.png",
+		icon_size = ITEM_GROUP_ICON_SIZE,
+		icon_mipmaps = ITEM_GROUP_ICON_MIPMAPS,
 		order = "e-a",
 	},
 	{
@@ -195,8 +195,8 @@ local function gen_molecules(grid_i_i, grid_is)
 				subgroup = ATOMS_SUBGROUP_PREFIX..slot.atom.row,
 				localised_description = {"item-description.atom-00", slot.atom.number, slot.atom.bonds},
 				icon = ATOM_ICON_ROOT..slot.atom.symbol.."/1100.png",
-				icon_size = ICON_SIZE,
-				icon_mipmaps = ICON_MIPMAPS,
+				icon_size = ITEM_ICON_SIZE,
+				icon_mipmaps = ITEM_ICON_MIPMAPS,
 				stack_size = 1,
 			}
 		})
@@ -237,18 +237,28 @@ local function gen_molecules(grid_i_i, grid_is)
 				local col = grid_0_i % GRID_WIDTH
 				local name_spec = height..width..row..col
 				local atom_icon_path = ATOM_ICON_ROOT..slot.atom.symbol.."/"..name_spec..".png"
-				table.insert(icons, {icon = atom_icon_path, icon_size = ICON_SIZE, icon_mipmaps = ICON_MIPMAPS})
+				table.insert(
+					icons,
+					{icon = atom_icon_path, icon_size = ITEM_ICON_SIZE, icon_mipmaps = ITEM_ICON_MIPMAPS})
 				if slot.up_bonds > 0 then
 					up_bond_icon_path = BOND_ICON_ROOT.."U"..name_spec..slot.up_bonds..".png"
 					table.insert(
 						icons,
-						{icon = up_bond_icon_path, icon_size = ICON_SIZE, icon_mipmaps = ICON_MIPMAPS})
+						{
+							icon = up_bond_icon_path,
+							icon_size = ITEM_ICON_SIZE,
+							icon_mipmaps = ITEM_ICON_MIPMAPS
+						})
 				end
 				if slot.left_bonds > 0 then
 					left_bond_icon_path = BOND_ICON_ROOT.."L"..name_spec..slot.left_bonds..".png"
 					table.insert(
 						icons,
-						{icon = left_bond_icon_path, icon_size = ICON_SIZE, icon_mipmaps = ICON_MIPMAPS})
+						{
+							icon = left_bond_icon_path,
+							icon_size = ITEM_ICON_SIZE,
+							icon_mipmaps = ITEM_ICON_MIPMAPS
+						})
 				end
 			end
 		end

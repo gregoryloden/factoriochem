@@ -343,39 +343,44 @@ def gen_all_bond_images(base_size, mips):
 					gen_and_write_bond_images(bond_folder, base_size, y_scale, x_scale, y, x, mips)
 	print("Bond images written")
 
-#Generate the icon for the molecule item group
-def gen_item_group_icon():
-	image = filled_mip_image(ITEM_GROUP_SIZE, ITEM_GROUP_MIPS, (0, 0, 0, 0))
-	shape = [
-		["O", 1, "C", 2, "N"],
-		[  1,      1,      1],
-		["N", 1, "O", 0, "H"],
-		[  1,      0,      0],
-		["H", 0,  "", 0,  ""],
-	]
-	y_scale = (len(shape) + 1) // 2
-	x_scale = len(shape[1])
+#Generate specific full molecule images
+def gen_specific_molecule(molecule, base_size, mips):
+	image = filled_mip_image(base_size, mips, (0, 0, 0, 0))
+	shape = [row.split("-") for row in molecule.split("|")]
 	bonds = {"H": 1, "C": 4, "N": 3, "O": 2}
+	y_scale = len(shape)
+	x_scale = max(len(row) for row in shape)
 	scale = max(y_scale, x_scale)
-	for row_i in range(0, len(shape), 2):
-		row = shape[row_i]
-		y = row_i // 2
-		for col_i in range(0, len(row), 2):
-			x = col_i // 2
-			symbol = row[col_i]
-			if symbol:
-				atom_image = gen_single_atom_image(
-					symbol, bonds[symbol], ITEM_GROUP_SIZE, y_scale, x_scale, y, x, ITEM_GROUP_MIPS)
-				overlay_image(image, 0, 0, atom_image, 0, 0, image.shape[1], ITEM_GROUP_SIZE)
-			if col_i > 0 and row[col_i - 1] > 0:
-				left_up_bond_images = gen_bond_images(ITEM_GROUP_SIZE, y_scale, x_scale, y, x, ITEM_GROUP_MIPS)
-				left_bond_image = left_up_bond_images["L"][row[col_i - 1]]
-				overlay_image(image, 0, 0, left_bond_image, 0, 0, image.shape[1], ITEM_GROUP_SIZE)
-			if row_i > 0 and shape[row_i - 1][x] > 0:
-				left_up_bond_images = gen_bond_images(ITEM_GROUP_SIZE, x_scale, y_scale, x, y, ITEM_GROUP_MIPS)
-				up_bond_image = left_up_bond_images["U"][shape[row_i - 1][x]]
-				overlay_image(image, 0, 0, up_bond_image, 0, 0, image.shape[1], ITEM_GROUP_SIZE)
-	cv2.imwrite("item_group.png", image, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+	for y in range(len(shape)):
+		row = shape[y]
+		left_bonds = 0
+		for x in range(len(row)):
+			symbol = row[x]
+			if symbol == "":
+				left_bonds = 0
+				continue
+			up_bonds = 0
+			right_bonds = 0
+			if symbol[0].isdigit():
+				up_bonds = int(symbol[0])
+				symbol = symbol[1:]
+			if symbol[-1].isdigit():
+				right_bonds = int(symbol[-1])
+				symbol = symbol[:-1]
+			atom_image = gen_single_atom_image(symbol, bonds[symbol], base_size, y_scale, x_scale, y, x, mips)
+			overlay_image(image, 0, 0, atom_image, 0, 0, image.shape[1], base_size)
+			if left_bonds > 0:
+				left_bond_image = gen_bond_images(base_size, y_scale, x_scale, y, x, mips)["L"][left_bonds]
+				overlay_image(image, 0, 0, left_bond_image, 0, 0, image.shape[1], base_size)
+			if up_bonds > 0:
+				up_bond_image = gen_bond_images(base_size, x_scale, y_scale, x, y, mips)["U"][up_bonds]
+				overlay_image(image, 0, 0, up_bond_image, 0, 0, image.shape[1], base_size)
+			left_bonds = right_bonds
+	return image
+
+def gen_item_group_icon():
+	image = gen_specific_molecule("O1-C2-N|1N1-1O-1H|1H", ITEM_GROUP_SIZE, ITEM_GROUP_MIPS)
+	cv2.imwrite("item-group.png", image, [cv2.IMWRITE_PNG_COMPRESSION, 9])
 	print("Item group written")
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))

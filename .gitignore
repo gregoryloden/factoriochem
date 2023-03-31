@@ -1,4 +1,4 @@
 deploy.bat
 graphics/atoms/*
 graphics/bonds/*
-graphics/item_group.png
+graphics/*.png
