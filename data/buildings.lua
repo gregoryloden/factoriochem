@@ -13,7 +13,7 @@ rotater_entity.fluid_boxes = {
 		hide_connection_info = true,
 	},
 }
-rotater_entity.fixed_recipe = "small-electric-pole"
+rotater_entity.fixed_recipe = "molecule-reaction-reactants"
 rotater_entity.module_specification = nil
 rotater_entity.next_upgrade = nil
 rotater_entity.fast_replaceable_group = nil

@@ -383,7 +383,13 @@ def gen_item_group_icon():
 	cv2.imwrite("item-group.png", image, [cv2.IMWRITE_PNG_COMPRESSION, 9])
 	print("Item group written")
 
+def gen_molecule_reaction_reactants_icon():
+	image = gen_specific_molecule("-H1-O|H--1H|1O1-H", BASE_ICON_SIZE, BASE_ICON_MIPS)
+	cv2.imwrite("molecule-reaction-reactants.png", image, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+	print("Molecule reaction reactants written")
+
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 gen_all_atom_images(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_all_bond_images(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_item_group_icon()
+gen_molecule_reaction_reactants_icon()

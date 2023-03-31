@@ -69,21 +69,17 @@ local GRID = empty_array()
 local GRID_WIDTH_M1 = GRID_WIDTH - 1
 local GRID_HEIGHT_M1 = GRID_HEIGHT - 1
 local MAX_SINGLE_BONDS = 2
-local ITEM_ICON_SIZE = 64
-local ITEM_ICON_MIPMAPS = 3
 local MOLECULE_BUILDER = empty_array()
 local ATOM_ROW_SEPARATOR = "|"
 local ATOM_COL_SEPARATOR = "-"
-local GRAPHICS_ROOT = "__FactorioChem-PoC__/graphics/"
 local ATOM_ICON_ROOT = GRAPHICS_ROOT.."atoms/"
 local BOND_ICON_ROOT = GRAPHICS_ROOT.."bonds/"
 local ATOMS_SUBGROUP_PREFIX = "atoms-"
-local MOLECULES_SUBGROUP = "molecules"
 local ITEM_GROUP_ICON_SIZE = 128
 local ITEM_GROUP_ICON_MIPMAPS = 2
 
 
--- Item groups and subgroups
+-- Item groups and subgroups, plus dummy items
 data:extend({
 	{
 		type = "item-group",
@@ -99,6 +95,16 @@ data:extend({
 		group = MOLECULES_GROUP_NAME,
 		order = "b",
 	},
+	{
+		type = "item",
+		name = "molecule-reaction-reactants",
+		localised_name = {"item-name.molecule-reaction-reactants"},
+		icon = GRAPHICS_ROOT.."molecule-reaction-reactants.png",
+		icon_size = ITEM_ICON_SIZE,
+		icon_mipmaps = ITEM_ICON_MIPMAPS,
+		stack_size = 1,
+		flags = {"hidden"},
+	}
 })
 for row_n, _ in ipairs(ATOM_ROWS) do
 	data:extend({
