@@ -1,9 +1,9 @@
-return {
+local BUILDING_DEFINITIONS = {
 	["molecule-rotater"] = {
 		building_design = "assembling-machine-3",
-		item_order = "a",
-		reactants = {[BASE_NAME] = true, [CATALYST_NAME] = true, [MODIFIER_NAME] = true},
-		products = {[RESULT_NAME] = true, [BONUS_NAME] = true, [REMAINDER_NAME] = true},
+		item_order = "b",
+		reactants = {BASE_NAME, CATALYST_NAME, MODIFIER_NAME},
+		products = {RESULT_NAME, BONUS_NAME, REMAINDER_NAME},
 		reaction = function(data)
 			-- TODO: real reaction
 			local base_inventory = data.chests["base"].get_inventory(defines.inventory.chest)
@@ -29,3 +29,12 @@ return {
 		end,
 	},
 }
+for _, building_definition in pairs(BUILDING_DEFINITIONS) do
+	building_definition.has_reactant = {}
+	for _, reactant_name in ipairs(building_definition.reactants) do
+		building_definition.has_reactant[reactant_name] = true
+	end
+	building_definition.has_product = {}
+	for _, product_name in ipairs(building_definition.products) do building_definition.has_product[product_name] = true end
+end
+return BUILDING_DEFINITIONS

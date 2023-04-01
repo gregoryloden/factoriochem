@@ -61,9 +61,9 @@ local function on_gui_opened(event)
 
 	function build_molecule_spec(name_prefix, component_name, is_reactant)
 		if is_reactant then
-			if not building_definition.reactants[component_name] then return {type = "empty-widget"} end
+			if not building_definition.has_reactant[component_name] then return {type = "empty-widget"} end
 		else
-			if not building_definition.products[component_name] then return {type = "empty-widget"} end
+			if not building_definition.has_product[component_name] then return {type = "empty-widget"} end
 		end
 		local spec = {
 			type = "sprite-button",

@@ -61,8 +61,8 @@ local function on_built_entity(event)
 		loader.destructible = false
 		building_data.loaders[component] = loader
 	end
-	for reactant, _ in pairs(building_definition.reactants) do build_sub_entities(reactant, false) end
-	for product, _ in pairs(building_definition.products) do build_sub_entities(product, true) end
+	for _, reactant in ipairs(building_definition.reactants) do build_sub_entities(reactant, false) end
+	for _, product in ipairs(building_definition.products) do build_sub_entities(product, true) end
 	global.molecule_reaction_building_data[entity.unit_number] = building_data
 end
 
@@ -122,7 +122,7 @@ local function update_entity(data)
 	-- any previous reaction has been resolved, check to see if any reactants have changed
 	local building_definition = BUILDING_DEFINITIONS[entity.name]
 	local changed = false
-	for reactant_name, _ in pairs(building_definition.reactants) do
+	for _, reactant_name in ipairs(building_definition.reactants) do
 		local reactant = next(chests[reactant_name].get_inventory(DEFINES_INVENTORY_CHEST).get_contents())
 		if reactant ~= reaction.reactants[reactant_name] then
 			reaction.reactants[reactant_name] = reactant
