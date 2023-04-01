@@ -39,11 +39,15 @@ end
 local function update_all_reaction_table_sprites(gui, entity_number)
 	local reaction_table = gui.relative[MOLECULE_REACTION_NAME].outer[REACTION_PREFIX.."frame"][REACTION_PREFIX.."table"]
 	local building_data = global.molecule_reaction_building_data[entity_number]
-	local products = building_data.reaction.products
+	local building_definition = BUILDING_DEFINITIONS[building_data.entity.name]
 	local chests = building_data.chests
-	for _, component_name in ipairs(MOLECULE_REACTION_COMPONENT_NAMES) do
+	for _, reactant_name in ipairs(building_definition.reactants) do
+		update_reaction_table_sprite(reaction_table[REACTION_PREFIX..reactant_name], chests[reactant_name])
+	end
+	local products = building_data.reaction.products
+	for _, product_name in ipairs(building_definition.products) do
 		update_reaction_table_sprite(
-			reaction_table[REACTION_PREFIX..component_name], chests[component_name], products[component_name])
+			reaction_table[REACTION_PREFIX..product_name], chests[product_name], products[product_name])
 	end
 end
 
