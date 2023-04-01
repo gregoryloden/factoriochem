@@ -124,23 +124,26 @@ local function update_entity(data)
 	if has_next_craft or entity.crafting_progress > 0 and entity.crafting_progress < 0.9 then return end
 	local reaction = data.reaction
 
-	-- complete the reaction if needed
-	for reactant_name, _ in pairs(reaction.reactants) do reaction[reactant_name] = nil end
+	-- the reaction has products which means that it needs resolving
+	if next(reaction.products) then
+		-- complete the reaction if needed
+		for reactant_name, _ in pairs(reaction.reactants) do reaction[reactant_name] = nil end
 
-	-- if there are products remaining to deliver, do so
-	local products_remaining = false
-	for product_name, product in pairs(reaction.products) do
-		local chest_inventory = data.chests[product_name].get_inventory(defines.inventory.chest)
-		if next(chest_inventory.get_contents()) then
-			products_remaining = true
-		else
-			chest_inventory.insert({name = product, count = 1})
-			reaction.products[product_name] = nil
+		-- deliver all remaining products and stop if there are any products remaining
+		local products_remaining = false
+		for product_name, product in pairs(reaction.products) do
+			local chest_inventory = data.chests[product_name].get_inventory(defines.inventory.chest)
+			if next(chest_inventory.get_contents()) then
+				products_remaining = true
+			else
+				chest_inventory.insert({name = product, count = 1})
+				reaction.products[product_name] = nil
+			end
 		end
+		if products_remaining then return end
 	end
-	if products_remaining then return end
 
-	-- now do building-specific handling to start a next reaction
+	-- any previous reaction has been resolved, so now do building-specific handling to start a next reaction
 	if MOLECULE_REACTIONS[entity.name](data) then
 		machine_inputs.insert({name = MOLECULE_REACTION_REACTANTS_NAME, count = 1})
 	end
