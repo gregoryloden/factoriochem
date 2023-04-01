@@ -52,13 +52,19 @@ end
 local function on_gui_opened(event)
 	local entity = event.entity
 	if not entity then return end
-	if entity.name ~= "molecule-rotater" then return end
+	local building_definition = BUILDING_DEFINITIONS[entity.name]
+	if not building_definition then return end
 
 	local gui = game.get_player(event.player_index).gui
 	close_gui(event.player_index, gui)
 	global.current_gui_entity[event.player_index] = entity.unit_number
 
 	function build_molecule_spec(name_prefix, component_name, is_reactant)
+		if is_reactant then
+			if not building_definition.reactants[component_name] then return {type = "empty-widget"} end
+		else
+			if not building_definition.products[component_name] then return {type = "empty-widget"} end
+		end
 		local spec = {
 			type = "sprite-button",
 			name = name_prefix..component_name,

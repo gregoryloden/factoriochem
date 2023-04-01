@@ -1,5 +1,4 @@
 -- Constants
-local BUILDING_DEFINITIONS = require("shared/buildings")
 local MOLECULE_REACTION_COMPONENT_OFFSETS = {
 	[BASE_NAME] = {x = -1, y = 1},
 	[CATALYST_NAME] = {x = 0, y = 1},
@@ -62,8 +61,8 @@ local function on_built_entity(event)
 		loader.destructible = false
 		building_data.loaders[component] = loader
 	end
-	for _, reactant in ipairs(building_definition.reactants) do build_sub_entities(reactant, false) end
-	for _, product in ipairs(building_definition.products) do build_sub_entities(product, true) end
+	for reactant, _ in pairs(building_definition.reactants) do build_sub_entities(reactant, false) end
+	for product, _ in pairs(building_definition.products) do build_sub_entities(product, true) end
 	global.molecule_reaction_building_data[entity.unit_number] = building_data
 end
 

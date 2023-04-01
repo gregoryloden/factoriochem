@@ -1,4 +1,6 @@
 require("constants")
+BUILDING_DEFINITIONS = require("shared/buildings")
+
 require("control/entity")
 require("control/gui")
 
