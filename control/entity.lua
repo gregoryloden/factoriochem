@@ -90,31 +90,6 @@ end
 
 
 -- Updates
-local MOLECULE_REACTIONS = {
-	["molecule-rotater"] = function(data)
-		local base_inventory = data.chests["base"].get_inventory(defines.inventory.chest)
-		local catalyst_inventory = data.chests["catalyst"].get_inventory(defines.inventory.chest)
-		local modifier_inventory = data.chests["modifier"].get_inventory(defines.inventory.chest)
-		local base = next(base_inventory.get_contents())
-		local catalyst = next(catalyst_inventory.get_contents())
-		local modifier = next(modifier_inventory.get_contents())
-		if base and catalyst and modifier then
-			local reaction = data.reaction
-			reaction.reactants["base"] = base
-			reaction.reactants["catalyst"] = catalyst
-			reaction.reactants["modifier"] = modifier
-			reaction.products["result"] = base
-			reaction.products["bonus"] = catalyst
-			reaction.products["remainder"] = modifier
-			base_inventory.remove({name = base, count = 1})
-			catalyst_inventory.remove({name = catalyst, count = 1})
-			modifier_inventory.remove({name = modifier, count = 1})
-			return true
-		end
-		return false
-	end,
-}
-
 local function update_entity(data)
 	-- make sure the next reaction is ready
 	local entity = data.entity
@@ -143,7 +118,7 @@ local function update_entity(data)
 	end
 
 	-- any previous reaction has been resolved, so now do building-specific handling to start a next reaction
-	if MOLECULE_REACTIONS[entity.name](data) then
+	if BUILDING_DEFINITIONS[entity.name].reaction(data) then
 		machine_inputs.insert({name = MOLECULE_REACTION_REACTANTS_NAME, count = 1})
 	end
 end
