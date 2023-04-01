@@ -18,7 +18,13 @@ local function on_built_entity(event)
 	entity.destructible = false
 	entity.rotatable = false
 
-	local building_data = {entity = entity, chests = {}, loaders = {}, reaction = {reactants = {}, products = {}}}
+	local building_data = {
+		entity = entity,
+		chests = {},
+		chest_inventories = {},
+		loaders = {},
+		reaction = {reactants = {}, products = {}},
+	}
 	function build_sub_entities(component, is_output)
 		local default_offset = MOLECULE_REACTION_COMPONENT_OFFSETS[component]
 		local offset_x, offset_y = default_offset.x, default_offset.y
@@ -37,6 +43,7 @@ local function on_built_entity(event)
 		})
 		chest.destructible = false
 		building_data.chests[component] = chest
+		building_data.chest_inventories[component] = chest.get_inventory(defines.inventory.chest)
 
 		if entity.direction == defines.direction.north or entity.direction == defines.direction.south then
 			offset_y = offset_y * 2
@@ -103,7 +110,7 @@ local function update_entity(data)
 	if has_next_craft or entity.crafting_progress > 0 and entity.crafting_progress < 0.9 then return end
 
 	local reaction = data.reaction
-	local chests = data.chests
+	local chest_inventories = data.chest_inventories
 
 	-- the reaction has products which means that it needs resolving
 	if next(reaction.products) then
@@ -113,7 +120,7 @@ local function update_entity(data)
 		-- deliver all remaining products and stop if there are any products remaining
 		local products_remaining = false
 		for product_name, product in pairs(reaction.products) do
-			local chest_inventory = chests[product_name].get_inventory(DEFINES_INVENTORY_CHEST)
+			local chest_inventory = chest_inventories[product_name]
 			if next(chest_inventory.get_contents()) then
 				products_remaining = true
 			else
@@ -129,7 +136,7 @@ local function update_entity(data)
 	local building_definition = BUILDING_DEFINITIONS[entity.name]
 	local changed = false
 	for _, reactant_name in ipairs(building_definition.reactants) do
-		local reactant = next(chests[reactant_name].get_inventory(DEFINES_INVENTORY_CHEST).get_contents())
+		local reactant = next(chest_inventories[reactant_name].get_contents())
 		if reactant ~= reaction.reactants[reactant_name] then
 			reaction.reactants[reactant_name] = reactant
 			changed = true
@@ -146,7 +153,7 @@ local function update_entity(data)
 	-- we have a full set of molecule reactants, so now do building-specific handling to start a next reaction
 	if building_definition.reaction(reaction) then
 		for reactant_name, reactant in pairs(reaction.reactants) do
-			chests[reactant_name].get_inventory(DEFINES_INVENTORY_CHEST).remove({name = reactant, count = 1})
+			chest_inventories[reactant_name].remove({name = reactant, count = 1})
 		end
 		machine_inputs.insert({name = MOLECULE_REACTION_REACTANTS_NAME, count = 1})
 	end

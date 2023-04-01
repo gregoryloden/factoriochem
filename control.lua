@@ -1,7 +1,5 @@
 require("constants")
 require("shared/buildings")
-DEFINES_INVENTORY_CHEST = defines.inventory.chest
-
 require("control/entity")
 require("control/gui")
 

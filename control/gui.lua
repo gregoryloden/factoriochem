@@ -25,8 +25,8 @@ local function gui_add_recursive(gui, element_spec)
 	for _, child_spec in ipairs(children_spec) do gui_add_recursive(element, child_spec) end
 end
 
-local function update_reaction_table_sprite(element, chest, product)
-	local item = next(chest.get_inventory(DEFINES_INVENTORY_CHEST).get_contents())
+local function update_reaction_table_sprite(element, chest_inventory, product)
+	local item = next(chest_inventory.get_contents())
 	if item then
 		element.sprite = "item/"..item
 	elseif product then
@@ -40,14 +40,14 @@ local function update_all_reaction_table_sprites(gui, entity_number)
 	local reaction_table = gui.relative[MOLECULE_REACTION_NAME].outer[REACTION_PREFIX.."frame"][REACTION_PREFIX.."table"]
 	local building_data = global.molecule_reaction_building_data[entity_number]
 	local building_definition = BUILDING_DEFINITIONS[building_data.entity.name]
-	local chests = building_data.chests
+	local chest_inventories = building_data.chest_inventories
 	for _, reactant_name in ipairs(building_definition.reactants) do
-		update_reaction_table_sprite(reaction_table[REACTION_PREFIX..reactant_name], chests[reactant_name])
+		update_reaction_table_sprite(reaction_table[REACTION_PREFIX..reactant_name], chest_inventories[reactant_name])
 	end
 	local products = building_data.reaction.products
 	for _, product_name in ipairs(building_definition.products) do
 		update_reaction_table_sprite(
-			reaction_table[REACTION_PREFIX..product_name], chests[product_name], products[product_name])
+			reaction_table[REACTION_PREFIX..product_name], chest_inventories[product_name], products[product_name])
 	end
 end
 
@@ -155,20 +155,19 @@ local function on_gui_click(event)
 
 	local reaction_table_component = REACTION_TABLE_COMPONENT_NAME_MAP[element.name]
 	if reaction_table_component then
-		local player_inventory = player.get_main_inventory()
-		local chests = global.molecule_reaction_building_data[global.current_gui_entity[event.player_index]].chests
-		local chest = chests[reaction_table_component]
-		local chest_inventory = chest.get_inventory(DEFINES_INVENTORY_CHEST)
+		local building_data = global.molecule_reaction_building_data[global.current_gui_entity[event.player_index]]
+		local chest_inventory = building_data.chest_inventories[reaction_table_component]
 		local chest_contents = chest_inventory.get_contents()
 		if next(chest_contents) then
+			local player_inventory = player.get_main_inventory()
 			for name, count in pairs(chest_contents) do
 				added = player_inventory.insert({name = name, count = count})
 				if added > 0 then chest_inventory.remove({name = name, count = added}) end
 			end
-			update_reaction_table_sprite(element, chest)
+			update_reaction_table_sprite(element, chest_inventory)
 		elseif player.cursor_stack then
 			chest_inventory.find_empty_stack().transfer_stack(player.cursor_stack)
-			update_reaction_table_sprite(element, chest)
+			update_reaction_table_sprite(element, chest_inventory)
 		end
 		return
 	end
