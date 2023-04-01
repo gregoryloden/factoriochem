@@ -7,6 +7,10 @@ local MOLECULE_REACTION_COMPONENT_OFFSETS = {
 	[BONUS_NAME] = {x = 0, y = -1},
 	[REMAINDER_NAME] = {x = 1, y = -1},
 }
+local REACTION_CACHE = {}
+
+-- pre-assign default cache values so that every building can have a default cache
+for name, definition in pairs(BUILDING_DEFINITIONS) do REACTION_CACHE[name] = {} end
 
 
 -- Event handling
@@ -23,7 +27,7 @@ local function on_built_entity(event)
 		chests = {},
 		chest_inventories = {},
 		loaders = {},
-		reaction = {reactants = {}, products = {}},
+		reaction = {reactants = {}, products = {}, cache = {}},
 	}
 	function build_sub_entities(component, is_output)
 		local default_offset = MOLECULE_REACTION_COMPONENT_OFFSETS[component]
@@ -86,7 +90,7 @@ local function on_mined_entity(event)
 	for _, loader in pairs(data.loaders) do loader.mine({inventory = transfer_inventory}) end
 	for name, count in pairs(transfer_inventory.get_contents()) do event.buffer.insert({name = name, count = count}) end
 	transfer_inventory.destroy()
-	-- the presence of products indicates an unresolved reaction
+	-- the presence of products indicates an unresolved reaction, which means we have items to return to the player
 	if next(data.reaction.products) then
 		-- the presence of reactants indicates that the reaction is not complete
 		if next(data.reaction.reactants) then
@@ -102,6 +106,13 @@ end
 
 
 -- Updates
+local function start_reaction(reaction, chest_inventories, machine_inputs)
+	for reactant_name, reactant in pairs(reaction.reactants) do
+		chest_inventories[reactant_name].remove({name = reactant, count = 1})
+	end
+	machine_inputs.insert({name = MOLECULE_REACTION_REACTANTS_NAME, count = 1})
+end
+
 local function update_entity(data)
 	-- make sure the next reaction is ready
 	local entity = data.entity
@@ -131,31 +142,46 @@ local function update_entity(data)
 		if products_remaining then return end
 	end
 
-	-- any previous reaction has been resolved, check to see if any reactants have changed
-	-- setting the next set of reactants counts as a change
+	-- any previous reaction has been resolved, check to see if our current reactant set is cached
+	local cache = reaction.cache
 	local building_definition = BUILDING_DEFINITIONS[entity.name]
-	local changed = false
 	for _, reactant_name in ipairs(building_definition.reactants) do
 		local reactant = next(chest_inventories[reactant_name].get_contents())
-		if reactant ~= reaction.reactants[reactant_name] then
-			reaction.reactants[reactant_name] = reactant
-			changed = true
+		reaction.reactants[reactant_name] = reactant
+		if not reactant then reactant = "" end
+		local new_cache = cache[reactant]
+		if not new_cache then
+			new_cache = {}
+			cache[reactant] = new_cache
 		end
+		cache = new_cache
 	end
-	if not changed then return end
+	if cache.products then
+		for product_name, product in pairs(cache.products) do reaction.products[product_name] = product end
+		start_reaction(reaction, chest_inventories, machine_inputs)
+		return
+	elseif cache.invalid then
+		return
+	end
 
-	-- reactants have changed, make sure we only have molecules
+	-- our current reaction is not cached, make sure we only have molecules
 	-- a missing reactant counts as a molecule
 	for _, reactant in pairs(reaction.reactants) do
-		if game.item_prototypes[reactant].group.name ~= MOLECULES_GROUP_NAME then return end
+		if game.item_prototypes[reactant].group.name ~= MOLECULES_GROUP_NAME then
+			cache.invalid = true
+			return
+		end
 	end
 
-	-- we have a full set of molecule reactants, so now do building-specific handling to start a next reaction
+	-- we have a full set of molecule reactants, so now do building-specific handling to generate a next reaction
 	if building_definition.reaction(reaction) then
-		for reactant_name, reactant in pairs(reaction.reactants) do
-			chest_inventories[reactant_name].remove({name = reactant, count = 1})
-		end
-		machine_inputs.insert({name = MOLECULE_REACTION_REACTANTS_NAME, count = 1})
+		-- the reaction was valid, start it and cache it
+		start_reaction(reaction, chest_inventories, machine_inputs)
+		cache.products = {}
+		for product_name, product in pairs(reaction.products) do cache.products[product_name] = product end
+	else
+		-- the reaction was not valid, cache that fact
+		cache.invalid = true
 	end
 end
 
