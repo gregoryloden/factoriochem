@@ -138,7 +138,11 @@ local function update_entity(data)
 	end
 
 	-- we have a full set of molecule reactants, so now do building-specific handling to start a next reaction
-	if building_definition.reaction(data) then
+	if building_definition.reaction(reaction) then
+		for reactant_name, reactant in pairs(reaction.reactants) do
+			local chest_inventory = data.chests[reactant_name].get_inventory(DEFINES_INVENTORY_CHEST)
+			chest_inventory.remove({name = reactant, count = 1})
+		end
 		machine_inputs.insert({name = MOLECULE_REACTION_REACTANTS_NAME, count = 1})
 	end
 end
