@@ -1,17 +1,28 @@
-local building_definitions = require("shared/buildings")
+-- Constants
+local BUILDING_DEFINITIONS = require("shared/buildings")
+local MOLECULE_REACTION_COMPONENT_OFFSETS = {
+	[BASE_NAME] = {x = -1, y = 1},
+	[CATALYST_NAME] = {x = 0, y = 1},
+	[MODIFIER_NAME] = {x = 1, y = 1},
+	[RESULT_NAME] = {x = -1, y = -1},
+	[BONUS_NAME] = {x = 0, y = -1},
+	[REMAINDER_NAME] = {x = 1, y = -1},
+}
 
 
 -- Event handling
 local function on_built_entity(event)
 	local entity = event.created_entity
-	local building_definition = building_definitions[entity.name]
+	local building_definition = BUILDING_DEFINITIONS[entity.name]
 	if not building_definition then return end
 
 	entity.destructible = false
 	entity.rotatable = false
 
 	local building_data = {entity = entity, chests = {}, loaders = {}, reaction = {reactants = {}, products = {}}}
-	function build_sub_entities(name, offset_x, offset_y, is_output)
+	function build_sub_entities(component, is_output)
+		local default_offset = MOLECULE_REACTION_COMPONENT_OFFSETS[component]
+		local offset_x, offset_y = default_offset.x, default_offset.y
 		if entity.direction == defines.direction.south then
 			offset_x, offset_y = -offset_x, -offset_y
 		elseif entity.direction == defines.direction.east then
@@ -26,7 +37,7 @@ local function on_built_entity(event)
 			create_build_effect_smoke = false,
 		})
 		chest.destructible = false
-		building_data.chests[name] = chest
+		building_data.chests[component] = chest
 
 		if entity.direction == defines.direction.north or entity.direction == defines.direction.south then
 			offset_y = offset_y * 2
@@ -49,20 +60,16 @@ local function on_built_entity(event)
 		})
 		if is_output then loader.rotate() end
 		loader.destructible = false
-		building_data.loaders[name] = loader
+		building_data.loaders[component] = loader
 	end
-	build_sub_entities(BASE_NAME, -1, 1, false)
-	build_sub_entities(CATALYST_NAME, 0, 1, false)
-	build_sub_entities(MODIFIER_NAME, 1, 1, false)
-	build_sub_entities(RESULT_NAME, -1, -1, true)
-	build_sub_entities(BONUS_NAME, 0, -1, true)
-	build_sub_entities(REMAINDER_NAME, 1, -1, true)
+	for _, reactant in ipairs(building_definition.reactants) do build_sub_entities(reactant, false) end
+	for _, product in ipairs(building_definition.products) do build_sub_entities(product, true) end
 	global.molecule_reaction_building_data[entity.unit_number] = building_data
 end
 
 local function on_mined_entity(event)
 	local entity = event.entity
-	if not building_definitions[entity.name] then return end
+	if not BUILDING_DEFINITIONS[entity.name] then return end
 
 	local data = global.molecule_reaction_building_data[entity.unit_number]
 	global.molecule_reaction_building_data[entity.unit_number] = nil
