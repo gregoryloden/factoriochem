@@ -96,7 +96,9 @@ local function update_entity(data)
 	local machine_inputs = entity.get_inventory(defines.inventory.assembling_machine_input)
 	local has_next_craft = next(machine_inputs.get_contents())
 	if has_next_craft or entity.crafting_progress > 0 and entity.crafting_progress < 0.9 then return end
+
 	local reaction = data.reaction
+	local chests = data.chests
 
 	-- the reaction has products which means that it needs resolving
 	if next(reaction.products) then
@@ -106,7 +108,7 @@ local function update_entity(data)
 		-- deliver all remaining products and stop if there are any products remaining
 		local products_remaining = false
 		for product_name, product in pairs(reaction.products) do
-			local chest_inventory = data.chests[product_name].get_inventory(defines.inventory.chest)
+			local chest_inventory = chests[product_name].get_inventory(DEFINES_INVENTORY_CHEST)
 			if next(chest_inventory.get_contents()) then
 				products_remaining = true
 			else
@@ -117,8 +119,26 @@ local function update_entity(data)
 		if products_remaining then return end
 	end
 
-	-- any previous reaction has been resolved, so now do building-specific handling to start a next reaction
-	if BUILDING_DEFINITIONS[entity.name].reaction(data) then
+	-- any previous reaction has been resolved, check to see if any reactants have changed
+	local building_definition = BUILDING_DEFINITIONS[entity.name]
+	local changed = false
+	for reactant_name, _ in pairs(building_definition.reactants) do
+		local reactant = next(chests[reactant_name].get_inventory(DEFINES_INVENTORY_CHEST).get_contents())
+		if reactant ~= reaction.reactants[reactant_name] then
+			reaction.reactants[reactant_name] = reactant
+			changed = true
+		end
+	end
+	if not changed then return end
+
+	-- reactants have changed, make sure we only have molecules
+	-- a missing reactant counts as a molecule
+	for _, reactant in pairs(reaction.reactants) do
+		if game.item_prototypes[reactant].group.name ~= MOLECULES_GROUP_NAME then return end
+	end
+
+	-- we have a full set of molecule reactants, so now do building-specific handling to start a next reaction
+	if building_definition.reaction(data) then
 		machine_inputs.insert({name = MOLECULE_REACTION_REACTANTS_NAME, count = 1})
 	end
 end

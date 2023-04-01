@@ -26,7 +26,7 @@ local function gui_add_recursive(gui, element_spec)
 end
 
 local function update_reaction_table_sprite(element, chest, product)
-	local item = next(chest.get_inventory(defines.inventory.chest).get_contents())
+	local item = next(chest.get_inventory(DEFINES_INVENTORY_CHEST).get_contents())
 	if item then
 		element.sprite = "item/"..item
 	elseif product then
@@ -153,7 +153,7 @@ local function on_gui_click(event)
 	if reaction_table_component then
 		local player_inventory = player.get_main_inventory()
 		local chests = global.molecule_reaction_building_data[global.current_gui_entity[event.player_index]].chests
-		local chest_inventory = chests[reaction_table_component].get_inventory(defines.inventory.chest)
+		local chest_inventory = chests[reaction_table_component].get_inventory(DEFINES_INVENTORY_CHEST)
 		local chest_contents = chest_inventory.get_contents()
 		if next(chest_contents) then
 			for name, count in pairs(chest_contents) do
