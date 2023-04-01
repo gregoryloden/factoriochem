@@ -97,14 +97,12 @@ data:extend({
 	},
 })
 for row_n, _ in ipairs(ATOM_ROWS) do
-	data:extend({
-		{
-			type = "item-subgroup",
-			name = ATOMS_SUBGROUP_PREFIX..row_n,
-			group = MOLECULES_GROUP_NAME,
-			order = "a"
-		},
-	})
+	data:extend({{
+		type = "item-subgroup",
+		name = ATOMS_SUBGROUP_PREFIX..row_n,
+		group = MOLECULES_GROUP_NAME,
+		order = "a"
+	}})
 end
 
 
@@ -184,18 +182,16 @@ local function gen_molecules(grid_i_i, grid_is)
 	elseif current_atom_count == 1 then
 		local slot = GRID[1]
 		local atom_number_hex = string.format("%02X", slot.atom.number)
-		data:extend({
-			{
-				type = "item",
-				name = "atom-"..atom_number_hex,
-				subgroup = ATOMS_SUBGROUP_PREFIX..slot.atom.row,
-				localised_description = {"item-description.atom-00", slot.atom.number, slot.atom.bonds},
-				icon = ATOM_ICON_ROOT..slot.atom.symbol.."/1100.png",
-				icon_size = ITEM_ICON_SIZE,
-				icon_mipmaps = ITEM_ICON_MIPMAPS,
-				stack_size = 1,
-			}
-		})
+		data:extend({{
+			type = "item",
+			name = "atom-"..atom_number_hex,
+			subgroup = ATOMS_SUBGROUP_PREFIX..slot.atom.row,
+			localised_description = {"item-description.atom-00", slot.atom.number, slot.atom.bonds},
+			icon = ATOM_ICON_ROOT..slot.atom.symbol.."/1100.png",
+			icon_size = ITEM_ICON_SIZE,
+			icon_mipmaps = ITEM_ICON_MIPMAPS,
+			stack_size = 1,
+		}})
 		total_molecules = total_molecules + 1
 	else
 		array_clear(MOLECULE_BUILDER)
@@ -259,17 +255,15 @@ local function gen_molecules(grid_i_i, grid_is)
 			end
 		end
 		local molecule_name = table.concat(MOLECULE_BUILDER)
-		data:extend({
-			{
-				type = "item",
-				name = "molecule-"..molecule_name,
-				subgroup = MOLECULES_SUBGROUP_NAME,
-				order = current_atom_count..string.format("%03X", current_shape_n),
-				localised_name = molecule_name,
-				icons = icons,
-				stack_size = 1,
-			}
-		})
+		data:extend({{
+			type = "item",
+			name = "molecule-"..molecule_name,
+			subgroup = MOLECULES_SUBGROUP_NAME,
+			order = current_atom_count..string.format("%03X", current_shape_n),
+			localised_name = molecule_name,
+			icons = icons,
+			stack_size = 1,
+		}})
 		total_molecules = total_molecules + 1
 	end
 end

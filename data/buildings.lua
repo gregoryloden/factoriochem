@@ -3,14 +3,12 @@ local MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME = "molecule-reaction-buildings"
 
 
 -- Molecule reaction buildings
-data:extend({
-	{
-		type = "item-subgroup",
-		name = MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME,
-		group = "production",
-		order = "e-a",
-	},
-})
+data:extend({{
+	type = "item-subgroup",
+	name = MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME,
+	group = "production",
+	order = "e-a",
+}})
 local building_definitions = require("shared/buildings")
 for name, definition in pairs(building_definitions) do
 	local entity = table.deepcopy(data.raw["assembling-machine"]["assembling-machine-3"])
@@ -52,17 +50,16 @@ end
 
 -- Hidden chests and loaders for molecule reaction buildings
 local hidden_entity_flags = {"hidden", "not-deconstructable", "not-blueprintable", "player-creation"}
-data:extend({
-	{
-		type = "container",
-		name = MOLECULE_REACTION_NAME.."-chest",
-		flags = hidden_entity_flags,
-		collision_mask = {},
-		inventory_size = 1,
-		picture = {filename = "__core__/graphics/empty.png", size = 1},
-		collision_box = {{-0.5, -0.5}, {0.5, 0.5}},
-	}
-})
+local reaction_chest = {
+	type = "container",
+	name = MOLECULE_REACTION_NAME.."-chest",
+	flags = hidden_entity_flags,
+	collision_mask = {},
+	inventory_size = 1,
+	picture = {filename = "__core__/graphics/empty.png", size = 1},
+	collision_box = {{-0.5, -0.5}, {0.5, 0.5}},
+}
+
 local reaction_loader = table.deepcopy(data.raw["loader-1x1"]["loader-1x1"])
 reaction_loader.name = MOLECULE_REACTION_NAME.."-loader"
 reaction_loader.structure.direction_in = {filename = "__core__/graphics/empty.png", size = 1}
@@ -70,4 +67,5 @@ reaction_loader.structure.direction_out = {filename = "__core__/graphics/empty.p
 reaction_loader.flags = hidden_entity_flags
 reaction_loader.selection_box = nil
 reaction_loader.collision_mask = {"transport-belt-layer"}
-data:extend({reaction_loader})
+
+data:extend({reaction_chest, reaction_loader})
