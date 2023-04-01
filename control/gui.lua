@@ -90,6 +90,9 @@ local function on_gui_opened(event)
 			name = name_prefix.."table",
 			column_count = 3,
 			children = {
+				{type = "empty-widget"},
+				{type = "label", caption = {"factoriochem-poc."..name_prefix.."table-header"}},
+				{type = "empty-widget"},
 				build_molecule_spec(name_prefix, BASE_NAME, true),
 				{type = "empty-widget"},
 				build_molecule_spec(name_prefix, RESULT_NAME),
@@ -124,19 +127,13 @@ local function on_gui_opened(event)
 				name = REACTION_PREFIX.."frame",
 				style = "inside_shallow_frame_with_padding",
 				direction = "vertical",
-				children = {
-					{type = "label", caption = {"factoriochem-poc.reaction-table-header"}},
-					build_reaction_table_spec(REACTION_PREFIX),
-				},
+				children = {build_reaction_table_spec(REACTION_PREFIX)},
 			}, {
 				-- reaction demo frame
 				type = "frame",
 				style = "inside_shallow_frame_with_padding",
 				direction = "vertical",
-				children = {
-					{type = "label", caption = {"factoriochem-poc.reaction-demo-table-header"}},
-					build_reaction_table_spec(REACTION_DEMO_PREFIX),
-				},
+				children = {build_reaction_table_spec(REACTION_DEMO_PREFIX)},
 			}},
 		}},
 	}
