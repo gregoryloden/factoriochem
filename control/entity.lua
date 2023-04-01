@@ -79,11 +79,16 @@ local function on_mined_entity(event)
 	for _, loader in pairs(data.loaders) do loader.mine({inventory = transfer_inventory}) end
 	for name, count in pairs(transfer_inventory.get_contents()) do event.buffer.insert({name = name, count = count}) end
 	transfer_inventory.destroy()
-	local reactants = data.reaction.reactants
-	if next(reactants) then
-		for _, reactant in pairs(reactants) do event.buffer.insert({name = reactant, count = 1}) end
-	else
-		for _, product in pairs(data.reaction.products) do event.buffer.insert({name = product, count = 1}) end
+	-- the presence of products indicates an unresolved reaction
+	if next(data.reaction.products) then
+		-- the presence of reactants indicates that the reaction is not complete
+		if next(data.reaction.reactants) then
+			for _, reactant in pairs(data.reaction.reactants) do
+				event.buffer.insert({name = reactant, count = 1})
+			end
+		else
+			for _, product in pairs(data.reaction.products) do event.buffer.insert({name = product, count = 1}) end
+		end
 	end
 	event.buffer.remove({name = MOLECULE_REACTION_REACTANTS_NAME, count = 2})
 end
@@ -120,6 +125,7 @@ local function update_entity(data)
 	end
 
 	-- any previous reaction has been resolved, check to see if any reactants have changed
+	-- setting the next set of reactants counts as a change
 	local building_definition = BUILDING_DEFINITIONS[entity.name]
 	local changed = false
 	for _, reactant_name in ipairs(building_definition.reactants) do
@@ -140,8 +146,7 @@ local function update_entity(data)
 	-- we have a full set of molecule reactants, so now do building-specific handling to start a next reaction
 	if building_definition.reaction(reaction) then
 		for reactant_name, reactant in pairs(reaction.reactants) do
-			local chest_inventory = data.chests[reactant_name].get_inventory(DEFINES_INVENTORY_CHEST)
-			chest_inventory.remove({name = reactant, count = 1})
+			chests[reactant_name].get_inventory(DEFINES_INVENTORY_CHEST).remove({name = reactant, count = 1})
 		end
 		machine_inputs.insert({name = MOLECULE_REACTION_REACTANTS_NAME, count = 1})
 	end
