@@ -11,44 +11,43 @@ data:extend({
 		order = "e-a",
 	},
 })
-
-local rotater_name = "molecule-rotater"
-local rotater_entity = table.deepcopy(data.raw["assembling-machine"]["assembling-machine-2"])
-rotater_entity.name = rotater_name
-rotater_entity.minable.result = rotater_name
-rotater_entity.energy_source = {type = "void"}
-rotater_entity.crafting_speed = 1
-rotater_entity.fluid_boxes = {
-	{
+local building_definitions = require("shared/buildings")
+for name, definition in pairs(building_definitions) do
+	local entity = table.deepcopy(data.raw["assembling-machine"]["assembling-machine-3"])
+	entity.name = name
+	entity.minable.result = name
+	entity.energy_source = {type = "void"}
+	entity.crafting_speed = 1
+	entity.fluid_boxes = {{
 		-- can't rotate an assembling machine without a fluidbox, so stick one by the outputs area
 		pipe_connections = {{position = {0, -3}}},
 		production_type = "output",
 		hide_connection_info = true,
-	},
-}
-rotater_entity.fixed_recipe = "molecule-reaction-reactants"
-rotater_entity.module_specification = nil
-rotater_entity.next_upgrade = nil
-rotater_entity.fast_replaceable_group = nil
-rotater_entity.selection_box[1][2] = rotater_entity.selection_box[1][2] - 1
-rotater_entity.selection_box[2][2] = rotater_entity.selection_box[2][2] + 1
-rotater_entity.collision_box[1][2] = rotater_entity.collision_box[1][2] - 1
-rotater_entity.collision_box[2][2] = rotater_entity.collision_box[2][2] + 1
+	}}
+	entity.fixed_recipe = MOLECULE_REACTION_REACTANTS_NAME
+	entity.module_specification = nil
+	entity.fast_replaceable_group = nil
+	entity.selection_box[1][2] = entity.selection_box[1][2] - 1
+	entity.selection_box[2][2] = entity.selection_box[2][2] + 1
+	entity.collision_box[1][2] = entity.collision_box[1][2] - 1
+	entity.collision_box[2][2] = entity.collision_box[2][2] + 1
 
-local rotater_item = table.deepcopy(data.raw.item["assembling-machine-2"])
-rotater_item.name = rotater_name
-rotater_item.place_result = rotater_name
-rotater_item.subgroup = MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME
+	local item = table.deepcopy(data.raw.item[definition.building_design])
+	item.name = name
+	item.place_result = name
+	item.subgroup = MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME
+	item.order = definition.item_order
 
-local rotater_recipe = {
-	type = "recipe",
-	name = rotater_name,
-	enabled = true,
-	ingredients = {},
-	result = rotater_name,
-}
+	local recipe = {
+		type = "recipe",
+		name = name,
+		enabled = true,
+		ingredients = {},
+		result = name,
+	}
 
-data:extend({rotater_entity, rotater_item, rotater_recipe})
+	data:extend({entity, item, recipe})
+end
 
 
 -- Hidden chests and loaders for molecule reaction buildings
