@@ -157,17 +157,18 @@ local function on_gui_click(event)
 	if reaction_table_component then
 		local player_inventory = player.get_main_inventory()
 		local chests = global.molecule_reaction_building_data[global.current_gui_entity[event.player_index]].chests
-		local chest_inventory = chests[reaction_table_component].get_inventory(DEFINES_INVENTORY_CHEST)
+		local chest = chests[reaction_table_component]
+		local chest_inventory = chest.get_inventory(DEFINES_INVENTORY_CHEST)
 		local chest_contents = chest_inventory.get_contents()
 		if next(chest_contents) then
 			for name, count in pairs(chest_contents) do
 				added = player_inventory.insert({name = name, count = count})
 				if added > 0 then chest_inventory.remove({name = name, count = added}) end
 			end
-			update_reaction_table_sprite(element, chests[reaction_table_component])
+			update_reaction_table_sprite(element, chest)
 		elseif player.cursor_stack then
 			chest_inventory.find_empty_stack().transfer_stack(player.cursor_stack)
-			update_reaction_table_sprite(element, chests[reaction_table_component])
+			update_reaction_table_sprite(element, chest)
 		end
 		return
 	end
