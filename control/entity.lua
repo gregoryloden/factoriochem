@@ -1,7 +1,11 @@
+local building_definitions = require("shared/buildings")
+
+
 -- Event handling
 local function on_built_entity(event)
 	local entity = event.created_entity
-	if entity.name ~= "molecule-rotater" then return end
+	local building_definition = building_definitions[entity.name]
+	if not building_definition then return end
 
 	entity.destructible = false
 	entity.rotatable = false
@@ -58,7 +62,7 @@ end
 
 local function on_mined_entity(event)
 	local entity = event.entity
-	if entity.name ~= "molecule-rotater" then return end
+	if not building_definitions[entity.name] then return end
 
 	local data = global.molecule_reaction_building_data[entity.unit_number]
 	global.molecule_reaction_building_data[entity.unit_number] = nil
