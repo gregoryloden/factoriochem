@@ -21,10 +21,11 @@ BUILDING_DEFINITIONS = {
 	},
 }
 for _, building_definition in pairs(BUILDING_DEFINITIONS) do
-	building_definition.has_reactant = {}
+	building_definition.has_component = {}
 	for _, reactant_name in ipairs(building_definition.reactants) do
-		building_definition.has_reactant[reactant_name] = true
+		building_definition.has_component[reactant_name] = true
 	end
-	building_definition.has_product = {}
-	for _, product_name in ipairs(building_definition.products) do building_definition.has_product[product_name] = true end
+	for _, product_name in ipairs(building_definition.products) do
+		building_definition.has_component[product_name] = true
+	end
 end
