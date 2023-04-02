@@ -27,7 +27,7 @@ local function on_built_entity(event)
 		chests = {},
 		chest_inventories = {},
 		loaders = {},
-		reaction = {reactants = {}, products = {}, cache = {}},
+		reaction = {reactants = {}, products = {}, cache = REACTION_CACHE[entity.name]},
 	}
 	function build_sub_entities(component, is_output)
 		local default_offset = MOLECULE_REACTION_COMPONENT_OFFSETS[component]

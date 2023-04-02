@@ -2,7 +2,7 @@ require("shared/buildings")
 
 
 -- Constants
-local MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME = "molecule-reaction-buildings"
+local MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME = MOLECULE_REACTION_NAME.."-buildings"
 local HIDDEN_ENTITY_FLAGS = {"hidden", "not-deconstructable", "not-blueprintable", "player-creation"}
 
 

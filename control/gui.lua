@@ -162,10 +162,10 @@ end
 
 local function on_gui_click(event)
 	local element = event.element
-	local player = game.get_player(event.player_index)
 
 	local reaction_table_component = REACTION_TABLE_COMPONENT_NAME_MAP[element.name]
 	if reaction_table_component then
+		local player = game.get_player(event.player_index)
 		local building_data = global.molecule_reaction_building_data[global.current_gui_entity[event.player_index]]
 		local chest_inventory = building_data.chest_inventories[reaction_table_component]
 		local chest_contents = chest_inventory.get_contents()
