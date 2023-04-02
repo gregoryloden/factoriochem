@@ -91,7 +91,7 @@ local function on_gui_opened(event)
 			type = "choose-elem-button",
 			name = name_prefix..component_name.."-selector",
 			elem_type = "item",
-			elem_filters = {{filter = "subgroup", subgroup = "atoms-7"}},
+			elem_filters = {{filter = "subgroup", subgroup = MOLECULE_REACTION_SELECTOR_PREFIX..selector}},
 			tooltip = {"factoriochem-poc."..entity.name.."-"..selector.."-tooltip"},
 		}
 	end
