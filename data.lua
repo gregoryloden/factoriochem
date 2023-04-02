@@ -1,4 +1,4 @@
-require("constants")
+require("shared/constants")
 GRAPHICS_ROOT = "__FactorioChem-PoC__/graphics/"
 ITEM_ICON_SIZE = 64
 ITEM_ICON_MIPMAPS = 3

@@ -1,4 +1,4 @@
-require("constants")
+require("shared/constants")
 require("shared/buildings")
 require("control/entity")
 require("control/gui")
