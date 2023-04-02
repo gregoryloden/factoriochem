@@ -75,9 +75,9 @@ local function on_gui_opened(event)
 			style = "factoriochem-poc-big-slot-button"
 		}
 		if name_prefix == REACTION_PREFIX then
-			spec.tooltip = {"factoriochem-poc.reaction-table-element-tooltip"}
+			spec.tooltip = {"factoriochem-poc.reaction-table-component-tooltip"}
 		elseif is_reactant and name_prefix == REACTION_DEMO_PREFIX then
-			spec.tooltip = {"factoriochem-poc.reaction-demo-table-element-tooltip"}
+			spec.tooltip = {"factoriochem-poc.reaction-demo-table-component-tooltip"}
 			spec.type = "choose-elem-button"
 			spec.elem_type = "item"
 			local filters = {}
@@ -88,23 +88,38 @@ local function on_gui_opened(event)
 		end
 		return spec
 	end
+	function build_selector_spec(name_prefix, component_name)
+		local selector = building_definition.selectors[component_name]
+		if not selector then return {type = "empty-widget"} end
+		return {
+			type = "choose-elem-button",
+			name = name_prefix..component_name.."-selector",
+			elem_type = "item",
+			elem_filters = {{filter = "subgroup", subgroup = "atoms-7"}},
+			tooltip = {"factoriochem-poc."..entity.name.."-"..selector.."-tooltip"},
+		}
+	end
 	function build_reaction_table_spec(name_prefix)
 		return {
 			type = "table",
 			name = name_prefix.."table",
 			column_count = 3,
 			children = {
+				-- title row
 				{type = "empty-widget"},
 				{type = "label", caption = {"factoriochem-poc."..name_prefix.."table-header"}},
 				{type = "empty-widget"},
+				-- base/result row
 				build_molecule_spec(name_prefix, BASE_NAME, true),
-				{type = "empty-widget"},
+				build_selector_spec(name_prefix, BASE_NAME),
 				build_molecule_spec(name_prefix, RESULT_NAME),
+				-- catalyst/bonus row
 				build_molecule_spec(name_prefix, CATALYST_NAME, true),
 				{type = "label", caption = {"factoriochem-poc.reaction-transition"}},
 				build_molecule_spec(name_prefix, BONUS_NAME),
+				-- modifier/remainder row
 				build_molecule_spec(name_prefix, MODIFIER_NAME, true),
-				{type = "empty-widget"},
+				build_selector_spec(name_prefix, MODIFIER_NAME),
 				build_molecule_spec(name_prefix, REMAINDER_NAME),
 			},
 		}

@@ -1,9 +1,12 @@
 BUILDING_DEFINITIONS = {
 	["molecule-rotater"] = {
+		-- data fields
 		building_design = "assembling-machine-3",
 		item_order = "b",
+		-- control fields
 		reactants = {BASE_NAME, CATALYST_NAME, MODIFIER_NAME},
 		products = {RESULT_NAME, BONUS_NAME, REMAINDER_NAME},
+		selectors = {[BASE_NAME] = "rotation", [MODIFIER_NAME] = "rotation"},
 		reaction = function(reaction)
 			local reactants = reaction.reactants
 			-- TODO: real reaction
