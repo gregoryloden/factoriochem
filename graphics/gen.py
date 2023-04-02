@@ -298,14 +298,14 @@ def gen_bond_images(base_size, y_scale, x_scale, y, x, mips):
 		center_y_min = center_y - bond_spacing * (bond_count - 1) / 2
 		for bond in range(bond_count):
 			draw_y = round((center_y_min + bond * bond_spacing - 0.5) * PRECISION_MULTIPLIER)
-			draw_left = (round((center_x - half_bond_length - 0.5) * PRECISION_MULTIPLIER), draw_y)
-			draw_right = (round((center_x + half_bond_length - 0.5) * PRECISION_MULTIPLIER), draw_y)
+			draw_start = (round((center_x - half_bond_length - 0.5) * PRECISION_MULTIPLIER), draw_y)
+			draw_end = (round((center_x + half_bond_length - 0.5) * PRECISION_MULTIPLIER), draw_y)
 			bond_thickness = int(BOND_THICKNESS_FRACTION * base_size / scale)
 			def draw(mask):
-				cv2.line(mask, draw_left, draw_right, 255, bond_thickness, cv2.LINE_AA, PRECISION_BITS)
+				cv2.line(mask, draw_start, draw_end, 255, bond_thickness, cv2.LINE_AA, PRECISION_BITS)
 			draw_alpha_on(l, draw)
-			draw_left = draw_left[::-1]
-			draw_right = draw_right[::-1]
+			draw_start = draw_start[::-1]
+			draw_end = draw_end[::-1]
 			draw_alpha_on(u, draw)
 		place_x = 0
 		l_mip_0 = l[:, 0:base_size]
@@ -343,6 +343,7 @@ def gen_all_bond_images(base_size, mips):
 					gen_and_write_bond_images(bond_folder, base_size, y_scale, x_scale, y, x, mips)
 	print("Bond images written")
 
+
 #Generate specific full molecule images
 def gen_specific_molecule(molecule, base_size, mips):
 	image = filled_mip_image(base_size, mips, (0, 0, 0, 0))
@@ -376,18 +377,18 @@ def gen_specific_molecule(molecule, base_size, mips):
 			left_bonds = right_bonds
 	return image
 
-def gen_item_group_icon():
-	image = gen_specific_molecule("O1-C2-N|1N1-1O-1H|1H", ITEM_GROUP_SIZE, ITEM_GROUP_MIPS)
+def gen_item_group_icon(base_size, mips):
+	image = gen_specific_molecule("O1-C2-N|1N1-1O-1H|1H", base_size, mips)
 	cv2.imwrite("item-group.png", image, [cv2.IMWRITE_PNG_COMPRESSION, 9])
 	print("Item group written")
 
-def gen_molecule_reaction_reactants_icon():
-	image = gen_specific_molecule("-H1-O|H--1H|1O1-H", BASE_ICON_SIZE, BASE_ICON_MIPS)
+def gen_molecule_reaction_reactants_icon(base_size, mips):
+	image = gen_specific_molecule("-H1-O|H--1H|1O1-H", base_size, mips)
 	cv2.imwrite("molecule-reaction-reactants.png", image, [cv2.IMWRITE_PNG_COMPRESSION, 9])
 	print("Molecule reaction reactants written")
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 gen_all_atom_images(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_all_bond_images(BASE_ICON_SIZE, BASE_ICON_MIPS)
-gen_item_group_icon()
-gen_molecule_reaction_reactants_icon()
+gen_item_group_icon(ITEM_GROUP_SIZE, ITEM_GROUP_MIPS)
+gen_molecule_reaction_reactants_icon(BASE_ICON_SIZE, BASE_ICON_MIPS)
