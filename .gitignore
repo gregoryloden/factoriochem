@@ -1,4 +1,5 @@
 deploy.bat
 graphics/atoms/*
 graphics/bonds/*
+graphics/selectors/*
 graphics/*.png

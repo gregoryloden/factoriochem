@@ -61,6 +61,11 @@ BOND_THICKNESS_FRACTION = 6 / 64
 BOND_SPACING_FRACTION = 18 / 64
 ITEM_GROUP_SIZE = 128
 ITEM_GROUP_MIPS = 2
+ROTATION_SELECTOR_COLOR = (224, 224, 192, 0)
+ROTATION_SELECTOR_RADIUS_FRACTION = 24 / 64
+ROTATION_SELECTOR_THICKNESS_FRACTION = 4 / 64
+ROTATION_SELECTOR_ARROW_SIZE_FRACTION = 6 / 64
+ROTATION_SELECTOR_DOT_RADIUS_FRACTION = 4 / 64
 
 
 #Utility functions
@@ -90,6 +95,20 @@ def overlay_image(back_image, back_left, back_top, front_image, front_left, fron
 		front_color = front_image[front_top:front_bottom, front_left:front_right, color]
 		back_image[back_top:back_bottom, back_left:back_right, color] = \
 			back_color + (front_color * 1.0 - back_color) * front_alpha / new_alpha
+
+def simple_overlay_image(back_image, front_image):
+	shape = front_image.shape
+	overlay_image(back_image, 0, 0, front_image, 0, 0, shape[1], shape[0])
+
+def easy_mips(image, base_size, mips):
+	#copy the entire outer mip, performance isn't really an issue
+	mip_0 = image[:, 0:base_size]
+	place_x = 0
+	for mip in range(1, mips):
+		size = base_size >> mip
+		place_x += base_size >> (mip - 1)
+		image[0:size, place_x:place_x + size] = cv2.resize(mip_0, (size, size), interpolation=cv2.INTER_AREA)
+	return image
 
 
 #Sub-image generation
@@ -301,23 +320,14 @@ def gen_bond_images(base_size, y_scale, x_scale, y, x, mips):
 			draw_start = (round((center_x - half_bond_length - 0.5) * PRECISION_MULTIPLIER), draw_y)
 			draw_end = (round((center_x + half_bond_length - 0.5) * PRECISION_MULTIPLIER), draw_y)
 			bond_thickness = int(BOND_THICKNESS_FRACTION * base_size / scale)
-			def draw(mask):
+			def draw_bond(mask):
 				cv2.line(mask, draw_start, draw_end, 255, bond_thickness, cv2.LINE_AA, PRECISION_BITS)
-			draw_alpha_on(l, draw)
+			draw_alpha_on(l, draw_bond)
 			draw_start = draw_start[::-1]
 			draw_end = draw_end[::-1]
 			draw_alpha_on(u, draw)
-		place_x = 0
-		l_mip_0 = l[:, 0:base_size]
-		u_mip_0 = u[:, 0:base_size]
-		for mip in range(1, mips):
-			size = base_size >> mip
-			place_x += base_size >> (mip - 1)
-			#copy the entire image, performance isn't really an issue
-			l[0:size, place_x:place_x + size] = cv2.resize(l_mip_0, (size, size), interpolation=cv2.INTER_AREA)
-			u[0:size, place_x:place_x + size] = cv2.resize(u_mip_0, (size, size), interpolation=cv2.INTER_AREA)
-		images["L"][bond_count] = l
-		images["U"][bond_count] = u
+		images["L"][bond_count] = easy_mips(l, base_size, mips)
+		images["U"][bond_count] = easy_mips(u, base_size, mips)
 	return images
 
 def gen_and_write_bond_images(bond_folder, base_size, y_scale, x_scale, y, x, mips):
@@ -367,13 +377,13 @@ def gen_specific_molecule(molecule, base_size, mips):
 				right_bonds = int(symbol[-1])
 				symbol = symbol[:-1]
 			atom_image = gen_single_atom_image(symbol, bonds[symbol], base_size, y_scale, x_scale, y, x, mips)
-			overlay_image(image, 0, 0, atom_image, 0, 0, image.shape[1], base_size)
+			simple_overlay_image(image, atom_image)
 			if left_bonds > 0:
-				left_bond_image = gen_bond_images(base_size, y_scale, x_scale, y, x, mips)["L"][left_bonds]
-				overlay_image(image, 0, 0, left_bond_image, 0, 0, image.shape[1], base_size)
+				simple_overlay_image(
+					image, gen_bond_images(base_size, y_scale, x_scale, y, x, mips)["L"][left_bonds])
 			if up_bonds > 0:
-				up_bond_image = gen_bond_images(base_size, x_scale, y_scale, x, y, mips)["U"][up_bonds]
-				overlay_image(image, 0, 0, up_bond_image, 0, 0, image.shape[1], base_size)
+				simple_overlay_image(
+					image, gen_bond_images(base_size, x_scale, y_scale, x, y, mips)["U"][up_bonds])
 			left_bonds = right_bonds
 	return image
 
@@ -387,8 +397,88 @@ def gen_molecule_reaction_reactants_icon(base_size, mips):
 	cv2.imwrite("molecule-reaction-reactants.png", image, [cv2.IMWRITE_PNG_COMPRESSION, 9])
 	print("Molecule reaction reactants written")
 
+
+#Generate selectors
+def get_selectors_folder():
+	selectors_folder = "selectors"
+	if not os.path.exists(selectors_folder):
+		os.mkdir(selectors_folder)
+	return selectors_folder
+
+def gen_rotation_selectors(base_size, mips):
+	selectors_folder = get_selectors_folder()
+	radius = int(base_size * ROTATION_SELECTOR_RADIUS_FRACTION)
+	center = base_size // 2
+	thickness = int(base_size * ROTATION_SELECTOR_THICKNESS_FRACTION)
+	arrow_size = int(base_size * ROTATION_SELECTOR_ARROW_SIZE_FRACTION)
+	center_tip_y = center + arrow_size
+	draw_center = (center, center)
+	draw_axes = (radius, radius)
+	dot_radius = int(ROTATION_SELECTOR_DOT_RADIUS_FRACTION * base_size)
+
+	#left and right images
+	left_specs = {
+		"start_angle": 180,
+		"arrow_center_x": center - radius,
+		"file_suffix": "l",
+	}
+	right_specs = {
+		"start_angle": 270,
+		"arrow_center_x": center + radius,
+		"file_suffix": "r",
+	}
+	for specs in [left_specs, right_specs]:
+		image = filled_mip_image(base_size, mips, ROTATION_SELECTOR_COLOR)
+		start_angle = specs["start_angle"]
+		def draw_arc_and_dot(mask):
+			cv2.ellipse(mask, draw_center, draw_axes, 0, start_angle, start_angle + 90, 255, thickness, cv2.LINE_AA)
+			cv2.circle(mask, draw_center, dot_radius, 255, -1, cv2.LINE_AA)
+		draw_alpha_on(image, draw_arc_and_dot)
+		arrow_image = filled_mip_image(base_size, mips, ROTATION_SELECTOR_COLOR)
+		arrow_center_x = specs["arrow_center_x"]
+		arrow_points = [
+			(arrow_center_x - arrow_size, center),
+			(arrow_center_x, center_tip_y),
+			(arrow_center_x + arrow_size, center),
+		]
+		draw_alpha_on(arrow_image, lambda mask: cv2.fillPoly(mask, numpy.array([arrow_points]), 255, cv2.LINE_AA))
+		simple_overlay_image(image, arrow_image)
+		file_path = os.path.join(selectors_folder, "rotation-" + specs["file_suffix"] + ".png")
+		cv2.imwrite(file_path, easy_mips(image, base_size, mips), [cv2.IMWRITE_PNG_COMPRESSION, 9])
+
+	#flip image
+	flip_image = filled_mip_image(base_size, mips, ROTATION_SELECTOR_COLOR)
+	def draw_flip_arc_and_dot(mask):
+		cv2.ellipse(mask, draw_center, draw_axes, 0, 300, 420, 255, thickness, cv2.LINE_AA)
+		cv2.ellipse(mask, draw_center, draw_axes, 0, 120, 240, 255, thickness, cv2.LINE_AA)
+		cv2.circle(mask, draw_center, dot_radius, 255, -1, cv2.LINE_AA)
+	draw_alpha_on(flip_image, draw_flip_arc_and_dot)
+	flip_arrows_image = filled_mip_image(base_size, mips, ROTATION_SELECTOR_COLOR)
+	flip_arrow_pointss = []
+	for mult in [-1, 1]:
+		flip_arrow_points = []
+		center_x = center + radius / 2 * mult
+		center_y = center - radius / 2 * math.sqrt(3) * mult
+		x_offset = arrow_size / 2 * math.sqrt(3) * mult
+		y_offset = arrow_size / 2 * mult
+		for _ in range(3):
+			(x_offset, y_offset) = -y_offset, x_offset
+			x = center_x + x_offset
+			y = center_y + y_offset
+			flip_arrow_points.append((round(x * PRECISION_MULTIPLIER), round(y * PRECISION_MULTIPLIER)))
+		flip_arrow_pointss.append(flip_arrow_points)
+	def draw_flip_arrows(mask):
+		cv2.fillPoly(mask, numpy.array(flip_arrow_pointss), 255, cv2.LINE_AA, PRECISION_BITS)
+	draw_alpha_on(flip_arrows_image, draw_flip_arrows)
+	simple_overlay_image(flip_image, flip_arrows_image)
+	file_path = os.path.join(selectors_folder, "rotation-f.png")
+	cv2.imwrite(file_path, easy_mips(flip_image, base_size, mips), [cv2.IMWRITE_PNG_COMPRESSION, 9])
+
+	print("Rotation selectors written")
+
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 gen_all_atom_images(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_all_bond_images(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_item_group_icon(ITEM_GROUP_SIZE, ITEM_GROUP_MIPS)
 gen_molecule_reaction_reactants_icon(BASE_ICON_SIZE, BASE_ICON_MIPS)
+gen_rotation_selectors(BASE_ICON_SIZE, BASE_ICON_MIPS)
