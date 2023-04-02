@@ -6,7 +6,7 @@ BUILDING_DEFINITIONS = {
 		-- control fields
 		reactants = {BASE_NAME, CATALYST_NAME, MODIFIER_NAME},
 		products = {RESULT_NAME, BONUS_NAME, REMAINDER_NAME},
-		selectors = {[BASE_NAME] = "rotation", [MODIFIER_NAME] = "rotation"},
+		selectors = {[BASE_NAME] = ROTATION_SELECTOR_NAME, [MODIFIER_NAME] = ROTATION_SELECTOR_NAME},
 		reaction = function(reaction)
 			local reactants = reaction.reactants
 			-- TODO: real reaction

@@ -5,6 +5,7 @@ ITEM_ICON_MIPMAPS = 3
 MOLECULES_SUBGROUP_NAME = "molecules"
 
 require("data/molecules")
+require("data/selectors")
 require("data/recipes")
 require("data/buildings")
 require("data/styles")
