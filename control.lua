@@ -1,4 +1,5 @@
 require("shared/constants")
+require("shared/molecules")
 require("shared/buildings")
 require("control/entity")
 require("control/gui")

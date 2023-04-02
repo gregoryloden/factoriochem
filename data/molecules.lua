@@ -33,38 +33,13 @@ local GRID_WIDTH = 3
 local GRID_HEIGHT = 3
 local GRID_AREA = GRID_WIDTH * GRID_HEIGHT
 local MAX_TOTAL_BONDS = 0
-local ALL_ATOMS = empty_array()
-local MOLECULE_ATOMS_ACCEPT_BONDS = {{[0] = ALL_ATOMS}}
+local MOLECULE_ATOMS_ACCEPT_BONDS = {}
 local HCNO = {H = true, C = true, N = true, O = true}
 local MAX_ATOMS = 8
 local MAX_ATOMS_HCNO = MAX_ATOMS
 local MAX_ATOMS_Ne = 4
 local MAX_ATOMS_Ar = 3
 local MAX_ATOMS_OTHER = 2
-local ATOM_ROWS = {
-	-- Row 1
-	{"H", "He"},
-	-- Row 2
-	{"Li", "Be", "B", "C", "N", "O", "F", "Ne"},
-	-- Row 3
-	{"Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar"},
-	-- Row 4
-	{"K", "Ca", "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn", "Ga", "Ge", "As", "Se", "Br", "Kr"},
-	-- Row 5
-	{"Rb", "Sr", "Y", "Zr", "Nb", "Mo", "Tc", "Ru", "Rh", "Pd", "Ag", "Cd", "In", "Sn", "Sb", "Te", "I", "Xe"},
-	-- Row 6
-	{
-		"Cs", "Ba",
-		"La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb", "Dy", "Ho", "Er", "Tm", "Yb",
-		"Lu", "Hf", "Ta", "W", "Re", "Os", "Ir", "Pt", "Au", "Hg", "Tl", "Pb", "Bi", "Po", "At", "Rn",
-	},
-	-- Row 7
-	{
-		"Fr", "Ra",
-		"Ac", "Th", "Pa", "U", "Np", "Pu", "Am", "Cm", "Bk", "Cf", "Es", "Fm", "Md", "No",
-		"Lr", "Rf", "Db", "Sg", "Bh", "Hs", "Mt", "Ds", "Rg", "Cn", "Nh", "Fl", "Mc", "Lv", "Ts", "Og",
-	},
-}
 local GRID = empty_array()
 local GRID_WIDTH_M1 = GRID_WIDTH - 1
 local GRID_HEIGHT_M1 = GRID_HEIGHT - 1
@@ -106,7 +81,7 @@ for row_n, _ in ipairs(ATOM_ROWS) do
 end
 
 
--- Atom generation
+-- Atom stats
 local function add_atom_accepts_bonds_for_molecule(atom, bonds, atom_count)
 	local atoms_accept_bonds = MOLECULE_ATOMS_ACCEPT_BONDS[atom_count]
 	if not atoms_accept_bonds then
@@ -121,31 +96,8 @@ local function add_atom_accepts_bonds_for_molecule(atom, bonds, atom_count)
 	array_push(atoms, atom)
 end
 
-local function gen_atom(symbol, bonds, row, molecule_max_atoms)
-	local atom = {
-		symbol = symbol,
-		bonds = bonds,
-		row = row,
-		number = ALL_ATOMS.n + 1,
-	}
-	for atom_count = 1, molecule_max_atoms do
-		add_atom_accepts_bonds_for_molecule(atom, bonds, atom_count)
-		if bonds > 0 then add_atom_accepts_bonds_for_molecule(atom, 0, atom_count) end
-	end
-	if bonds > MAX_TOTAL_BONDS then MAX_TOTAL_BONDS = bonds end
-end
-
 for row_n, atoms_row in ipairs(ATOM_ROWS) do
-	atoms_in_row = #atoms_row
-	for i, symbol in ipairs(atoms_row) do
-		local bonds = 0
-		if i >= atoms_in_row - 4 then
-			bonds = atoms_in_row - i
-		elseif i == atoms_in_row - 5 then
-			bonds = 3
-		elseif i <= 2 then
-			bonds = i
-		end
+	for _, symbol in ipairs(atoms_row) do
 		local molecule_max_atoms = MAX_ATOMS_Ne
 		if row_n > 3 then
 			molecule_max_atoms = MAX_ATOMS_OTHER
@@ -154,7 +106,12 @@ for row_n, atoms_row in ipairs(ATOM_ROWS) do
 		elseif HCNO[symbol] then
 			molecule_max_atoms = MAX_ATOMS_HCNO
 		end
-		gen_atom(symbol, bonds, row_n, molecule_max_atoms)
+		local atom = ALL_ATOMS[symbol]
+		for atom_count = 1, molecule_max_atoms do
+			add_atom_accepts_bonds_for_molecule(atom, 0, atom_count)
+			if atom.bonds > 0 then add_atom_accepts_bonds_for_molecule(atom, atom.bonds, atom_count) end
+		end
+		if atom.bonds > MAX_TOTAL_BONDS then MAX_TOTAL_BONDS = atom.bonds end
 	end
 end
 
@@ -527,6 +484,8 @@ for shape_n = 0, bit32.lshift(1, GRID_AREA) - 1 do try_gen_molecule_bonds(shape_
 local debug = false
 --debug = true
 if debug then
+	local total_atoms = 0
+	for _, _ in pairs(ALL_ATOMS) do total_atoms = total_atoms + 1 end
 	data:extend({
 		{
 			type = "item-subgroup",
@@ -537,7 +496,7 @@ if debug then
 			type = "item",
 			name = "atom-count",
 			subgroup = "molecules-debug",
-			localised_name = "Total atoms: "..ALL_ATOMS.n,
+			localised_name = "Total atoms: "..total_atoms,
 			icon = "__base__/graphics/icons/info.png",
 			icon_size = 64,
 			stack_size = 1,
