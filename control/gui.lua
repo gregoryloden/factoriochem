@@ -3,9 +3,15 @@ local REACTION_PREFIX = "reaction-"
 local REACTION_DEMO_PREFIX = "reaction-demo-"
 local REACTION_TABLE_COMPONENT_NAME_MAP = {}
 local REACTION_DEMO_TABLE_COMPONENT_NAME_MAP = {}
-for _, name in ipairs(MOLECULE_REACTION_COMPONENT_NAMES) do
-	REACTION_TABLE_COMPONENT_NAME_MAP[REACTION_PREFIX..name] = name
-	REACTION_DEMO_TABLE_COMPONENT_NAME_MAP[REACTION_DEMO_PREFIX..name] = name
+for _, component_name in ipairs(MOLECULE_REACTION_COMPONENT_NAMES) do
+	REACTION_TABLE_COMPONENT_NAME_MAP[REACTION_PREFIX..component_name] = component_name
+	REACTION_DEMO_TABLE_COMPONENT_NAME_MAP[REACTION_DEMO_PREFIX..component_name] = component_name
+end
+local REACTION_TABLE_SELECTOR_NAME_MAP = {}
+local REACTION_DEMO_TABLE_SELECTOR_NAME_MAP = {}
+for _, reactant_name in ipairs(MOLECULE_REACTION_SELECTOR_REACTANTS) do
+	REACTION_TABLE_SELECTOR_NAME_MAP[REACTION_PREFIX..reactant_name.."-selector"] = reactant_name
+	REACTION_DEMO_TABLE_SELECTOR_NAME_MAP[REACTION_DEMO_PREFIX..reactant_name.."-selector"] = reactant_name
 end
 
 
@@ -84,16 +90,20 @@ local function on_gui_opened(event)
 		end
 		return spec
 	end
-	function build_selector_spec(name_prefix, component_name)
-		local selector = building_definition.selectors[component_name]
+	function build_selector_spec(name_prefix, reactant_name)
+		local selector = building_definition.selectors[reactant_name]
 		if not selector then return {type = "empty-widget"} end
-		return {
+		local spec = {
 			type = "choose-elem-button",
-			name = name_prefix..component_name.."-selector",
+			name = name_prefix..reactant_name.."-selector",
 			elem_type = "item",
 			elem_filters = {{filter = "subgroup", subgroup = MOLECULE_REACTION_SELECTOR_PREFIX..selector}},
 			tooltip = {"factoriochem-poc."..entity.name.."-"..selector.."-tooltip"},
 		}
+		if name_prefix == REACTION_PREFIX then
+			spec.item = global.molecule_reaction_building_data[entity.unit_number].reaction.selectors[reactant_name]
+		end
+		return spec
 	end
 	function build_reaction_table_spec(name_prefix)
 		return {
@@ -182,6 +192,18 @@ local function on_gui_click(event)
 		end
 		return
 	end
+end
+
+local function on_gui_elem_changed(event)
+	local element = event.element
+
+	local reaction_table_selector_reactant = REACTION_TABLE_SELECTOR_NAME_MAP[element.name]
+	if reaction_table_selector_reactant then
+		local building_data = global.molecule_reaction_building_data[global.current_gui_entity[event.player_index]]
+		building_data.reaction.selectors[reaction_table_selector_reactant] = element.elem_value
+		entity_assign_cache(building_data, BUILDING_DEFINITIONS[building_data.entity.name])
+		return
+	end
 
 	local reaction_demo_table_component = REACTION_DEMO_TABLE_COMPONENT_NAME_MAP[element.name]
 	if reaction_demo_table_component then
@@ -204,3 +226,4 @@ end
 script.on_event(defines.events.on_gui_opened, on_gui_opened)
 script.on_event(defines.events.on_gui_closed, on_gui_closed)
 script.on_event(defines.events.on_gui_click, on_gui_click)
+script.on_event(defines.events.on_gui_elem_changed, on_gui_elem_changed)

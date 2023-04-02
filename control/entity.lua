@@ -8,9 +8,24 @@ local MOLECULE_REACTION_COMPONENT_OFFSETS = {
 	[REMAINDER_NAME] = {x = 1, y = -1},
 }
 local REACTION_CACHE = {}
-
--- pre-assign default cache values so that every building can have a default cache
+-- give each building type a base cache, buildings will add to it based on their own selectors and reactants
 for name, definition in pairs(BUILDING_DEFINITIONS) do REACTION_CACHE[name] = {} end
+
+
+-- Shared global entity utilities
+function entity_assign_cache(building_data, building_definition)
+	local cache = REACTION_CACHE[building_data.entity.name]
+	for reactant_name, _ in pairs(building_definition.selectors) do
+		local selector_val = building_data.reaction.selectors[reactant_name] or ""
+		local new_cache = cache[selector_val]
+		if not new_cache then
+			new_cache = {}
+			cache[selector_val] = new_cache
+		end
+		cache = new_cache
+	end
+	building_data.reaction.cache = cache
+end
 
 
 -- Event handling
@@ -27,8 +42,9 @@ local function on_built_entity(event)
 		chests = {},
 		chest_inventories = {},
 		loaders = {},
-		reaction = {reactants = {}, products = {}, cache = REACTION_CACHE[entity.name]},
+		reaction = {reactants = {}, products = {}, selectors = {}},
 	}
+	entity_assign_cache(building_data, building_definition)
 	function build_sub_entities(component, is_output)
 		local default_offset = MOLECULE_REACTION_COMPONENT_OFFSETS[component]
 		local offset_x, offset_y = default_offset.x, default_offset.y
