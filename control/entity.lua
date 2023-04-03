@@ -48,10 +48,10 @@ local function on_built_entity(event)
 	function build_sub_entities(component, is_output)
 		local default_offset = MOLECULE_REACTION_COMPONENT_OFFSETS[component]
 		local offset_x, offset_y = default_offset.x, default_offset.y
-		if entity.direction == defines.direction.south then
-			offset_x, offset_y = -offset_x, -offset_y
-		elseif entity.direction == defines.direction.east then
+		if entity.direction == defines.direction.east then
 			offset_x, offset_y = -offset_y, offset_x
+		elseif entity.direction == defines.direction.south then
+			offset_x, offset_y = -offset_x, -offset_y
 		elseif entity.direction == defines.direction.west then
 			offset_x, offset_y = offset_y, -offset_x
 		end
@@ -71,10 +71,10 @@ local function on_built_entity(event)
 			offset_x = offset_x * 2
 		end
 		local loader_direction = defines.direction.north
-		if offset_y < -1 then
-			loader_direction = defines.direction.south
-		elseif offset_x < -1 then
+		if offset_x < -1 then
 			loader_direction = defines.direction.east
+		elseif offset_y < -1 then
+			loader_direction = defines.direction.south
 		elseif offset_x > 1 then
 			loader_direction = defines.direction.west
 		end
