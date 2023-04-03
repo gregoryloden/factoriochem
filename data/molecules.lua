@@ -177,7 +177,7 @@ local function gen_molecules(grid_i_i, grid_is)
 			end
 		end
 		local height = last_row + 1
-		local icons = {}
+		local icons = {{icon = "__core__/graphics/empty.png", icon_size = 1}}
 		for grid_i = 1, GRID_AREA do
 			local slot = GRID[grid_i]
 			if slot then
