@@ -29,8 +29,15 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 	entity.selection_box[2][2] = entity.selection_box[2][2] + 1
 	entity.collision_box[1][2] = entity.collision_box[1][2] - 1
 	entity.collision_box[2][2] = entity.collision_box[2][2] + 1
+	local building_animation = data.raw[definition.building_design[1]][definition.building_design[2]].animation
+	entity.animation = {
+		north = building_animation.north or building_animation,
+		east = building_animation.east or building_animation,
+		south = building_animation.south or building_animation,
+		west = building_animation.west or building_animation,
+	}
 
-	local item = table.deepcopy(data.raw.item[definition.building_design])
+	local item = table.deepcopy(data.raw.item[definition.building_design[2]])
 	item.name = name
 	item.place_result = name
 	item.subgroup = MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME

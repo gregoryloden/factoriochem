@@ -80,7 +80,7 @@ end
 BUILDING_DEFINITIONS = {
 	["molecule-rotater"] = {
 		-- data fields
-		building_design = "assembling-machine-3",
+		building_design = {"assembling-machine", "assembling-machine-3"},
 		item_order = "b",
 		-- control fields
 		reactants = {BASE_NAME},
