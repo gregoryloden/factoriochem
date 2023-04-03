@@ -45,8 +45,6 @@ local GRID_WIDTH_M1 = GRID_WIDTH - 1
 local GRID_HEIGHT_M1 = GRID_HEIGHT - 1
 local MAX_SINGLE_BONDS = 2
 local MOLECULE_BUILDER = empty_array()
-local ATOM_ROW_SEPARATOR = "|"
-local ATOM_COL_SEPARATOR = "-"
 local ATOM_ICON_ROOT = GRAPHICS_ROOT.."atoms/"
 local BOND_ICON_ROOT = GRAPHICS_ROOT.."bonds/"
 local ATOMS_SUBGROUP_PREFIX = "atoms-"
@@ -141,8 +139,9 @@ local function gen_molecules(grid_i_i, grid_is)
 		local atom_number_hex = string.format("%02X", slot.atom.number)
 		data:extend({{
 			type = "item",
-			name = "atom-"..atom_number_hex,
+			name = ATOM_ITEM_PREFIX..slot.atom.symbol,
 			subgroup = ATOMS_SUBGROUP_PREFIX..slot.atom.row,
+			order = atom_number_hex,
 			localised_description = {"item-description.atom-00", slot.atom.number, slot.atom.bonds},
 			icon = ATOM_ICON_ROOT..slot.atom.symbol.."/1100.png",
 			icon_size = ITEM_ICON_SIZE,
@@ -214,7 +213,7 @@ local function gen_molecules(grid_i_i, grid_is)
 		local molecule_name = table.concat(MOLECULE_BUILDER)
 		data:extend({{
 			type = "item",
-			name = "molecule-"..molecule_name,
+			name = MOLECULE_ITEM_PREFIX..molecule_name,
 			subgroup = MOLECULES_SUBGROUP_NAME,
 			order = current_atom_count..string.format("%03X", current_shape_n),
 			localised_name = molecule_name,

@@ -1,5 +1,7 @@
 MOLECULES_GROUP_NAME = "molecules"
 MOLECULE_REACTION_NAME = "molecule-reaction"
+ATOM_ITEM_PREFIX = "atom-"
+MOLECULE_ITEM_PREFIX = "molecule-"
 BASE_NAME = "base"
 CATALYST_NAME = "catalyst"
 MODIFIER_NAME = "modifier"

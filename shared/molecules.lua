@@ -23,6 +23,8 @@ ATOM_ROWS = {
 	},
 }
 ALL_ATOMS = {}
+ATOM_ROW_SEPARATOR = "|"
+ATOM_COL_SEPARATOR = "-"
 
 local atomic_number = 0
 for row_n, atoms_row in ipairs(ATOM_ROWS) do
