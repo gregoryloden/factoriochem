@@ -69,6 +69,9 @@ ROTATION_SELECTOR_DOT_RADIUS_FRACTION = 4 / 64
 
 
 #Utility functions
+def imwrite(file_path, image):
+	cv2.imwrite(file_path, image, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+	
 def filled_mip_image(base_size, mips, color):
 	return numpy.full((base_size, sum(base_size >> i for i in range(mips)), 4), color, numpy.uint8)
 
@@ -261,8 +264,7 @@ def gen_atom_images(symbol, bonds, molecule_max_atoms, base_size, mips):
 			for y in range(y_scale):
 				for x in range(x_scale):
 					image = gen_single_atom_image(symbol, bonds, base_size, y_scale, x_scale, y, x, mips)
-					file_name = os.path.join(atom_folder, f"{y_scale}{x_scale}{y}{x}.png")
-					cv2.imwrite(file_name, image, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+					imwrite(os.path.join(atom_folder, f"{y_scale}{x_scale}{y}{x}.png"), image)
 
 def gen_all_atom_images(base_size, mips):
 	element_number = 0
@@ -325,7 +327,7 @@ def gen_bond_images(base_size, y_scale, x_scale, y, x, mips):
 			draw_alpha_on(l, draw_bond)
 			draw_start = draw_start[::-1]
 			draw_end = draw_end[::-1]
-			draw_alpha_on(u, draw)
+			draw_alpha_on(u, draw_bond)
 		images["L"][bond_count] = easy_mips(l, base_size, mips)
 		images["U"][bond_count] = easy_mips(u, base_size, mips)
 	return images
@@ -339,8 +341,7 @@ def gen_and_write_bond_images(bond_folder, base_size, y_scale, x_scale, y, x, mi
 	for (direction, bond_images) in gen_bond_images(base_size, y_scale, x_scale, y, x, mips).items():
 		for (bonds, image) in bond_images.items():
 			#file names represent left and up bonds for an atom with the same number set
-			file_path = os.path.join(bond_folder, f"{direction}{name_specs[direction]}{bonds}.png")
-			cv2.imwrite(file_path, image, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+			imwrite(os.path.join(bond_folder, f"{direction}{name_specs[direction]}{bonds}.png"), image)
 
 def gen_all_bond_images(base_size, mips):
 	bond_folder = "bonds"
@@ -388,13 +389,11 @@ def gen_specific_molecule(molecule, base_size, mips):
 	return image
 
 def gen_item_group_icon(base_size, mips):
-	image = gen_specific_molecule("O1-C2-N|1N1-1O-1H|1H", base_size, mips)
-	cv2.imwrite("item-group.png", image, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+	imwrite("item-group.png", gen_specific_molecule("O1-C2-N|1N1-1O-1H|1H", base_size, mips))
 	print("Item group written")
 
 def gen_molecule_reaction_reactants_icon(base_size, mips):
-	image = gen_specific_molecule("-H1-O|H--1H|1O1-H", base_size, mips)
-	cv2.imwrite("molecule-reaction-reactants.png", image, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+	imwrite("molecule-reaction-reactants.png", gen_specific_molecule("-H1-O|H--1H|1O1-H", base_size, mips))
 	print("Molecule reaction reactants written")
 
 
@@ -449,7 +448,7 @@ def gen_rotation_selectors(base_size, mips):
 		draw_alpha_on(arrow_image, draw_arrow)
 		simple_overlay_image(image, arrow_image)
 		file_path = os.path.join(selectors_folder, "rotation-" + specs["file_suffix"] + ".png")
-		cv2.imwrite(file_path, easy_mips(image, base_size, mips), [cv2.IMWRITE_PNG_COMPRESSION, 9])
+		imwrite(file_path, easy_mips(image, base_size, mips))
 
 	#flip image
 	flip_image = filled_mip_image(base_size, mips, ROTATION_SELECTOR_COLOR)
@@ -470,8 +469,7 @@ def gen_rotation_selectors(base_size, mips):
 		cv2.fillPoly(mask, numpy.array(flip_arrow_pointss), 255, cv2.LINE_AA, PRECISION_BITS)
 	draw_alpha_on(flip_arrows_image, draw_flip_arrows)
 	simple_overlay_image(flip_image, flip_arrows_image)
-	file_path = os.path.join(selectors_folder, "rotation-f.png")
-	cv2.imwrite(file_path, easy_mips(flip_image, base_size, mips), [cv2.IMWRITE_PNG_COMPRESSION, 9])
+	imwrite(os.path.join(selectors_folder, "rotation-f.png"), easy_mips(flip_image, base_size, mips))
 
 	print("Rotation selectors written")
 
