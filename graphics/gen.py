@@ -407,14 +407,21 @@ def get_selectors_folder():
 
 def gen_rotation_selectors(base_size, mips):
 	selectors_folder = get_selectors_folder()
-	radius = int(base_size * ROTATION_SELECTOR_RADIUS_FRACTION)
-	center = base_size // 2
+	radius = base_size * ROTATION_SELECTOR_RADIUS_FRACTION
+	center = base_size / 2
 	thickness = int(base_size * ROTATION_SELECTOR_THICKNESS_FRACTION)
-	arrow_size = int(base_size * ROTATION_SELECTOR_ARROW_SIZE_FRACTION)
-	center_tip_y = center + arrow_size
-	draw_center = (center, center)
-	draw_axes = (radius, radius)
-	dot_radius = int(ROTATION_SELECTOR_DOT_RADIUS_FRACTION * base_size)
+	arrow_size = base_size * ROTATION_SELECTOR_ARROW_SIZE_FRACTION
+	draw_center = (round((center - 0.5) * PRECISION_MULTIPLIER),) * 2
+	draw_axes = (round(radius * PRECISION_MULTIPLIER),) * 2
+	draw_dot_radius = round(ROTATION_SELECTOR_DOT_RADIUS_FRACTION * base_size * PRECISION_MULTIPLIER)
+	def get_draw_arrow_points(center_x, center_y, x_offset, y_offset):
+		draw_arrow_points = []
+		for _ in range(3):
+			(x_offset, y_offset) = -y_offset, x_offset
+			x = center_x + x_offset - 0.5
+			y = center_y + y_offset - 0.5
+			draw_arrow_points.append((round(x * PRECISION_MULTIPLIER), round(y * PRECISION_MULTIPLIER)))
+		return draw_arrow_points
 
 	#left and right images
 	left_specs = {
@@ -431,17 +438,15 @@ def gen_rotation_selectors(base_size, mips):
 		image = filled_mip_image(base_size, mips, ROTATION_SELECTOR_COLOR)
 		start_angle = specs["start_angle"]
 		def draw_arc_and_dot(mask):
-			cv2.ellipse(mask, draw_center, draw_axes, 0, start_angle, start_angle + 90, 255, thickness, cv2.LINE_AA)
-			cv2.circle(mask, draw_center, dot_radius, 255, -1, cv2.LINE_AA)
+			cv2.ellipse(
+				mask, draw_center, draw_axes, start_angle, 0, 90, 255, thickness, cv2.LINE_AA, PRECISION_BITS)
+			cv2.circle(mask, draw_center, draw_dot_radius, 255, -1, cv2.LINE_AA, PRECISION_BITS)
 		draw_alpha_on(image, draw_arc_and_dot)
 		arrow_image = filled_mip_image(base_size, mips, ROTATION_SELECTOR_COLOR)
-		arrow_center_x = specs["arrow_center_x"]
-		arrow_points = [
-			(arrow_center_x - arrow_size, center),
-			(arrow_center_x, center_tip_y),
-			(arrow_center_x + arrow_size, center),
-		]
-		draw_alpha_on(arrow_image, lambda mask: cv2.fillPoly(mask, numpy.array([arrow_points]), 255, cv2.LINE_AA))
+		draw_arrow_points = get_draw_arrow_points(specs["arrow_center_x"], center, 0, -arrow_size)
+		def draw_arrow(mask):
+			cv2.fillPoly(mask, numpy.array([draw_arrow_points]), 255, cv2.LINE_AA, PRECISION_BITS)
+		draw_alpha_on(arrow_image, draw_arrow)
 		simple_overlay_image(image, arrow_image)
 		file_path = os.path.join(selectors_folder, "rotation-" + specs["file_suffix"] + ".png")
 		cv2.imwrite(file_path, easy_mips(image, base_size, mips), [cv2.IMWRITE_PNG_COMPRESSION, 9])
@@ -449,24 +454,18 @@ def gen_rotation_selectors(base_size, mips):
 	#flip image
 	flip_image = filled_mip_image(base_size, mips, ROTATION_SELECTOR_COLOR)
 	def draw_flip_arc_and_dot(mask):
-		cv2.ellipse(mask, draw_center, draw_axes, 0, 300, 420, 255, thickness, cv2.LINE_AA)
-		cv2.ellipse(mask, draw_center, draw_axes, 0, 120, 240, 255, thickness, cv2.LINE_AA)
-		cv2.circle(mask, draw_center, dot_radius, 255, -1, cv2.LINE_AA)
+		cv2.ellipse(mask, draw_center, draw_axes, 120, 0, 120, 255, thickness, cv2.LINE_AA, PRECISION_BITS)
+		cv2.ellipse(mask, draw_center, draw_axes, 300, 0, 120, 255, thickness, cv2.LINE_AA, PRECISION_BITS)
+		cv2.circle(mask, draw_center, draw_dot_radius, 255, -1, cv2.LINE_AA, PRECISION_BITS)
 	draw_alpha_on(flip_image, draw_flip_arc_and_dot)
 	flip_arrows_image = filled_mip_image(base_size, mips, ROTATION_SELECTOR_COLOR)
 	flip_arrow_pointss = []
 	for mult in [-1, 1]:
-		flip_arrow_points = []
 		center_x = center + radius / 2 * mult
 		center_y = center - radius / 2 * math.sqrt(3) * mult
 		x_offset = arrow_size / 2 * math.sqrt(3) * mult
 		y_offset = arrow_size / 2 * mult
-		for _ in range(3):
-			(x_offset, y_offset) = -y_offset, x_offset
-			x = center_x + x_offset
-			y = center_y + y_offset
-			flip_arrow_points.append((round(x * PRECISION_MULTIPLIER), round(y * PRECISION_MULTIPLIER)))
-		flip_arrow_pointss.append(flip_arrow_points)
+		flip_arrow_pointss.append(get_draw_arrow_points(center_x, center_y, x_offset, y_offset))
 	def draw_flip_arrows(mask):
 		cv2.fillPoly(mask, numpy.array(flip_arrow_pointss), 255, cv2.LINE_AA, PRECISION_BITS)
 	draw_alpha_on(flip_arrows_image, draw_flip_arrows)
