@@ -88,8 +88,7 @@ BUILDING_DEFINITIONS = {
 		selectors = {[BASE_NAME] = ROTATION_SELECTOR_NAME},
 		reaction = function(reaction)
 			local molecule = reaction.reactants[BASE_NAME]
-			local selector_val = reaction.selectors[BASE_NAME]
-			if not molecule or not selector_val then return false end
+			if not molecule then return false end
 			if string.find(molecule, ATOM_ITEM_PREFIX_MATCH) then
 				-- don't bother doing calculations to rotate an atom, it's already its own result
 				reaction.products[RESULT_NAME] = molecule
@@ -98,7 +97,7 @@ BUILDING_DEFINITIONS = {
 
 			-- build the shape of the new grid
 			local shape, height, width = parse_molecule(molecule)
-			local rotation = tonumber(string.sub(selector_val, -1))
+			local rotation = tonumber(string.sub(reaction.selectors[BASE_NAME], -1))
 			local new_shape
 			if rotation == 2 then
 				new_shape = gen_grid(height, width)

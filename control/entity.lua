@@ -189,7 +189,16 @@ local function update_entity(data)
 		end
 	end
 
-	-- we have a full set of molecule reactants, so now do building-specific handling to generate a next reaction
+	-- also make sure all selectors have been set
+	for reactant_name, _ in pairs(building_definition.selectors) do
+		if not reaction.selectors[reactant_name] then
+			cache.invalid = true
+			return
+		end
+	end
+
+	-- we have a full set of selectors and molecule reactants, so now do building-specific handling to generate a next
+	--	reaction
 	if building_definition.reaction(reaction) then
 		-- the reaction was valid, start it and cache it
 		start_reaction(reaction, chest_inventories, machine_inputs)
