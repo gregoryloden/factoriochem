@@ -103,6 +103,10 @@ def simple_overlay_image(back_image, front_image):
 	shape = front_image.shape
 	overlay_image(back_image, 0, 0, front_image, 0, 0, shape[1], shape[0])
 
+def simple_overlay_image_at(back_image, back_left, back_top, front_image):
+	shape = front_image.shape
+	overlay_image(back_image, back_left, back_top, front_image, 0, 0, shape[1], shape[0])
+
 def easy_mips(image, base_size, mips):
 	#copy the entire outer mip, performance isn't really an issue
 	mip_0 = image[:, 0:base_size]
@@ -315,7 +319,7 @@ def gen_bond_images(base_size, y_scale, x_scale, y, x, mips):
 		half_bond_length = BOND_LENGTH_FRACTIONS[bond_count] * base_size / scale * 0.5
 		l = filled_mip_image(base_size, mips, BOND_COLOR)
 		u = filled_mip_image(base_size, mips, BOND_COLOR)
-		bond_spacing = int(BOND_SPACING_FRACTION * base_size / scale)
+		bond_spacing = BOND_SPACING_FRACTION * base_size / scale
 		center_y_min = center_y - bond_spacing * (bond_count - 1) / 2
 		for bond in range(bond_count):
 			draw_y = round((center_y_min + bond * bond_spacing - 0.5) * PRECISION_MULTIPLIER)
@@ -412,7 +416,7 @@ def gen_rotation_selectors(base_size, mips):
 	arrow_size = base_size * ROTATION_SELECTOR_ARROW_SIZE_FRACTION
 	draw_center = (round((center - 0.5) * PRECISION_MULTIPLIER),) * 2
 	draw_axes = (round(radius * PRECISION_MULTIPLIER),) * 2
-	draw_dot_radius = round(ROTATION_SELECTOR_DOT_RADIUS_FRACTION * base_size * PRECISION_MULTIPLIER)
+	draw_dot_radius = round((ROTATION_SELECTOR_DOT_RADIUS_FRACTION * base_size - 0.5) * PRECISION_MULTIPLIER)
 	def get_draw_arrow_points(center_x, center_y, x_offset, y_offset):
 		draw_arrow_points = []
 		for _ in range(3):
@@ -473,9 +477,76 @@ def gen_rotation_selectors(base_size, mips):
 
 	print("Rotation selectors written")
 
+
+#Generate building overlays
+def gen_building_overlays():
+	building_overlays_folder = "building-overlays"
+	if not os.path.exists(building_overlays_folder):
+		os.mkdir(building_overlays_folder)
+	overlays = [
+		("base", (160, 160, 224, 0), False),
+		("catalyst", (160, 224, 160, 0), False),
+		("modifier", (224, 160, 160, 0), False),
+		("result", (224, 224, 160, 0), True),
+		("bonus", (224, 160, 224, 0), True),
+		("remainder", (160, 224, 224, 0), True),
+	]
+	for (base_size, prefix) in [(32, ""), (64, "hr-")]:
+		for (component, color, is_output) in overlays:
+			#generate the base loader shape
+			base_height = int(base_size * 1.75)
+			base_image = numpy.full((base_height, base_size, 4), color, numpy.uint8)
+			if is_output:
+				loader_points = [
+					(0, 1.25 * base_size),
+					(base_size, 1.25 * base_size),
+					(base_size, 0.25 * base_size),
+					(base_size / 2, 0),
+					(0, 0.25 * base_size),
+				]
+			else:
+				loader_points = [
+					(0, 0.5 * base_size),
+					(base_size, 0.5 * base_size),
+					(base_size, 1.75 * base_size),
+					(base_size / 2, 1.5 * base_size),
+					(0, 1.75 * base_size),
+				]
+			draw_loader_points = [
+				(round((x - 0.5) * PRECISION_MULTIPLIER), round((y - 0.5) * PRECISION_MULTIPLIER))
+				for (x, y) in loader_points
+			]
+			def draw_loader(mask):
+				cv2.fillPoly(mask, numpy.array([draw_loader_points]), 255, cv2.LINE_AA, PRECISION_BITS)
+			draw_alpha_on(base_image, draw_loader)
+			circle_image = numpy.full((base_size, base_size, 4), color, numpy.uint8)
+			draw_circle_center = (round((base_size / 2 - 0.5) * PRECISION_MULTIPLIER),) * 2
+			draw_circle_radius = round((base_size / 2 - 0.5) * PRECISION_MULTIPLIER)
+			def draw_circle(mask):
+				cv2.circle(mask, draw_circle_center, draw_circle_radius, 255, -1, cv2.LINE_AA, PRECISION_BITS)
+			draw_alpha_on(circle_image, draw_circle)
+			simple_overlay_image_at(base_image, 0, base_height - base_size if is_output else 0, circle_image)
+
+			#draw it in all 4 directions
+			image = numpy.zeros((base_height + base_size, base_height + base_size, 4), numpy.uint8)
+			image[0:base_height, 0:base_size] = base_image
+			placements = [
+				(base_size, 0, cv2.ROTATE_90_CLOCKWISE),
+				(base_height, base_size, cv2.ROTATE_180),
+				(0, base_height, cv2.ROTATE_90_COUNTERCLOCKWISE),
+			]
+			for (left, top, rotation) in placements:
+				rotated = cv2.rotate(base_image, rotation)
+				image[top:top + rotated.shape[0], left:left + rotated.shape[1]] = rotated
+			imwrite(os.path.join(building_overlays_folder, prefix + component + ".png"), image)
+	print("Building overlays written")
+
+
+#Generate all graphics
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 gen_all_atom_images(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_all_bond_images(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_item_group_icon(ITEM_GROUP_SIZE, ITEM_GROUP_MIPS)
 gen_molecule_reaction_reactants_icon(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_rotation_selectors(BASE_ICON_SIZE, BASE_ICON_MIPS)
+gen_building_overlays()
