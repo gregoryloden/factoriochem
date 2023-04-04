@@ -66,6 +66,8 @@ ROTATION_SELECTOR_RADIUS_FRACTION = 24 / 64
 ROTATION_SELECTOR_THICKNESS_FRACTION = 4 / 64
 ROTATION_SELECTOR_ARROW_SIZE_FRACTION = 6 / 64
 ROTATION_SELECTOR_DOT_RADIUS_FRACTION = 4 / 64
+ROTATION_SELECTOR_OUTLINE_COLOR = (64, 64, 64, 0)
+ROTATION_SELECTOR_OUTLINE_FRACTION = 4 / 64
 RECIPE_ICON_MIPS = 4
 
 
@@ -426,21 +428,26 @@ def get_draw_arrow_points(center_x, center_y, x_offset, y_offset):
 		draw_arrow_points.append((round(x * PRECISION_MULTIPLIER), round(y * PRECISION_MULTIPLIER)))
 	return draw_arrow_points
 
-def gen_prepared_rotation_selector_image(base_size, mips, arcs, draw_arrow_pointss):
+def gen_prepared_rotation_selector_image(base_size, mips, arcs, draw_arrow_pointss, is_outline = False):
 	(radius, center, _) = get_rotation_selector_arc_values(base_size)
 	thickness = int(base_size * ROTATION_SELECTOR_THICKNESS_FRACTION)
+	dot_radius = ROTATION_SELECTOR_DOT_RADIUS_FRACTION * base_size
+	if is_outline:
+		thickness += int(ROTATION_SELECTOR_OUTLINE_FRACTION * base_size * 2)
+		dot_radius += ROTATION_SELECTOR_OUTLINE_FRACTION * base_size
 	draw_center = (round((center - 0.5) * PRECISION_MULTIPLIER),) * 2
 	draw_axes = (round(radius * PRECISION_MULTIPLIER),) * 2
-	draw_dot_radius = round((ROTATION_SELECTOR_DOT_RADIUS_FRACTION * base_size - 0.5) * PRECISION_MULTIPLIER)
+	draw_dot_radius = round((dot_radius - 0.5) * PRECISION_MULTIPLIER)
 
-	image = filled_mip_image(base_size, mips, ROTATION_SELECTOR_COLOR)
+	color = ROTATION_SELECTOR_OUTLINE_COLOR if is_outline else ROTATION_SELECTOR_COLOR
+	image = filled_mip_image(base_size, mips, color)
 	def draw_arcs_and_dot(mask):
 		for (start_angle, arc) in arcs:
 			cv2.ellipse(
 				mask, draw_center, draw_axes, start_angle, 0, arc, 255, thickness, cv2.LINE_AA, PRECISION_BITS)
 		cv2.circle(mask, draw_center, draw_dot_radius, 255, -1, cv2.LINE_AA, PRECISION_BITS)
 	draw_alpha_on(image, draw_arcs_and_dot)
-	arrows_image = filled_mip_image(base_size, mips, ROTATION_SELECTOR_COLOR)
+	arrows_image = filled_mip_image(base_size, mips, color)
 	def draw_arrows(mask):
 		cv2.fillPoly(mask, numpy.array(draw_arrow_pointss), 255, cv2.LINE_AA, PRECISION_BITS)
 	draw_alpha_on(arrows_image, draw_arrows)
@@ -452,8 +459,10 @@ def gen_left_right_rotation_selector_image(base_size, mips, start_angle, arrow_c
 	draw_arrow_points = get_draw_arrow_points(center + radius * arrow_center_x_radius_multiplier, center, 0, -arrow_size)
 	return gen_prepared_rotation_selector_image(base_size, mips, [(start_angle, 90)], [draw_arrow_points])
 
-def gen_flip_rotation_selector_image(base_size, mips):
+def gen_flip_rotation_selector_image(base_size, mips, is_outline = False):
 	(radius, center, arrow_size) = get_rotation_selector_arc_values(base_size)
+	if is_outline:
+		arrow_size += ROTATION_SELECTOR_OUTLINE_FRACTION * base_size
 	draw_arrow_pointss = []
 	for mult in [-1, 1]:
 		center_x = center + radius / 2 * mult
@@ -461,7 +470,7 @@ def gen_flip_rotation_selector_image(base_size, mips):
 		x_offset = arrow_size / 2 * math.sqrt(3) * mult
 		y_offset = arrow_size / 2 * mult
 		draw_arrow_pointss.append(get_draw_arrow_points(center_x, center_y, x_offset, y_offset))
-	return gen_prepared_rotation_selector_image(base_size, mips, [(120, 120), (300, 120)], draw_arrow_pointss)
+	return gen_prepared_rotation_selector_image(base_size, mips, [(120, 120), (300, 120)], draw_arrow_pointss, is_outline)
 
 def gen_rotation_selectors(base_size, mips):
 	selectors_folder = get_selectors_folder()
@@ -545,7 +554,8 @@ def gen_all_building_recipe_icons():
 	recipes_folder = "recipes"
 	if not os.path.exists(recipes_folder):
 		os.mkdir(recipes_folder)
-	molecule_rotater_image = gen_flip_rotation_selector_image(BASE_ICON_SIZE, RECIPE_ICON_MIPS)
+	molecule_rotater_image = gen_flip_rotation_selector_image(BASE_ICON_SIZE, RECIPE_ICON_MIPS, is_outline=True)
+	simple_overlay_image(molecule_rotater_image, gen_flip_rotation_selector_image(BASE_ICON_SIZE, RECIPE_ICON_MIPS))
 	imwrite(os.path.join(recipes_folder, "molecule-rotater.png"), molecule_rotater_image)
 	print("Building recipe icons written")
 
