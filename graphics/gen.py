@@ -401,88 +401,88 @@ def gen_molecule_reaction_reactants_icon(base_size, mips):
 	print("Molecule reaction reactants written")
 
 
-#Generate selectors
+#Shared selectors utilities
 def get_selectors_folder():
 	selectors_folder = "selectors"
 	if not os.path.exists(selectors_folder):
 		os.mkdir(selectors_folder)
 	return selectors_folder
 
-def gen_rotation_selectors(base_size, mips):
-	selectors_folder = get_selectors_folder()
+
+#Generate rotation selectors
+def get_rotation_selector_arc_values(base_size):
 	radius = base_size * ROTATION_SELECTOR_RADIUS_FRACTION
 	center = base_size / 2
-	thickness = int(base_size * ROTATION_SELECTOR_THICKNESS_FRACTION)
 	arrow_size = base_size * ROTATION_SELECTOR_ARROW_SIZE_FRACTION
+	return (radius, center, arrow_size)
+
+def get_draw_arrow_points(center_x, center_y, x_offset, y_offset):
+	draw_arrow_points = []
+	for _ in range(3):
+		(x_offset, y_offset) = -y_offset, x_offset
+		x = center_x + x_offset - 0.5
+		y = center_y + y_offset - 0.5
+		draw_arrow_points.append((round(x * PRECISION_MULTIPLIER), round(y * PRECISION_MULTIPLIER)))
+	return draw_arrow_points
+
+def gen_prepared_rotation_selector_image(base_size, mips, arcs, draw_arrow_pointss):
+	(radius, center, _) = get_rotation_selector_arc_values(base_size)
+	thickness = int(base_size * ROTATION_SELECTOR_THICKNESS_FRACTION)
 	draw_center = (round((center - 0.5) * PRECISION_MULTIPLIER),) * 2
 	draw_axes = (round(radius * PRECISION_MULTIPLIER),) * 2
 	draw_dot_radius = round((ROTATION_SELECTOR_DOT_RADIUS_FRACTION * base_size - 0.5) * PRECISION_MULTIPLIER)
-	def get_draw_arrow_points(center_x, center_y, x_offset, y_offset):
-		draw_arrow_points = []
-		for _ in range(3):
-			(x_offset, y_offset) = -y_offset, x_offset
-			x = center_x + x_offset - 0.5
-			y = center_y + y_offset - 0.5
-			draw_arrow_points.append((round(x * PRECISION_MULTIPLIER), round(y * PRECISION_MULTIPLIER)))
-		return draw_arrow_points
 
-	#left and right images
-	left_specs = {
-		"start_angle": 180,
-		"arrow_center_x": center - radius,
-		"file_suffix": "l",
-	}
-	right_specs = {
-		"start_angle": 270,
-		"arrow_center_x": center + radius,
-		"file_suffix": "r",
-	}
-	for specs in [left_specs, right_specs]:
-		image = filled_mip_image(base_size, mips, ROTATION_SELECTOR_COLOR)
-		start_angle = specs["start_angle"]
-		def draw_arc_and_dot(mask):
+	image = filled_mip_image(base_size, mips, ROTATION_SELECTOR_COLOR)
+	def draw_arcs_and_dot(mask):
+		for (start_angle, arc) in arcs:
 			cv2.ellipse(
-				mask, draw_center, draw_axes, start_angle, 0, 90, 255, thickness, cv2.LINE_AA, PRECISION_BITS)
-			cv2.circle(mask, draw_center, draw_dot_radius, 255, -1, cv2.LINE_AA, PRECISION_BITS)
-		draw_alpha_on(image, draw_arc_and_dot)
-		arrow_image = filled_mip_image(base_size, mips, ROTATION_SELECTOR_COLOR)
-		draw_arrow_points = get_draw_arrow_points(specs["arrow_center_x"], center, 0, -arrow_size)
-		def draw_arrow(mask):
-			cv2.fillPoly(mask, numpy.array([draw_arrow_points]), 255, cv2.LINE_AA, PRECISION_BITS)
-		draw_alpha_on(arrow_image, draw_arrow)
-		simple_overlay_image(image, arrow_image)
-		file_path = os.path.join(selectors_folder, "rotation-" + specs["file_suffix"] + ".png")
-		imwrite(file_path, easy_mips(image, base_size, mips))
-
-	#flip image
-	flip_image = filled_mip_image(base_size, mips, ROTATION_SELECTOR_COLOR)
-	def draw_flip_arc_and_dot(mask):
-		cv2.ellipse(mask, draw_center, draw_axes, 120, 0, 120, 255, thickness, cv2.LINE_AA, PRECISION_BITS)
-		cv2.ellipse(mask, draw_center, draw_axes, 300, 0, 120, 255, thickness, cv2.LINE_AA, PRECISION_BITS)
+				mask, draw_center, draw_axes, start_angle, 0, arc, 255, thickness, cv2.LINE_AA, PRECISION_BITS)
 		cv2.circle(mask, draw_center, draw_dot_radius, 255, -1, cv2.LINE_AA, PRECISION_BITS)
-	draw_alpha_on(flip_image, draw_flip_arc_and_dot)
-	flip_arrows_image = filled_mip_image(base_size, mips, ROTATION_SELECTOR_COLOR)
-	flip_arrow_pointss = []
+	draw_alpha_on(image, draw_arcs_and_dot)
+	arrows_image = filled_mip_image(base_size, mips, ROTATION_SELECTOR_COLOR)
+	def draw_arrows(mask):
+		cv2.fillPoly(mask, numpy.array(draw_arrow_pointss), 255, cv2.LINE_AA, PRECISION_BITS)
+	draw_alpha_on(arrows_image, draw_arrows)
+	simple_overlay_image(image, arrows_image)
+	return easy_mips(image, base_size, mips)
+
+def gen_left_right_rotation_selector_image(base_size, mips, start_angle, arrow_center_x_radius_multiplier):
+	(radius, center, arrow_size) = get_rotation_selector_arc_values(base_size)
+	draw_arrow_points = get_draw_arrow_points(center + radius * arrow_center_x_radius_multiplier, center, 0, -arrow_size)
+	return gen_prepared_rotation_selector_image(base_size, mips, [(start_angle, 90)], [draw_arrow_points])
+
+def gen_flip_rotation_selector_image(base_size, mips):
+	(radius, center, arrow_size) = get_rotation_selector_arc_values(base_size)
+	draw_arrow_pointss = []
 	for mult in [-1, 1]:
 		center_x = center + radius / 2 * mult
 		center_y = center - radius / 2 * math.sqrt(3) * mult
 		x_offset = arrow_size / 2 * math.sqrt(3) * mult
 		y_offset = arrow_size / 2 * mult
-		flip_arrow_pointss.append(get_draw_arrow_points(center_x, center_y, x_offset, y_offset))
-	def draw_flip_arrows(mask):
-		cv2.fillPoly(mask, numpy.array(flip_arrow_pointss), 255, cv2.LINE_AA, PRECISION_BITS)
-	draw_alpha_on(flip_arrows_image, draw_flip_arrows)
-	simple_overlay_image(flip_image, flip_arrows_image)
-	imwrite(os.path.join(selectors_folder, "rotation-f.png"), easy_mips(flip_image, base_size, mips))
+		draw_arrow_pointss.append(get_draw_arrow_points(center_x, center_y, x_offset, y_offset))
+	return gen_prepared_rotation_selector_image(base_size, mips, [(120, 120), (300, 120)], draw_arrow_pointss)
 
+def gen_rotation_selectors(base_size, mips):
+	selectors_folder = get_selectors_folder()
+	left_image = gen_left_right_rotation_selector_image(base_size, mips, 180, -1)
+	imwrite(os.path.join(selectors_folder, "rotation-l.png"), left_image)
+	right_image = gen_left_right_rotation_selector_image(base_size, mips, 270, 1)
+	imwrite(os.path.join(selectors_folder, "rotation-r.png"), right_image)
+	imwrite(os.path.join(selectors_folder, "rotation-f.png"), gen_flip_rotation_selector_image(base_size, mips))
 	print("Rotation selectors written")
 
 
-#Generate building overlays
-def gen_building_overlays():
+#Shared building overlays utilities
+def get_building_overlays_folder():
 	building_overlays_folder = "building-overlays"
 	if not os.path.exists(building_overlays_folder):
 		os.mkdir(building_overlays_folder)
+	return building_overlays_folder
+
+
+#Generate reaction component building overlays
+def gen_reaction_component_building_overlays():
+	building_overlays_folder = get_building_overlays_folder()
 	overlays = [
 		("base", (160, 160, 224, 0), False),
 		("catalyst", (160, 224, 160, 0), False),
@@ -542,6 +542,9 @@ def gen_building_overlays():
 				rotated = cv2.rotate(base_image, rotation)
 				image[top:top + rotated.shape[0], left:left + rotated.shape[1]] = rotated
 			imwrite(os.path.join(building_overlays_folder, prefix + component + ".png"), image)
+
+def gen_building_overlays():
+	gen_reaction_component_building_overlays()
 	print("Building overlays written")
 
 
