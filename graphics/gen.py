@@ -136,7 +136,7 @@ def get_circle_mip_datas(base_size, y_scale, x_scale, y, x, mips):
 		scale = max(x_scale, y_scale)
 		scale_data = {
 			"scale": scale,
-			"radius": base_size * RADIUS_FRACTION / scale,
+			"radius": RADIUS_FRACTION * base_size / scale,
 			"center_y_min": 0.5 * (1 + scale - y_scale),
 			"center_x_min": 0.5 * (1 + scale - x_scale),
 		}
@@ -414,9 +414,9 @@ def get_selectors_folder():
 
 #Generate rotation selectors
 def get_rotation_selector_arc_values(base_size):
-	radius = base_size * ROTATION_SELECTOR_RADIUS_FRACTION
+	radius = ROTATION_SELECTOR_RADIUS_FRACTION * base_size
 	center = base_size / 2
-	arrow_size = base_size * ROTATION_SELECTOR_ARROW_SIZE_FRACTION
+	arrow_size = ROTATION_SELECTOR_ARROW_SIZE_FRACTION * base_size
 	return (radius, center, arrow_size)
 
 def get_draw_arrow_points(center_x, center_y, x_offset, y_offset):
@@ -430,7 +430,7 @@ def get_draw_arrow_points(center_x, center_y, x_offset, y_offset):
 
 def gen_prepared_rotation_selector_image(base_size, mips, arcs, draw_arrow_pointss, is_outline = False):
 	(radius, center, _) = get_rotation_selector_arc_values(base_size)
-	thickness = int(base_size * ROTATION_SELECTOR_THICKNESS_FRACTION)
+	thickness = int(ROTATION_SELECTOR_THICKNESS_FRACTION * base_size)
 	dot_radius = ROTATION_SELECTOR_DOT_RADIUS_FRACTION * base_size
 	if is_outline:
 		thickness += int(ROTATION_SELECTOR_OUTLINE_FRACTION * base_size * 2)
