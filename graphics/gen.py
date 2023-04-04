@@ -491,7 +491,7 @@ def gen_reaction_component_building_overlays():
 		("bonus", (224, 160, 224, 0), True),
 		("remainder", (160, 224, 224, 0), True),
 	]
-	for (base_size, prefix) in [(32, ""), (64, "hr-")]:
+	for (base_size, suffix) in [(32, ""), (64, "-hr")]:
 		for (component, color, is_output) in overlays:
 			#generate the base loader shape
 			base_height = int(base_size * 1.75)
@@ -541,7 +541,7 @@ def gen_reaction_component_building_overlays():
 			for (left, top, rotation) in placements:
 				rotated = cv2.rotate(base_image, rotation)
 				image[top:top + rotated.shape[0], left:left + rotated.shape[1]] = rotated
-			imwrite(os.path.join(building_overlays_folder, prefix + component + ".png"), image)
+			imwrite(os.path.join(building_overlays_folder, component + suffix + ".png"), image)
 
 def gen_building_overlays():
 	gen_reaction_component_building_overlays()

@@ -58,7 +58,7 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 					priority = "high",
 					shift = direction_data.shift,
 					hr_version = {
-						filename = GRAPHICS_ROOT.."building-overlays/hr-"..component..".png",
+						filename = GRAPHICS_ROOT.."building-overlays/"..component.."-hr.png",
 						width = direction_data.width * 2,
 						height = direction_data.height * 2,
 						x = direction_data.x * 2,
