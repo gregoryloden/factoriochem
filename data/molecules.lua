@@ -117,6 +117,8 @@ end
 -- Molecule generation
 local current_atom_count = 0
 local current_shape_n = 0
+local current_shape_height = 0
+local current_shape_width = 0
 local total_molecules = 0
 
 local function assign_valid_atoms(grid_is)
@@ -151,16 +153,15 @@ local function gen_molecules(grid_i_i, grid_is)
 		total_molecules = total_molecules + 1
 	else
 		array_clear(MOLECULE_BUILDER)
+		local icons = {{icon = "__core__/graphics/empty.png", icon_size = 1}}
 		local last_row = 0
 		local last_col = 0
-		local width = 0
 		for grid_i = 1, GRID_AREA do
 			local slot = GRID[grid_i]
 			if slot then
 				local grid_0_i = grid_i - 1
 				local row = math.floor(grid_0_i / GRID_WIDTH)
 				local col = grid_0_i % GRID_WIDTH
-				if col >= width then width = col + 1 end
 				if row > last_row then
 					last_row = row
 					array_push(MOLECULE_BUILDER, ATOM_ROW_SEPARATOR)
@@ -170,44 +171,31 @@ local function gen_molecules(grid_i_i, grid_is)
 					array_push(MOLECULE_BUILDER, ATOM_COL_SEPARATOR)
 					last_col = last_col + 1
 				end
-				if slot.up_bonds > 0 then array_push(MOLECULE_BUILDER, slot.up_bonds) end
-				array_push(MOLECULE_BUILDER, slot.atom.symbol)
-				if slot.right_bonds > 0 then array_push(MOLECULE_BUILDER, slot.right_bonds) end
-			end
-		end
-		local height = last_row + 1
-		local icons = {{icon = "__core__/graphics/empty.png", icon_size = 1}}
-		for grid_i = 1, GRID_AREA do
-			local slot = GRID[grid_i]
-			if slot then
-				local grid_0_i = grid_i - 1
-				local row = math.floor(grid_0_i / GRID_WIDTH)
-				local col = grid_0_i % GRID_WIDTH
-				local name_spec = height..width..row..col
-				local atom_icon_path = ATOM_ICON_ROOT..slot.atom.symbol.."/"..name_spec..".png"
+				local name_spec = current_shape_height..current_shape_width..row..col
 				table.insert(
 					icons,
 					{
-						icon = atom_icon_path,
+						icon = ATOM_ICON_ROOT..slot.atom.symbol.."/"..name_spec..".png",
 						icon_size = ITEM_ICON_SIZE,
 						icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 					})
 				if slot.up_bonds > 0 then
-					up_bond_icon_path = BOND_ICON_ROOT.."U"..name_spec..slot.up_bonds..".png"
+					array_push(MOLECULE_BUILDER, slot.up_bonds)
 					table.insert(
 						icons,
 						{
-							icon = up_bond_icon_path,
+							icon = BOND_ICON_ROOT.."U"..name_spec..slot.up_bonds..".png",
 							icon_size = ITEM_ICON_SIZE,
 							icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 						})
 				end
+				array_push(MOLECULE_BUILDER, slot.atom.symbol)
+				if slot.right_bonds > 0 then array_push(MOLECULE_BUILDER, slot.right_bonds) end
 				if slot.left_bonds > 0 then
-					left_bond_icon_path = BOND_ICON_ROOT.."L"..name_spec..slot.left_bonds..".png"
 					table.insert(
 						icons,
 						{
-							icon = left_bond_icon_path,
+							icon = BOND_ICON_ROOT.."L"..name_spec..slot.left_bonds..".png",
 							icon_size = ITEM_ICON_SIZE,
 							icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 						})
@@ -460,12 +448,19 @@ local function try_gen_molecule_bonds(shape_n)
 	-- build the grid of slots
 	array_clear(GRID)
 	current_atom_count = 0
+	current_shape_width = 0
+	current_shape_height = 0
 	local first_grid_i = 0
 	for grid_i = 1, GRID_AREA do
 		if bit32.band(shape_n, bit32.lshift(1, grid_i - 1)) ~= 0 then
 			array_push(GRID, gen_atom_slot())
 			if first_grid_i == 0 then first_grid_i = grid_i end
 			current_atom_count = current_atom_count + 1
+			local grid_0_i = grid_i - 1
+			local shape_height = math.floor(grid_0_i / GRID_WIDTH) + 1
+			local shape_width = grid_0_i % GRID_WIDTH + 1
+			if shape_height > current_shape_height then current_shape_height = shape_height end
+			if shape_width > current_shape_width then current_shape_width = shape_width end
 		else
 			array_push(GRID, nil)
 		end
