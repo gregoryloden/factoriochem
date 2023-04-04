@@ -48,7 +48,8 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 	entity.selection_box[2][2] = entity.selection_box[2][2] + 1
 	entity.collision_box[1][2] = entity.collision_box[1][2] - 1
 	entity.collision_box[2][2] = entity.collision_box[2][2] + 1
-	local building_animation = data.raw[definition.building_design[1]][definition.building_design[2]].animation
+	local building_design = data.raw[definition.building_design[1]][definition.building_design[2]]
+	local building_animation = building_design.animation
 	entity.animation = {
 		north = table.deepcopy(building_animation.north or building_animation),
 		east = table.deepcopy(building_animation.east or building_animation),
@@ -85,6 +86,7 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 			end
 		end
 	end
+	entity.working_sound = building_design.working_sound
 
 	local reaction_recipe = {
 		type = "recipe",
