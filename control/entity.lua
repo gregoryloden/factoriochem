@@ -1,12 +1,4 @@
 -- Constants
-local MOLECULE_REACTION_COMPONENT_OFFSETS = {
-	[BASE_NAME] = {x = -1, y = 1},
-	[CATALYST_NAME] = {x = 0, y = 1},
-	[MODIFIER_NAME] = {x = 1, y = 1},
-	[RESULT_NAME] = {x = -1, y = -1},
-	[BONUS_NAME] = {x = 0, y = -1},
-	[REMAINDER_NAME] = {x = 1, y = -1},
-}
 local REACTION_CACHE = {}
 -- give each building type a base cache, buildings will add to it based on their own selectors and reactants
 for name, definition in pairs(BUILDING_DEFINITIONS) do REACTION_CACHE[name] = {} end

@@ -1,5 +1,11 @@
 -- Constants
 local MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME = MOLECULE_REACTION_NAME.."-buildings"
+local DIRECTION_ANIMATION_DATA = {
+	north = function(shift_x, shift_y) return {width = 32, height = 56, x = 0, y = 0, shift = {shift_x, shift_y}} end,
+	east = function(shift_x, shift_y) return {width = 56, height = 32, x = 32, y = 0, shift = {-shift_y, shift_x}} end,
+	south = function(shift_x, shift_y) return {width = 32, height = 56, x = 56, y = 32, shift = {-shift_x, -shift_y}} end,
+	west = function(shift_x, shift_y) return {width = 56, height = 32, x = 0, y = 56, shift = {shift_y, -shift_x}} end,
+}
 local HIDDEN_ENTITY_FLAGS = {"hidden", "not-deconstructable", "not-blueprintable", "player-creation"}
 
 
@@ -31,11 +37,39 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 	entity.collision_box[2][2] = entity.collision_box[2][2] + 1
 	local building_animation = data.raw[definition.building_design[1]][definition.building_design[2]].animation
 	entity.animation = {
-		north = building_animation.north or building_animation,
-		east = building_animation.east or building_animation,
-		south = building_animation.south or building_animation,
-		west = building_animation.west or building_animation,
+		north = table.deepcopy(building_animation.north or building_animation),
+		east = table.deepcopy(building_animation.east or building_animation),
+		south = table.deepcopy(building_animation.south or building_animation),
+		west = table.deepcopy(building_animation.west or building_animation),
 	}
+	for _, direction in ipairs({"north", "east", "south", "west"}) do
+		layers = entity.animation[direction].layers
+		for _, component in ipairs(MOLECULE_REACTION_COMPONENT_NAMES) do
+			local shift = MOLECULE_REACTION_COMPONENT_OFFSETS[component]
+			local direction_data = DIRECTION_ANIMATION_DATA[direction](shift.x, shift.y * 1.375)
+			local layer = {
+				filename = GRAPHICS_ROOT.."building-overlays/"..component..".png",
+				width = direction_data.width,
+				height = direction_data.height,
+				x = direction_data.x,
+				y = direction_data.y,
+				repeat_count = layers[1].frame_count,
+				priority = "high",
+				shift = direction_data.shift,
+				hr_version = {
+					filename = GRAPHICS_ROOT.."building-overlays/hr-"..component..".png",
+					width = direction_data.width * 2,
+					height = direction_data.height * 2,
+					x = direction_data.x * 2,
+					y = direction_data.y * 2,
+					repeat_count = layers[1].hr_version.frame_count,
+					priority = "high",
+					shift = direction_data.shift,
+				},
+			}
+			table.insert(layers, layer)
+		end
+	end
 
 	local item = table.deepcopy(data.raw.item[definition.building_design[2]])
 	item.name = name
