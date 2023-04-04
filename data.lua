@@ -8,6 +8,5 @@ MOLECULES_SUBGROUP_NAME = "molecules"
 
 require("data/molecules")
 require("data/selectors")
-require("data/recipes")
 require("data/buildings")
 require("data/styles")

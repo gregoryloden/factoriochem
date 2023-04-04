@@ -3,4 +3,5 @@ graphics/*.png
 graphics/atoms/*
 graphics/bonds/*
 graphics/building-overlays/*
+graphics/recipes/*
 graphics/selectors/*

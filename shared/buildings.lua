@@ -82,9 +82,10 @@ BUILDING_DEFINITIONS = {
 		-- data fields
 		building_design = {"assembling-machine", "assembling-machine-3"},
 		item_order = "b",
-		-- control fields
+		-- data and control fields
 		reactants = {BASE_NAME},
 		products = {RESULT_NAME},
+		-- control fields
 		selectors = {[BASE_NAME] = ROTATION_SELECTOR_NAME},
 		reaction = function(reaction)
 			local molecule = reaction.reactants[BASE_NAME]

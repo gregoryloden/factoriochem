@@ -66,6 +66,7 @@ ROTATION_SELECTOR_RADIUS_FRACTION = 24 / 64
 ROTATION_SELECTOR_THICKNESS_FRACTION = 4 / 64
 ROTATION_SELECTOR_ARROW_SIZE_FRACTION = 6 / 64
 ROTATION_SELECTOR_DOT_RADIUS_FRACTION = 4 / 64
+RECIPE_ICON_MIPS = 4
 
 
 #Utility functions
@@ -472,17 +473,11 @@ def gen_rotation_selectors(base_size, mips):
 	print("Rotation selectors written")
 
 
-#Shared building overlays utilities
-def get_building_overlays_folder():
+#Generate building overlays
+def gen_building_overlays():
 	building_overlays_folder = "building-overlays"
 	if not os.path.exists(building_overlays_folder):
 		os.mkdir(building_overlays_folder)
-	return building_overlays_folder
-
-
-#Generate reaction component building overlays
-def gen_reaction_component_building_overlays():
-	building_overlays_folder = get_building_overlays_folder()
 	overlays = [
 		("base", (160, 160, 224, 0), False),
 		("catalyst", (160, 224, 160, 0), False),
@@ -542,10 +537,17 @@ def gen_reaction_component_building_overlays():
 				rotated = cv2.rotate(base_image, rotation)
 				image[top:top + rotated.shape[0], left:left + rotated.shape[1]] = rotated
 			imwrite(os.path.join(building_overlays_folder, component + suffix + ".png"), image)
-
-def gen_building_overlays():
-	gen_reaction_component_building_overlays()
 	print("Building overlays written")
+
+
+#Generate building recipe icons
+def gen_all_building_recipe_icons():
+	recipes_folder = "recipes"
+	if not os.path.exists(recipes_folder):
+		os.mkdir(recipes_folder)
+	molecule_rotater_image = gen_flip_rotation_selector_image(BASE_ICON_SIZE, RECIPE_ICON_MIPS)
+	imwrite(os.path.join(recipes_folder, "molecule-rotater.png"), molecule_rotater_image)
+	print("Building recipe icons written")
 
 
 #Generate all graphics
@@ -556,3 +558,4 @@ gen_item_group_icon(ITEM_GROUP_SIZE, ITEM_GROUP_MIPS)
 gen_molecule_reaction_reactants_icon(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_rotation_selectors(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_building_overlays()
+gen_all_building_recipe_icons()

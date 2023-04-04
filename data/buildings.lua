@@ -10,12 +10,24 @@ local HIDDEN_ENTITY_FLAGS = {"hidden", "not-deconstructable", "not-blueprintable
 
 
 -- Molecule reaction buildings
-data:extend({{
-	type = "item-subgroup",
-	name = MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME,
-	group = "production",
-	order = "e-a",
-}})
+data:extend({
+	{
+		type = "item-subgroup",
+		name = MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME,
+		group = "production",
+		order = "e-a",
+	},
+	{
+		type = "item",
+		name = MOLECULE_REACTION_REACTANTS_NAME,
+		localised_name = {"item-name."..MOLECULE_REACTION_REACTANTS_NAME},
+		icon = GRAPHICS_ROOT..MOLECULE_REACTION_REACTANTS_NAME..".png",
+		icon_size = ITEM_ICON_SIZE,
+		icon_mipmaps = ITEM_ICON_MIPMAPS,
+		stack_size = 1,
+		flags = {"hidden"},
+	},
+})
 for name, definition in pairs(BUILDING_DEFINITIONS) do
 	local entity = table.deepcopy(data.raw["assembling-machine"]["assembling-machine-3"])
 	entity.name = name
@@ -28,7 +40,7 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 		production_type = "output",
 		hide_connection_info = true,
 	}}
-	entity.fixed_recipe = MOLECULE_REACTION_REACTANTS_NAME
+	entity.fixed_recipe = name.."-reaction"
 	entity.module_specification = nil
 	entity.fast_replaceable_group = nil
 	entity.selection_box[1][2] = entity.selection_box[1][2] - 1
@@ -73,6 +85,20 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 		end
 	end
 
+	local reaction_recipe = {
+		type = "recipe",
+		name = name.."-reaction",
+		subgroup = MOLECULES_SUBGROUP_NAME,
+		enabled = true,
+		ingredients = {{MOLECULE_REACTION_REACTANTS_NAME, 1}},
+		results = {},
+		energy_required = 1,
+		icon = GRAPHICS_ROOT.."recipes/"..name..".png",
+		icon_size = ITEM_ICON_SIZE,
+		icon_mipmaps = ITEM_ICON_MIPMAPS,
+		hidden = true,
+	}
+
 	local item = table.deepcopy(data.raw.item[definition.building_design[2]])
 	item.name = name
 	item.place_result = name
@@ -87,7 +113,7 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 		result = name,
 	}
 
-	data:extend({entity, item, recipe})
+	data:extend({entity, reaction_recipe, item, recipe})
 end
 
 
