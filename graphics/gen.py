@@ -69,6 +69,8 @@ ROTATION_SELECTOR_ARROW_SIZE_FRACTION = 6 / 64
 ROTATION_SELECTOR_DOT_RADIUS_FRACTION = 4 / 64
 ROTATION_SELECTOR_OUTLINE_COLOR = (64, 64, 64, 0)
 ROTATION_SELECTOR_OUTLINE_FRACTION = 4 / 64
+BASE_OVERLAY_SIZE = 32
+MOLECULIER_MOLECULE = "H--C|-He|N--O"
 
 
 #Utility functions
@@ -146,13 +148,16 @@ def get_circle_mip_datas(base_size, y_scale, x_scale, y, x, mips):
 		y_data = {}
 		scale_data[y] = y_data
 	mip_datas = y_data.get(x, None)
-	if mip_datas:
+	if not mip_datas:
+		mip_datas = {}
+	elif mip_datas.get(mips - 1, False):
 		return mip_datas
-	mip_datas = {}
 	y_data[x] = mip_datas
 	center_y = base_size * (y + scale_data["center_y_min"]) / scale_data["scale"]
 	center_x = base_size * (x + scale_data["center_x_min"]) / scale_data["scale"]
 	for mip in range(mips):
+		if mip_datas.get(mip, False):
+			continue
 		size = base_size >> mip
 		alpha = numpy.zeros((size, size), numpy.uint8)
 		shrink = 1 / (1 << mip)
@@ -174,7 +179,11 @@ def get_text_data(symbol, base_size, mips):
 	if not base_size_data:
 		base_size_data = {}
 		TEXT_DATAS[base_size] = base_size_data
-	text_data = base_size_data.get(symbol, None)
+	text_mips_data = base_size_data.get(mips, None)
+	if not text_mips_data:
+		text_mips_data = {}
+		base_size_data[mips] = text_mips_data
+	text_data = text_mips_data.get(symbol, None)
 	if text_data:
 		return text_data
 	font_scale = FONT_SCALE_FRACTIONS[len(symbol)] * base_size
@@ -213,7 +222,7 @@ def get_text_data(symbol, base_size, mips):
 		"half_width": (right_edge - left_edge) / 2,
 		"half_height": (bottom_edge - top_edge) / 2,
 	}
-	base_size_data[symbol] = text_data
+	text_mips_data[symbol] = text_data
 	return text_data
 
 
@@ -366,7 +375,7 @@ def gen_all_bond_images(base_size, mips):
 def gen_specific_molecule(molecule, base_size, mips):
 	image = filled_mip_image(base_size, mips, (0, 0, 0, 0))
 	shape = [row.split("-") for row in molecule.split("|")]
-	bonds = {"H": 1, "C": 4, "N": 3, "O": 2}
+	bonds = {"H": 1, "C": 4, "N": 3, "O": 2, "He": 0}
 	y_scale = len(shape)
 	x_scale = max(len(row) for row in shape)
 	scale = max(y_scale, x_scale)
@@ -483,7 +492,7 @@ def gen_rotation_selectors(base_size, mips):
 
 
 #Generate building overlays
-def gen_building_overlays():
+def gen_building_overlays(base_size):
 	building_overlays_folder = "building-overlays"
 	if not os.path.exists(building_overlays_folder):
 		os.mkdir(building_overlays_folder)
@@ -495,7 +504,7 @@ def gen_building_overlays():
 		("bonus", (224, 160, 224, 0), True),
 		("remainder", (160, 224, 224, 0), True),
 	]
-	for (base_size, suffix) in [(32, ""), (64, "-hr")]:
+	for (base_size, suffix) in [(base_size, ""), (base_size * 2, "-hr")]:
 		for (component, color, is_output) in overlays:
 			#generate the base loader shape
 			base_height = int(base_size * 1.75)
@@ -546,28 +555,45 @@ def gen_building_overlays():
 				rotated = cv2.rotate(base_image, rotation)
 				image[top:top + rotated.shape[0], left:left + rotated.shape[1]] = rotated
 			imwrite(os.path.join(building_overlays_folder, component + suffix + ".png"), image)
+		moleculifier_image = gen_specific_molecule(MOLECULIER_MOLECULE, base_size * 2, 1)
+		imwrite(os.path.join(building_overlays_folder, f"moleculifier{suffix}.png"), moleculifier_image)
 	print("Building overlays written")
 
 
-#Generate icon overlays
-def gen_icon_overlays():
+#Generate building icon overlays
+def gen_icon_overlays(base_size, mips):
 	icon_overlays_folder = "icon-overlays"
 	if not os.path.exists(icon_overlays_folder):
 		os.mkdir(icon_overlays_folder)
-	molecule_rotater_image = gen_flip_rotation_selector_image(BASE_ICON_SIZE, BASE_ICON_MIPS, is_outline=True)
-	simple_overlay_image(molecule_rotater_image, gen_flip_rotation_selector_image(BASE_ICON_SIZE, BASE_ICON_MIPS))
+	molecule_rotater_image = gen_flip_rotation_selector_image(base_size, mips, is_outline=True)
+	simple_overlay_image(molecule_rotater_image, gen_flip_rotation_selector_image(base_size, mips))
 	imwrite(os.path.join(icon_overlays_folder, "molecule-rotater.png"), molecule_rotater_image)
+	moleculifier_image = gen_specific_molecule(MOLECULIER_MOLECULE, base_size, mips)
+	imwrite(os.path.join(icon_overlays_folder, "moleculifier.png"), moleculifier_image)
 	print("Icon overlays written")
 
 
-#Generate building recipe icons
-def gen_all_building_recipe_icons():
+#Shared recipes utilities
+def get_recipes_folder():
 	recipes_folder = "recipes"
 	if not os.path.exists(recipes_folder):
 		os.mkdir(recipes_folder)
-	molecule_rotater_image = gen_flip_rotation_selector_image(BASE_ICON_SIZE, BASE_ICON_MIPS)
+	return recipes_folder
+
+
+#Generate building recipe icons
+def gen_building_recipe_icons(base_size, mips):
+	recipes_folder = get_recipes_folder()
+	molecule_rotater_image = gen_flip_rotation_selector_image(base_size, mips)
 	imwrite(os.path.join(recipes_folder, "molecule-rotater.png"), molecule_rotater_image)
 	print("Building recipe icons written")
+
+
+#Generate moleculify recipe icons
+def gen_moleculify_recipe_icons(base_size, mips):
+	recipes_folder = get_recipes_folder()
+	imwrite(os.path.join(recipes_folder, "moleculify-water.png"), gen_specific_molecule("|--H|-H1-1O", base_size, mips))
+	print("Moleculify recipe icons written")
 
 
 #Generate all graphics
@@ -577,6 +603,7 @@ gen_all_bond_images(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_item_group_icon(ITEM_GROUP_SIZE, ITEM_GROUP_MIPS)
 gen_molecule_reaction_reactants_icon(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_rotation_selectors(BASE_ICON_SIZE, BASE_ICON_MIPS)
-gen_building_overlays()
-gen_icon_overlays()
-gen_all_building_recipe_icons()
+gen_building_overlays(BASE_OVERLAY_SIZE)
+gen_icon_overlays(BASE_ICON_SIZE, BASE_ICON_MIPS)
+gen_building_recipe_icons(BASE_ICON_SIZE, BASE_ICON_MIPS)
+gen_moleculify_recipe_icons(BASE_ICON_SIZE, BASE_ICON_MIPS)

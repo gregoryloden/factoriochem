@@ -145,7 +145,7 @@ local function gen_molecules(grid_i_i, grid_is)
 			localised_description = {"item-description.atom-00", slot.atom.number, slot.atom.bonds},
 			icon = ATOM_ICON_ROOT..slot.atom.symbol.."/1100.png",
 			icon_size = ITEM_ICON_SIZE,
-			icon_mipmaps = ITEM_ICON_MIPMAPS,
+			icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 			stack_size = 1,
 		}})
 		total_molecules = total_molecules + 1
@@ -187,7 +187,11 @@ local function gen_molecules(grid_i_i, grid_is)
 				local atom_icon_path = ATOM_ICON_ROOT..slot.atom.symbol.."/"..name_spec..".png"
 				table.insert(
 					icons,
-					{icon = atom_icon_path, icon_size = ITEM_ICON_SIZE, icon_mipmaps = ITEM_ICON_MIPMAPS})
+					{
+						icon = atom_icon_path,
+						icon_size = ITEM_ICON_SIZE,
+						icon_mipmaps = MOLECULE_ICON_MIPMAPS,
+					})
 				if slot.up_bonds > 0 then
 					up_bond_icon_path = BOND_ICON_ROOT.."U"..name_spec..slot.up_bonds..".png"
 					table.insert(
@@ -195,7 +199,7 @@ local function gen_molecules(grid_i_i, grid_is)
 						{
 							icon = up_bond_icon_path,
 							icon_size = ITEM_ICON_SIZE,
-							icon_mipmaps = ITEM_ICON_MIPMAPS
+							icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 						})
 				end
 				if slot.left_bonds > 0 then
@@ -205,7 +209,7 @@ local function gen_molecules(grid_i_i, grid_is)
 						{
 							icon = left_bond_icon_path,
 							icon_size = ITEM_ICON_SIZE,
-							icon_mipmaps = ITEM_ICON_MIPMAPS
+							icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 						})
 				end
 			end

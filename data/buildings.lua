@@ -7,7 +7,8 @@ local DIRECTION_ANIMATION_DATA = {
 	west = function(shift_x, shift_y) return {width = 56, height = 32, x = 0, y = 56, shift = {shift_y, -shift_x}} end,
 }
 local HIDDEN_ENTITY_FLAGS = {"hidden", "not-deconstructable", "not-blueprintable", "player-creation"}
-local RECIPE_ICON_MIPMAPS = 4
+local BUILDING_OVERLAY_ICON_SIZE = 64
+local MOLECULIFIER_NAME = "moleculifier"
 
 
 -- Molecule reaction buildings
@@ -24,7 +25,7 @@ data:extend({
 		localised_name = {"item-name."..MOLECULE_REACTION_REACTANTS_NAME},
 		icon = GRAPHICS_ROOT..MOLECULE_REACTION_REACTANTS_NAME..".png",
 		icon_size = ITEM_ICON_SIZE,
-		icon_mipmaps = ITEM_ICON_MIPMAPS,
+		icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 		stack_size = 1,
 		flags = {"hidden"},
 	},
@@ -98,7 +99,7 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 		energy_required = 1,
 		icon = GRAPHICS_ROOT.."recipes/"..name..".png",
 		icon_size = ITEM_ICON_SIZE,
-		icon_mipmaps = RECIPE_ICON_MIPMAPS,
+		icon_mipmaps = ITEM_ICON_MIPMAPS,
 		hidden = true,
 	}
 
@@ -112,7 +113,7 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 		{
 			icon = GRAPHICS_ROOT.."icon-overlays/"..name..".png",
 			icon_size = ITEM_ICON_SIZE,
-			icon_mipmaps = RECIPE_ICON_MIPMAPS,
+			icon_mipmaps = ITEM_ICON_MIPMAPS,
 		},
 	}
 	item.icon = nil
@@ -151,3 +152,55 @@ reaction_loader.selection_box = nil
 reaction_loader.collision_mask = {"transport-belt-layer"}
 
 data:extend({reaction_chest, reaction_loader})
+
+
+-- Moleculifier building
+local moleculifier_entity = table.deepcopy(data.raw["assembling-machine"]["assembling-machine-2"])
+moleculifier_entity.name = MOLECULIFIER_NAME
+moleculifier_entity.minable.result = MOLECULIFIER_NAME
+moleculifier_entity.energy_source = {type = "void"}
+moleculifier_entity.crafting_speed = 1
+moleculifier_entity.crafting_categories = {MOLECULIFY_RECIPE_CATEGORY}
+moleculifier_entity.module_specification = nil
+moleculifier_entity.fast_replaceable_group = nil
+moleculifier_entity.next_upgrade = nil
+local moleculifier_overlay_layer = {
+	filename = GRAPHICS_ROOT.."building-overlays/"..MOLECULIFIER_NAME..".png",
+	size = BUILDING_OVERLAY_ICON_SIZE,
+	repeat_count = moleculifier_entity.animation.layers[1].frame_count,
+	priority = "high",
+	hr_version = {
+		filename = GRAPHICS_ROOT.."building-overlays/"..MOLECULIFIER_NAME.."-hr.png",
+		size = BUILDING_OVERLAY_ICON_SIZE * 2,
+		repeat_count = moleculifier_entity.animation.layers[1].hr_version.frame_count,
+		priority = "high",
+	},
+}
+table.insert(moleculifier_entity.animation.layers, moleculifier_overlay_layer)
+
+local moleculifier_item = table.deepcopy(data.raw.item["assembling-machine-2"])
+moleculifier_item.name = MOLECULIFIER_NAME
+moleculifier_item.place_result = MOLECULIFIER_NAME
+moleculifier_item.subgroup = MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME
+moleculifier_item.order = "a"
+moleculifier_item.icons = {
+	{icon = moleculifier_item.icon, icon_size = moleculifier_item.icon_size, icon_mipmaps = moleculifier_item.icon_mipmaps},
+	{
+		icon = GRAPHICS_ROOT.."icon-overlays/"..MOLECULIFIER_NAME..".png",
+		icon_size = ITEM_ICON_SIZE,
+		icon_mipmaps = ITEM_ICON_MIPMAPS,
+	},
+}
+moleculifier_item.icon = nil
+moleculifier_item.icon_size = nil
+moleculifier_item.icon_mipmaps = nil
+
+local moleculifier_recipe = {
+	type = "recipe",
+	name = MOLECULIFIER_NAME,
+	enabled = true,
+	ingredients = {},
+	result = MOLECULIFIER_NAME
+}
+
+data:extend({moleculifier_entity, moleculifier_item, moleculifier_recipe})
