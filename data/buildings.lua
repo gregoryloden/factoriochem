@@ -7,6 +7,7 @@ local DIRECTION_ANIMATION_DATA = {
 	west = function(shift_x, shift_y) return {width = 56, height = 32, x = 0, y = 56, shift = {shift_y, -shift_x}} end,
 }
 local HIDDEN_ENTITY_FLAGS = {"hidden", "not-deconstructable", "not-blueprintable", "player-creation"}
+local RECIPE_ICON_MIPMAPS = 4
 
 
 -- Molecule reaction buildings
@@ -95,7 +96,7 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 		energy_required = 1,
 		icon = GRAPHICS_ROOT.."recipes/"..name..".png",
 		icon_size = ITEM_ICON_SIZE,
-		icon_mipmaps = ITEM_ICON_MIPMAPS,
+		icon_mipmaps = RECIPE_ICON_MIPMAPS,
 		hidden = true,
 	}
 
@@ -104,6 +105,17 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 	item.place_result = name
 	item.subgroup = MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME
 	item.order = definition.item_order
+	item.icons = {
+		{icon = item.icon, icon_size = item.icon_size, icon_mipmaps = item.icon_mipmaps},
+		{
+			icon = GRAPHICS_ROOT.."recipes/"..name..".png",
+			icon_size = ITEM_ICON_SIZE,
+			icon_mipmaps = RECIPE_ICON_MIPMAPS,
+		},
+	}
+	item.icon = nil
+	item.icon_size = nil
+	item.icon_mipmaps = nil
 
 	local recipe = {
 		type = "recipe",
