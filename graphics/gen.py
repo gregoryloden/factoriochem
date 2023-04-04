@@ -498,22 +498,25 @@ def gen_building_overlays():
 			base_image = numpy.full((base_height, base_size, 4), color, numpy.uint8)
 			if is_output:
 				loader_points = [
-					(0, 1.25 * base_size),
-					(base_size, 1.25 * base_size),
-					(base_size, 0.25 * base_size),
-					(base_size / 2, 0),
-					(0, 0.25 * base_size),
+					(2 / 32, 1.25),
+					(30 / 32, 1.25),
+					(30 / 32, 0.25),
+					(0.5, 0 + 1 / 32),
+					(2 / 32, 0.25),
 				]
 			else:
 				loader_points = [
-					(0, 0.5 * base_size),
-					(base_size, 0.5 * base_size),
-					(base_size, 1.75 * base_size),
-					(base_size / 2, 1.5 * base_size),
-					(0, 1.75 * base_size),
+					(2 / 32, 0.5),
+					(30 / 32, 0.5),
+					(30 / 32, 1.75 - 1 / 32),
+					(0.5, 1.5),
+					(2 / 32, 1.75 - 1 / 32),
 				]
 			draw_loader_points = [
-				(round((x - 0.5) * PRECISION_MULTIPLIER), round((y - 0.5) * PRECISION_MULTIPLIER))
+				(
+					round((x * base_size - 0.5) * PRECISION_MULTIPLIER),
+					round((y * base_size - 0.5) * PRECISION_MULTIPLIER)
+				)
 				for (x, y) in loader_points
 			]
 			def draw_loader(mask):
