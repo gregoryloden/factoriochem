@@ -2,6 +2,7 @@ deploy.bat
 graphics/*.png
 graphics/atoms/*
 graphics/bonds/*
+graphics/icon-overlays/*
 graphics/building-overlays/*
 graphics/recipes/*
 graphics/selectors/*

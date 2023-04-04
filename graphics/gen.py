@@ -8,7 +8,8 @@ import math
 MAX_GRID_WIDTH = 3
 MAX_GRID_HEIGHT = 3
 BASE_ICON_SIZE = 64
-BASE_ICON_MIPS = 3
+BASE_ICON_MIPS = 4
+MOLECULE_ICON_MIPS = 3
 COLOR_FOR_BONDS = [
 	(192, 240, 192, 0),
 	(240, 240, 240, 0),
@@ -68,7 +69,6 @@ ROTATION_SELECTOR_ARROW_SIZE_FRACTION = 6 / 64
 ROTATION_SELECTOR_DOT_RADIUS_FRACTION = 4 / 64
 ROTATION_SELECTOR_OUTLINE_COLOR = (64, 64, 64, 0)
 ROTATION_SELECTOR_OUTLINE_FRACTION = 4 / 64
-RECIPE_ICON_MIPS = 4
 
 
 #Utility functions
@@ -549,23 +549,34 @@ def gen_building_overlays():
 	print("Building overlays written")
 
 
+#Generate icon overlays
+def gen_icon_overlays():
+	icon_overlays_folder = "icon-overlays"
+	if not os.path.exists(icon_overlays_folder):
+		os.mkdir(icon_overlays_folder)
+	molecule_rotater_image = gen_flip_rotation_selector_image(BASE_ICON_SIZE, BASE_ICON_MIPS, is_outline=True)
+	simple_overlay_image(molecule_rotater_image, gen_flip_rotation_selector_image(BASE_ICON_SIZE, BASE_ICON_MIPS))
+	imwrite(os.path.join(icon_overlays_folder, "molecule-rotater.png"), molecule_rotater_image)
+	print("Icon overlays written")
+
+
 #Generate building recipe icons
 def gen_all_building_recipe_icons():
 	recipes_folder = "recipes"
 	if not os.path.exists(recipes_folder):
 		os.mkdir(recipes_folder)
-	molecule_rotater_image = gen_flip_rotation_selector_image(BASE_ICON_SIZE, RECIPE_ICON_MIPS, is_outline=True)
-	simple_overlay_image(molecule_rotater_image, gen_flip_rotation_selector_image(BASE_ICON_SIZE, RECIPE_ICON_MIPS))
+	molecule_rotater_image = gen_flip_rotation_selector_image(BASE_ICON_SIZE, BASE_ICON_MIPS)
 	imwrite(os.path.join(recipes_folder, "molecule-rotater.png"), molecule_rotater_image)
 	print("Building recipe icons written")
 
 
 #Generate all graphics
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-gen_all_atom_images(BASE_ICON_SIZE, BASE_ICON_MIPS)
-gen_all_bond_images(BASE_ICON_SIZE, BASE_ICON_MIPS)
+gen_all_atom_images(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
+gen_all_bond_images(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_item_group_icon(ITEM_GROUP_SIZE, ITEM_GROUP_MIPS)
-gen_molecule_reaction_reactants_icon(BASE_ICON_SIZE, BASE_ICON_MIPS)
+gen_molecule_reaction_reactants_icon(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_rotation_selectors(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_building_overlays()
+gen_icon_overlays()
 gen_all_building_recipe_icons()

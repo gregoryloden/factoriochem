@@ -110,7 +110,7 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 	item.icons = {
 		{icon = item.icon, icon_size = item.icon_size, icon_mipmaps = item.icon_mipmaps},
 		{
-			icon = GRAPHICS_ROOT.."recipes/"..name..".png",
+			icon = GRAPHICS_ROOT.."icon-overlays/"..name..".png",
 			icon_size = ITEM_ICON_SIZE,
 			icon_mipmaps = RECIPE_ICON_MIPMAPS,
 		},
