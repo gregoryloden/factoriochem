@@ -45,29 +45,31 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 	for _, direction in ipairs({"north", "east", "south", "west"}) do
 		layers = entity.animation[direction].layers
 		for _, component in ipairs(MOLECULE_REACTION_COMPONENT_NAMES) do
-			local shift = MOLECULE_REACTION_COMPONENT_OFFSETS[component]
-			local direction_data = DIRECTION_ANIMATION_DATA[direction](shift.x, shift.y * 1.375)
-			local layer = {
-				filename = GRAPHICS_ROOT.."building-overlays/"..component..".png",
-				width = direction_data.width,
-				height = direction_data.height,
-				x = direction_data.x,
-				y = direction_data.y,
-				repeat_count = layers[1].frame_count,
-				priority = "high",
-				shift = direction_data.shift,
-				hr_version = {
-					filename = GRAPHICS_ROOT.."building-overlays/hr-"..component..".png",
-					width = direction_data.width * 2,
-					height = direction_data.height * 2,
-					x = direction_data.x * 2,
-					y = direction_data.y * 2,
-					repeat_count = layers[1].hr_version.frame_count,
+			if definition.has_component[component] then
+				local shift = MOLECULE_REACTION_COMPONENT_OFFSETS[component]
+				local direction_data = DIRECTION_ANIMATION_DATA[direction](shift.x, shift.y * 1.375)
+				local layer = {
+					filename = GRAPHICS_ROOT.."building-overlays/"..component..".png",
+					width = direction_data.width,
+					height = direction_data.height,
+					x = direction_data.x,
+					y = direction_data.y,
+					repeat_count = layers[1].frame_count,
 					priority = "high",
 					shift = direction_data.shift,
-				},
-			}
-			table.insert(layers, layer)
+					hr_version = {
+						filename = GRAPHICS_ROOT.."building-overlays/hr-"..component..".png",
+						width = direction_data.width * 2,
+						height = direction_data.height * 2,
+						x = direction_data.x * 2,
+						y = direction_data.y * 2,
+						repeat_count = layers[1].hr_version.frame_count,
+						priority = "high",
+						shift = direction_data.shift,
+					},
+				}
+				table.insert(layers, layer)
+			end
 		end
 	end
 
