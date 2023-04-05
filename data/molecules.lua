@@ -45,6 +45,8 @@ local GRID_WIDTH_M1 = GRID_WIDTH - 1
 local GRID_HEIGHT_M1 = GRID_HEIGHT - 1
 local MAX_SINGLE_BONDS = 2
 local MOLECULE_BUILDER = empty_array()
+local MOLECULE_DISPLAY_COUNTER = {}
+local MOLECULE_DISPLAY_BUILDER = empty_array()
 local ATOM_ICON_ROOT = GRAPHICS_ROOT.."atoms/"
 local BOND_ICON_ROOT = GRAPHICS_ROOT.."bonds/"
 local ATOMS_SUBGROUP_PREFIX = "atoms-"
@@ -172,11 +174,12 @@ local function gen_molecules(grid_i_i, grid_is)
 					array_push(MOLECULE_BUILDER, ATOM_COL_SEPARATOR)
 					last_col = last_col + 1
 				end
+				local symbol = slot.atom.symbol
 				local name_spec = current_shape_height..current_shape_width..row..col
 				table.insert(
 					icons,
 					{
-						icon = ATOM_ICON_ROOT..slot.atom.symbol.."/"..name_spec..".png",
+						icon = ATOM_ICON_ROOT..symbol.."/"..name_spec..".png",
 						icon_size = ITEM_ICON_SIZE,
 						icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 					})
@@ -190,7 +193,7 @@ local function gen_molecules(grid_i_i, grid_is)
 							icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 						})
 				end
-				array_push(MOLECULE_BUILDER, slot.atom.symbol)
+				array_push(MOLECULE_BUILDER, symbol)
 				if slot.right_bonds > 0 then array_push(MOLECULE_BUILDER, slot.right_bonds) end
 				if slot.left_bonds > 0 then
 					table.insert(
@@ -201,15 +204,33 @@ local function gen_molecules(grid_i_i, grid_is)
 							icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 						})
 				end
+				MOLECULE_DISPLAY_COUNTER[symbol] = (MOLECULE_DISPLAY_COUNTER[symbol] or 0) + 1
 			end
 		end
-		local molecule_name = table.concat(MOLECULE_BUILDER)
+		-- selection sort to assemble a chemical name in ascending atomic number order
+		array_clear(MOLECULE_DISPLAY_BUILDER)
+		while true do
+			local symbol
+			local atomic_number = 1000
+			for check_symbol, _ in pairs(MOLECULE_DISPLAY_COUNTER) do
+				check_atomic_number = ALL_ATOMS[check_symbol].number
+				if check_atomic_number < atomic_number then
+					symbol = check_symbol
+					atomic_number = check_atomic_number
+				end
+			end
+			if not symbol then break end
+			array_push(MOLECULE_DISPLAY_BUILDER, symbol)
+			local count = MOLECULE_DISPLAY_COUNTER[symbol]
+			if count > 1 then array_push(MOLECULE_DISPLAY_BUILDER, count) end
+			MOLECULE_DISPLAY_COUNTER[symbol] = nil
+		end
 		data:extend({{
 			type = "item",
-			name = MOLECULE_ITEM_PREFIX..molecule_name,
+			name = MOLECULE_ITEM_PREFIX..table.concat(MOLECULE_BUILDER),
 			subgroup = MOLECULES_SUBGROUP_NAME,
 			order = current_shape_order_prefix..current_atom_count..string.format("%03X", current_shape_n),
-			localised_name = molecule_name,
+			localised_name = table.concat(MOLECULE_DISPLAY_BUILDER),
 			icons = icons,
 			stack_size = 1,
 		}})
