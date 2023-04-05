@@ -123,15 +123,17 @@ def iter_mips(base_size, mips):
 		yield (mip, place_x, size)
 		place_x += size
 
-def easy_mips(image, base_size, mips):
+def easy_mips(image):
 	#copy the entire outer mip, performance isn't really an issue
+	(base_size, total_size, _) = image.shape
 	mip_0 = image[:, 0:base_size]
-	place_x = 0
-	for mip in range(1, mips):
+	place_x = base_size
+	for mip in range(1, 64):
 		size = base_size >> mip
-		place_x += base_size >> (mip - 1)
 		image[0:size, place_x:place_x + size] = cv2.resize(mip_0, (size, size), interpolation=cv2.INTER_AREA)
-	return image
+		place_x += size
+		if place_x >= total_size:
+			return image
 
 
 #Sub-image generation
@@ -363,8 +365,8 @@ def gen_bond_images(base_size, y_scale, x_scale, y, x, mips):
 			draw_start = draw_start[::-1]
 			draw_end = draw_end[::-1]
 			draw_alpha_on(u, draw_bond)
-		images["L"][bond_count] = easy_mips(l, base_size, mips)
-		images["U"][bond_count] = easy_mips(u, base_size, mips)
+		images["L"][bond_count] = easy_mips(l)
+		images["U"][bond_count] = easy_mips(u)
 	return images
 
 def gen_and_write_bond_images(bond_folder, base_size, y_scale, x_scale, y, x, mips):
@@ -493,7 +495,7 @@ def gen_prepared_rotation_selector_image(base_size, mips, arcs, draw_arrow_point
 		cv2.fillPoly(mask, numpy.array(draw_arrow_pointss), 255, cv2.LINE_AA, PRECISION_BITS)
 	draw_alpha_on(arrows_image, draw_arrows)
 	simple_overlay_image(image, arrows_image)
-	return easy_mips(image, base_size, mips)
+	return easy_mips(image)
 
 def gen_left_right_rotation_selector_image(base_size, mips, start_angle, arrow_center_x_radius_multiplier):
 	(radius, center, arrow_size) = get_rotation_selector_arc_values(base_size)
