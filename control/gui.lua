@@ -1,6 +1,7 @@
 -- Constants
 local REACTION_PREFIX = "reaction-"
 local REACTION_DEMO_PREFIX = "reaction-demo-"
+local SELECTOR_SUFFIX = "-selector"
 local REACTION_TABLE_COMPONENT_NAME_MAP = {}
 local REACTION_DEMO_TABLE_COMPONENT_NAME_MAP = {}
 for _, component_name in ipairs(MOLECULE_REACTION_COMPONENT_NAMES) do
@@ -10,8 +11,8 @@ end
 local REACTION_TABLE_SELECTOR_NAME_MAP = {}
 local REACTION_DEMO_TABLE_SELECTOR_NAME_MAP = {}
 for _, reactant_name in ipairs(MOLECULE_REACTION_SELECTOR_REACTANTS) do
-	REACTION_TABLE_SELECTOR_NAME_MAP[REACTION_PREFIX..reactant_name.."-selector"] = reactant_name
-	REACTION_DEMO_TABLE_SELECTOR_NAME_MAP[REACTION_DEMO_PREFIX..reactant_name.."-selector"] = reactant_name
+	REACTION_TABLE_SELECTOR_NAME_MAP[REACTION_PREFIX..reactant_name..SELECTOR_SUFFIX] = reactant_name
+	REACTION_DEMO_TABLE_SELECTOR_NAME_MAP[REACTION_DEMO_PREFIX..reactant_name..SELECTOR_SUFFIX] = reactant_name
 end
 
 
@@ -95,10 +96,10 @@ local function on_gui_opened(event)
 		if not selector then return {type = "empty-widget"} end
 		local spec = {
 			type = "choose-elem-button",
-			name = name_prefix..reactant_name.."-selector",
+			name = name_prefix..reactant_name..SELECTOR_SUFFIX,
 			elem_type = "item",
 			elem_filters = {{filter = "subgroup", subgroup = MOLECULE_REACTION_SELECTOR_PREFIX..selector}},
-			tooltip = {"factoriochem-poc."..entity.name.."-"..selector.."-tooltip"},
+			tooltip = {"factoriochem-poc."..entity.name.."-"..reactant_name..SELECTOR_SUFFIX.."-tooltip"},
 		}
 		if name_prefix == REACTION_PREFIX then
 			spec.item = global.molecule_reaction_building_data[entity.unit_number].reaction.selectors[reactant_name]
