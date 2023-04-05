@@ -107,14 +107,15 @@ def overlay_image(back_image, back_left, back_top, front_image, front_left, fron
 		front_color = front_image[front_top:front_bottom, front_left:front_right, color]
 		back_image[back_top:back_bottom, back_left:back_right, color] = \
 			back_color + (front_color * 1.0 - back_color) * front_alpha / new_alpha
+	return back_image
 
 def simple_overlay_image(back_image, front_image):
 	shape = front_image.shape
-	overlay_image(back_image, 0, 0, front_image, 0, 0, shape[1], shape[0])
+	return overlay_image(back_image, 0, 0, front_image, 0, 0, shape[1], shape[0])
 
 def simple_overlay_image_at(back_image, back_left, back_top, front_image):
 	shape = front_image.shape
-	overlay_image(back_image, back_left, back_top, front_image, 0, 0, shape[1], shape[0])
+	return overlay_image(back_image, back_left, back_top, front_image, 0, 0, shape[1], shape[0])
 
 def iter_mips(base_size, mips):
 	place_x = 0
@@ -423,11 +424,10 @@ def gen_specific_molecule(molecule, base_size, mips, include_outline = False):
 				right_bonds = int(symbol[-1])
 				symbol = symbol[:-1]
 			if include_outline:
-				atom_outline_image = gen_single_atom_outline_image(base_size, y_scale, x_scale, y, x, mips)
-				simple_overlay_image(atom_outline_image, image)
-				image = atom_outline_image
-			atom_image = gen_single_atom_image(symbol, bonds[symbol], base_size, y_scale, x_scale, y, x, mips)
-			simple_overlay_image(image, atom_image)
+				image = simple_overlay_image(
+					gen_single_atom_outline_image(base_size, y_scale, x_scale, y, x, mips), image)
+			simple_overlay_image(
+				image, gen_single_atom_image(symbol, bonds[symbol], base_size, y_scale, x_scale, y, x, mips))
 			if left_bonds > 0:
 				simple_overlay_image(
 					image, gen_bond_images(base_size, y_scale, x_scale, y, x, mips)["L"][left_bonds])
@@ -494,8 +494,7 @@ def gen_prepared_rotation_selector_image(base_size, mips, arcs, draw_arrow_point
 	def draw_arrows(mask):
 		cv2.fillPoly(mask, numpy.array(draw_arrow_pointss), 255, cv2.LINE_AA, PRECISION_BITS)
 	draw_alpha_on(arrows_image, draw_arrows)
-	simple_overlay_image(image, arrows_image)
-	return easy_mips(image)
+	return easy_mips(simple_overlay_image(image, arrows_image))
 
 def gen_left_right_rotation_selector_image(base_size, mips, start_angle, arrow_center_x_radius_multiplier):
 	(radius, center, arrow_size) = get_rotation_selector_arc_values(base_size)
@@ -600,10 +599,9 @@ def gen_icon_overlays(base_size, mips):
 	icon_overlays_folder = "icon-overlays"
 	if not os.path.exists(icon_overlays_folder):
 		os.mkdir(icon_overlays_folder)
-	molecule_rotater_image = \
-		gen_flip_rotation_selector_image(base_size, mips, is_outline=True, color=ICON_OVERLAY_OUTLINE_COLOR)
-	simple_overlay_image(
-		molecule_rotater_image, gen_flip_rotation_selector_image(base_size, mips, color=MOLECULE_ROTATER_ICON_COLOR))
+	molecule_rotater_image = simple_overlay_image(
+		gen_flip_rotation_selector_image(base_size, mips, is_outline=True, color=ICON_OVERLAY_OUTLINE_COLOR),
+		gen_flip_rotation_selector_image(base_size, mips, color=MOLECULE_ROTATER_ICON_COLOR))
 	imwrite(os.path.join(icon_overlays_folder, "molecule-rotater.png"), molecule_rotater_image)
 	moleculifier_image = gen_specific_molecule(MOLECULIFIER_MOLECULE, base_size, mips, include_outline=True)
 	imwrite(os.path.join(icon_overlays_folder, "moleculifier.png"), moleculifier_image)
