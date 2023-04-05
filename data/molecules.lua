@@ -29,6 +29,7 @@ end
 
 
 -- Constants
+local ATOMS_SUBGROUP_PREFIX = "atoms-"
 local GRID_WIDTH = 3
 local GRID_HEIGHT = 3
 local GRID_AREA = GRID_WIDTH * GRID_HEIGHT
@@ -49,7 +50,7 @@ local MOLECULE_DISPLAY_COUNTER = {}
 local MOLECULE_DISPLAY_BUILDER = empty_array()
 local ATOM_ICON_ROOT = GRAPHICS_ROOT.."atoms/"
 local BOND_ICON_ROOT = GRAPHICS_ROOT.."bonds/"
-local ATOMS_SUBGROUP_PREFIX = "atoms-"
+local MOLECULE_DESCRIPTION_CACHE = {}
 local ITEM_GROUP_ICON_SIZE = 128
 local ITEM_GROUP_ICON_MIPMAPS = 2
 
@@ -210,6 +211,7 @@ local function gen_molecules(grid_i_i, grid_is)
 		end
 		-- selection sort to assemble a chemical name in ascending atomic number order
 		array_clear(MOLECULE_DISPLAY_BUILDER)
+		local description_cache = MOLECULE_DESCRIPTION_CACHE
 		while true do
 			local symbol
 			local atomic_number = 1000
@@ -225,6 +227,25 @@ local function gen_molecules(grid_i_i, grid_is)
 			local count = MOLECULE_DISPLAY_COUNTER[symbol]
 			if count > 1 then array_push(MOLECULE_DISPLAY_BUILDER, count) end
 			MOLECULE_DISPLAY_COUNTER[symbol] = nil
+			local next_description_cache = description_cache[symbol]
+			if not next_description_cache then
+				local atom = ALL_ATOMS[symbol]
+				local description = description_cache[1]
+				if description then
+					next_description_cache = {{
+						"item-description.molecule-AA2",
+						description,
+						symbol,
+						atom.number,
+						atom.localised_name
+					}}
+				else
+					next_description_cache =
+						{{"item-description.molecule-AA", symbol, atom.number, atom.localised_name}}
+				end
+				description_cache[symbol] = next_description_cache
+			end
+			description_cache = next_description_cache
 		end
 		data:extend({{
 			type = "item",
@@ -232,6 +253,7 @@ local function gen_molecules(grid_i_i, grid_is)
 			subgroup = MOLECULES_SUBGROUP_NAME,
 			order = current_shape_order_prefix..current_atom_count..string.format("%03X", current_shape_n),
 			localised_name = table.concat(MOLECULE_DISPLAY_BUILDER),
+			localised_description = description_cache[1],
 			icons = icons,
 			stack_size = 1,
 		}})
