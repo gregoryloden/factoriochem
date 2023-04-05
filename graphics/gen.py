@@ -67,10 +67,11 @@ ROTATION_SELECTOR_RADIUS_FRACTION = 24 / 64
 ROTATION_SELECTOR_THICKNESS_FRACTION = 4 / 64
 ROTATION_SELECTOR_ARROW_SIZE_FRACTION = 6 / 64
 ROTATION_SELECTOR_DOT_RADIUS_FRACTION = 4 / 64
-ROTATION_SELECTOR_OUTLINE_COLOR = (64, 64, 64, 0)
 ROTATION_SELECTOR_OUTLINE_FRACTION = 4 / 64
+ICON_OVERLAY_OUTLINE_COLOR = (64, 64, 64, 0)
+MOLECULE_ROTATER_ICON_COLOR = (192, 192, 224, 0)
 BASE_OVERLAY_SIZE = 32
-MOLECULIER_MOLECULE = "H--C|-He|N--O"
+MOLECULIFIER_MOLECULE = "H--C|-He|N--O"
 
 
 #Utility functions
@@ -437,7 +438,7 @@ def get_draw_arrow_points(center_x, center_y, x_offset, y_offset):
 		draw_arrow_points.append((round(x * PRECISION_MULTIPLIER), round(y * PRECISION_MULTIPLIER)))
 	return draw_arrow_points
 
-def gen_prepared_rotation_selector_image(base_size, mips, arcs, draw_arrow_pointss, is_outline = False):
+def gen_prepared_rotation_selector_image(base_size, mips, arcs, draw_arrow_pointss, is_outline = False, color = None):
 	(radius, center, _) = get_rotation_selector_arc_values(base_size)
 	thickness = int(ROTATION_SELECTOR_THICKNESS_FRACTION * base_size)
 	dot_radius = ROTATION_SELECTOR_DOT_RADIUS_FRACTION * base_size
@@ -448,7 +449,8 @@ def gen_prepared_rotation_selector_image(base_size, mips, arcs, draw_arrow_point
 	draw_axes = (round(radius * PRECISION_MULTIPLIER),) * 2
 	draw_dot_radius = round((dot_radius - 0.5) * PRECISION_MULTIPLIER)
 
-	color = ROTATION_SELECTOR_OUTLINE_COLOR if is_outline else ROTATION_SELECTOR_COLOR
+	if not color:
+		color = ROTATION_SELECTOR_COLOR
 	image = filled_mip_image(base_size, mips, color)
 	def draw_arcs_and_dot(mask):
 		for (start_angle, arc) in arcs:
@@ -468,7 +470,7 @@ def gen_left_right_rotation_selector_image(base_size, mips, start_angle, arrow_c
 	draw_arrow_points = get_draw_arrow_points(center + radius * arrow_center_x_radius_multiplier, center, 0, -arrow_size)
 	return gen_prepared_rotation_selector_image(base_size, mips, [(start_angle, 90)], [draw_arrow_points])
 
-def gen_flip_rotation_selector_image(base_size, mips, is_outline = False):
+def gen_flip_rotation_selector_image(base_size, mips, is_outline = False, color = None):
 	(radius, center, arrow_size) = get_rotation_selector_arc_values(base_size)
 	if is_outline:
 		arrow_size += ROTATION_SELECTOR_OUTLINE_FRACTION * base_size
@@ -479,7 +481,8 @@ def gen_flip_rotation_selector_image(base_size, mips, is_outline = False):
 		x_offset = arrow_size / 2 * math.sqrt(3) * mult
 		y_offset = arrow_size / 2 * mult
 		draw_arrow_pointss.append(get_draw_arrow_points(center_x, center_y, x_offset, y_offset))
-	return gen_prepared_rotation_selector_image(base_size, mips, [(120, 120), (300, 120)], draw_arrow_pointss, is_outline)
+	return gen_prepared_rotation_selector_image(
+		base_size, mips, [(120, 120), (300, 120)], draw_arrow_pointss, is_outline, color)
 
 def gen_rotation_selectors(base_size, mips):
 	selectors_folder = get_selectors_folder()
@@ -555,7 +558,7 @@ def gen_building_overlays(base_size):
 				rotated = cv2.rotate(base_image, rotation)
 				image[top:top + rotated.shape[0], left:left + rotated.shape[1]] = rotated
 			imwrite(os.path.join(building_overlays_folder, component + suffix + ".png"), image)
-		moleculifier_image = gen_specific_molecule(MOLECULIER_MOLECULE, base_size * 2, 1)
+		moleculifier_image = gen_specific_molecule(MOLECULIFIER_MOLECULE, base_size * 2, 1)
 		imwrite(os.path.join(building_overlays_folder, f"moleculifier{suffix}.png"), moleculifier_image)
 	print("Building overlays written")
 
@@ -565,10 +568,12 @@ def gen_icon_overlays(base_size, mips):
 	icon_overlays_folder = "icon-overlays"
 	if not os.path.exists(icon_overlays_folder):
 		os.mkdir(icon_overlays_folder)
-	molecule_rotater_image = gen_flip_rotation_selector_image(base_size, mips, is_outline=True)
-	simple_overlay_image(molecule_rotater_image, gen_flip_rotation_selector_image(base_size, mips))
+	molecule_rotater_image = \
+		gen_flip_rotation_selector_image(base_size, mips, is_outline=True, color=ICON_OVERLAY_OUTLINE_COLOR)
+	simple_overlay_image(
+		molecule_rotater_image, gen_flip_rotation_selector_image(base_size, mips, color=MOLECULE_ROTATER_ICON_COLOR))
 	imwrite(os.path.join(icon_overlays_folder, "molecule-rotater.png"), molecule_rotater_image)
-	moleculifier_image = gen_specific_molecule(MOLECULIER_MOLECULE, base_size, mips)
+	moleculifier_image = gen_specific_molecule(MOLECULIFIER_MOLECULE, base_size, mips)
 	imwrite(os.path.join(icon_overlays_folder, "moleculifier.png"), moleculifier_image)
 	print("Icon overlays written")
 
@@ -584,7 +589,7 @@ def get_recipes_folder():
 #Generate building recipe icons
 def gen_building_recipe_icons(base_size, mips):
 	recipes_folder = get_recipes_folder()
-	molecule_rotater_image = gen_flip_rotation_selector_image(base_size, mips)
+	molecule_rotater_image = gen_flip_rotation_selector_image(base_size, mips, color=MOLECULE_ROTATER_ICON_COLOR)
 	imwrite(os.path.join(recipes_folder, "molecule-rotater.png"), molecule_rotater_image)
 	print("Building recipe icons written")
 
