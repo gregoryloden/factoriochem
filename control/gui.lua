@@ -1,12 +1,16 @@
 -- Constants
 local REACTION_PREFIX = "reaction-"
 local REACTION_DEMO_PREFIX = "reaction-demo-"
+local FRAME_NAME = "frame"
+local TABLE_NAME = "table"
 local SELECTOR_SUFFIX = "-selector"
 local REACTION_TABLE_COMPONENT_NAME_MAP = {}
-local REACTION_DEMO_TABLE_COMPONENT_NAME_MAP = {}
 for _, component_name in ipairs(MOLECULE_REACTION_COMPONENT_NAMES) do
 	REACTION_TABLE_COMPONENT_NAME_MAP[REACTION_PREFIX..component_name] = component_name
-	REACTION_DEMO_TABLE_COMPONENT_NAME_MAP[REACTION_DEMO_PREFIX..component_name] = component_name
+end
+local REACTION_DEMO_TABLE_REACTANT_NAME_MAP = {}
+for _, reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
+	REACTION_DEMO_TABLE_REACTANT_NAME_MAP[REACTION_DEMO_PREFIX..reactant_name] = reactant_name
 end
 local REACTION_TABLE_SELECTOR_NAME_MAP = {}
 local REACTION_DEMO_TABLE_SELECTOR_NAME_MAP = {}
@@ -44,7 +48,8 @@ local function update_reaction_table_sprite(element, chest_inventory, product)
 end
 
 local function update_all_reaction_table_sprites(gui, entity_number)
-	local reaction_table = gui.relative[MOLECULE_REACTION_NAME].outer[REACTION_PREFIX.."frame"][REACTION_PREFIX.."table"]
+	local reaction_table =
+		gui.relative[MOLECULE_REACTION_NAME].outer[REACTION_PREFIX..FRAME_NAME][REACTION_PREFIX..TABLE_NAME]
 	local building_data = global.molecule_reaction_building_data[entity_number]
 	local building_definition = BUILDING_DEFINITIONS[building_data.entity.name]
 	local chest_inventories = building_data.chest_inventories
@@ -55,6 +60,39 @@ local function update_all_reaction_table_sprites(gui, entity_number)
 	for _, product_name in ipairs(building_definition.products) do
 		update_reaction_table_sprite(
 			reaction_table[REACTION_PREFIX..product_name], chest_inventories[product_name], products[product_name])
+	end
+end
+
+local function get_demo_state(entity_name)
+	local demo_state = global.gui_demo_items[entity_name]
+	if not demo_state then
+		demo_state = {reactants = {}, products = {}, selectors = {}}
+		global.gui_demo_items[entity_name] = demo_state
+	end
+	return demo_state
+end
+
+local function demo_reaction(building_data, demo_state, reaction_demo_table)
+	for product_name, _ in pairs(demo_state.products) do
+		demo_state.products[product_name] = nil
+	end
+	local building_definition = BUILDING_DEFINITIONS[building_data.entity.name]
+	local has_all_selectors = true
+	for reactant_name, _ in pairs(building_definition.selectors) do
+		if not demo_state.selectors[reactant_name] then
+			has_all_selectors = false
+			break
+		end
+	end
+	if has_all_selectors then building_definition.reaction(demo_state) end
+	for _, product_name in ipairs(building_definition.products) do
+		local element = reaction_demo_table[REACTION_DEMO_PREFIX..product_name]
+		local product = demo_state.products[product_name]
+		if product then
+			element.sprite = "item/"..product
+		else
+			element.sprite = nil
+		end
 	end
 end
 
@@ -69,6 +107,7 @@ local function on_gui_opened(event)
 	local gui = game.get_player(event.player_index).gui
 	close_gui(event.player_index, gui)
 	global.current_gui_entity[event.player_index] = entity.unit_number
+	local demo_state = get_demo_state(entity.name)
 
 	function build_molecule_spec(name_prefix, component_name, is_reactant)
 		if not building_definition.has_component[component_name] then return {type = "empty-widget"} end
@@ -79,15 +118,20 @@ local function on_gui_opened(event)
 		}
 		if name_prefix == REACTION_PREFIX then
 			spec.tooltip = {"factoriochem-poc.reaction-table-component-tooltip"}
-		elseif is_reactant and name_prefix == REACTION_DEMO_PREFIX then
-			spec.tooltip = {"factoriochem-poc.reaction-demo-table-component-tooltip"}
-			spec.type = "choose-elem-button"
-			spec.elem_type = "item"
-			local filters = {}
-			for _, subgroup in ipairs(game.item_group_prototypes[MOLECULES_GROUP_NAME].subgroups) do
-				table.insert(filters, {filter = "subgroup", subgroup = subgroup.name})
+		elseif name_prefix == REACTION_DEMO_PREFIX then
+			if is_reactant then
+				spec.tooltip = {"factoriochem-poc.reaction-demo-table-reactant-tooltip"}
+				spec.type = "choose-elem-button"
+				spec.elem_type = "item"
+				local filters = {}
+				for _, subgroup in ipairs(game.item_group_prototypes[MOLECULES_GROUP_NAME].subgroups) do
+					table.insert(filters, {filter = "subgroup", subgroup = subgroup.name})
+				end
+				spec.elem_filters = filters
+				spec.item = demo_state.reactants[component_name]
+			elseif demo_state.products[component_name] then
+				spec.sprite = "item/"..demo_state.products[component_name]
 			end
-			spec.elem_filters = filters
 		end
 		return spec
 	end
@@ -103,6 +147,8 @@ local function on_gui_opened(event)
 		}
 		if name_prefix == REACTION_PREFIX then
 			spec.item = global.molecule_reaction_building_data[entity.unit_number].reaction.selectors[reactant_name]
+		elseif name_prefix == REACTION_DEMO_PREFIX then
+			spec.item = demo_state.selectors[reactant_name]
 		end
 		return spec
 	end
@@ -173,11 +219,11 @@ end
 
 local function on_gui_click(event)
 	local element = event.element
+	local building_data = global.molecule_reaction_building_data[global.current_gui_entity[event.player_index]]
 
 	local reaction_table_component = REACTION_TABLE_COMPONENT_NAME_MAP[element.name]
 	if reaction_table_component then
 		local player = game.get_player(event.player_index)
-		local building_data = global.molecule_reaction_building_data[global.current_gui_entity[event.player_index]]
 		local chest_inventory = building_data.chest_inventories[reaction_table_component]
 		local chest_contents = chest_inventory.get_contents()
 		if next(chest_contents) then
@@ -197,17 +243,28 @@ end
 
 local function on_gui_elem_changed(event)
 	local element = event.element
+	local building_data = global.molecule_reaction_building_data[global.current_gui_entity[event.player_index]]
 
 	local reaction_table_selector_reactant = REACTION_TABLE_SELECTOR_NAME_MAP[element.name]
 	if reaction_table_selector_reactant then
-		local building_data = global.molecule_reaction_building_data[global.current_gui_entity[event.player_index]]
 		building_data.reaction.selectors[reaction_table_selector_reactant] = element.elem_value
 		entity_assign_cache(building_data, BUILDING_DEFINITIONS[building_data.entity.name])
 		return
 	end
 
-	local reaction_demo_table_component = REACTION_DEMO_TABLE_COMPONENT_NAME_MAP[element.name]
-	if reaction_demo_table_component then
+	local reaction_demo_table_reactant = REACTION_DEMO_TABLE_REACTANT_NAME_MAP[element.name]
+	if reaction_demo_table_reactant then
+		local demo_state = get_demo_state(building_data.entity.name)
+		demo_state.reactants[reaction_demo_table_reactant] = element.elem_value
+		demo_reaction(building_data, demo_state, element.parent)
+		return
+	end
+
+	local reaction_demo_table_selector_reactant = REACTION_DEMO_TABLE_SELECTOR_NAME_MAP[element.name]
+	if reaction_demo_table_selector_reactant then
+		local demo_state = get_demo_state(building_data.entity.name)
+		demo_state.selectors[reaction_demo_table_selector_reactant] = element.elem_value
+		demo_reaction(building_data, demo_state, element.parent)
 		return
 	end
 end
@@ -216,6 +273,7 @@ end
 -- Global event handling
 function gui_on_init()
 	global.current_gui_entity = {}
+	global.gui_demo_items = {}
 end
 
 function gui_on_nth_tick(data)
