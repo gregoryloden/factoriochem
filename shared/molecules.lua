@@ -39,12 +39,14 @@ for row_n, atoms_row in ipairs(ATOM_ROWS) do
 		elseif i <= 2 then
 			bonds = i
 		end
-		ALL_ATOMS[symbol] = {
+		local atom = {
 			symbol = symbol,
 			bonds = bonds,
 			row = row_n,
 			number = atomic_number,
 			localised_name = {"factoriochem-poc-atom."..symbol},
 		}
+		ALL_ATOMS[symbol] = atom
+		ALL_ATOMS[atomic_number] = atom
 	end
 end

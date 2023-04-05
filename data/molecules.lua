@@ -176,7 +176,8 @@ local function gen_molecules(grid_i_i, grid_is)
 					array_push(MOLECULE_BUILDER, ATOM_COL_SEPARATOR)
 					last_col = last_col + 1
 				end
-				local symbol = slot.atom.symbol
+				local atom = slot.atom
+				local symbol = atom.symbol
 				local name_spec = current_shape_height..current_shape_width..row..col
 				table.insert(
 					icons,
@@ -206,44 +207,48 @@ local function gen_molecules(grid_i_i, grid_is)
 							icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 						})
 				end
-				MOLECULE_DISPLAY_COUNTER[symbol] = (MOLECULE_DISPLAY_COUNTER[symbol] or 0) + 1
+				local number = atom.number
+				MOLECULE_DISPLAY_COUNTER[number] = (MOLECULE_DISPLAY_COUNTER[number] or 0) + 1
 			end
 		end
 		-- selection sort to assemble a chemical name in ascending atomic number order
 		array_clear(MOLECULE_DISPLAY_BUILDER)
 		local description_cache = MOLECULE_DESCRIPTION_CACHE
 		while true do
-			local symbol
 			local atomic_number = 1000
-			for check_symbol, _ in pairs(MOLECULE_DISPLAY_COUNTER) do
-				check_atomic_number = ALL_ATOMS[check_symbol].number
-				if check_atomic_number < atomic_number then
-					symbol = check_symbol
-					atomic_number = check_atomic_number
-				end
+			for check_atomic_number, _ in pairs(MOLECULE_DISPLAY_COUNTER) do
+				if check_atomic_number < atomic_number then atomic_number = check_atomic_number end
 			end
-			if not symbol then break end
-			array_push(MOLECULE_DISPLAY_BUILDER, symbol)
-			local count = MOLECULE_DISPLAY_COUNTER[symbol]
+			if atomic_number == 1000 then break end
+			local atom = ALL_ATOMS[atomic_number]
+			array_push(MOLECULE_DISPLAY_BUILDER, atom.symbol)
+			local count = MOLECULE_DISPLAY_COUNTER[atomic_number]
 			if count > 1 then array_push(MOLECULE_DISPLAY_BUILDER, count) end
-			MOLECULE_DISPLAY_COUNTER[symbol] = nil
-			local next_description_cache = description_cache[symbol]
+			MOLECULE_DISPLAY_COUNTER[atomic_number] = nil
+			local next_description_cache = description_cache[atomic_number]
 			if not next_description_cache then
-				local atom = ALL_ATOMS[symbol]
-				local description = description_cache[1]
+				local description = description_cache[0]
 				if description then
-					next_description_cache = {{
-						"item-description.molecule-AA2",
-						description,
-						symbol,
-						atom.number,
-						atom.localised_name
-					}}
+					next_description_cache = {
+						[0] = {
+							"item-description.molecule-AA2",
+							description,
+							atom.symbol,
+							atom.number,
+							atom.localised_name,
+						},
+					}
 				else
-					next_description_cache =
-						{{"item-description.molecule-AA", symbol, atom.number, atom.localised_name}}
+					next_description_cache = {
+						[0] = {
+							"item-description.molecule-AA",
+							atom.symbol,
+							atom.number,
+							atom.localised_name
+						},
+					}
 				end
-				description_cache[symbol] = next_description_cache
+				description_cache[atomic_number] = next_description_cache
 			end
 			description_cache = next_description_cache
 		end
@@ -253,7 +258,7 @@ local function gen_molecules(grid_i_i, grid_is)
 			subgroup = MOLECULES_SUBGROUP_NAME,
 			order = current_shape_order_prefix..current_atom_count..string.format("%03X", current_shape_n),
 			localised_name = table.concat(MOLECULE_DISPLAY_BUILDER),
-			localised_description = description_cache[1],
+			localised_description = description_cache[0],
 			icons = icons,
 			stack_size = 1,
 		}})
