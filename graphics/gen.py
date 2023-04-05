@@ -47,7 +47,8 @@ PRECISION_BITS = 8
 PRECISION_MULTIPLIER = 1 << PRECISION_BITS
 CIRCLE_DATA = {}
 HCNO = ["H", "C", "N", "O"]
-MAX_ATOMS_HCNO = 8
+MAX_ATOMS = 8
+MAX_ATOMS_HCNO = MAX_ATOMS
 MAX_ATOMS_Ne = 4
 MAX_ATOMS_Ar = 3
 MAX_ATOMS_OTHER = 2
@@ -73,6 +74,7 @@ ICON_OVERLAY_OUTLINE_COLOR = (64, 64, 64, 0)
 MOLECULE_ROTATER_ICON_COLOR = (192, 192, 224, 0)
 BASE_OVERLAY_SIZE = 32
 MOLECULIFIER_MOLECULE = "H--C|-He|N--O"
+SHAPE_BACKGROUND_COLOR = (128, 128, 128, 0)
 
 
 #Utility functions
@@ -242,21 +244,26 @@ def get_text_data(symbol, base_size, mips):
 
 
 #Generate atom images
-def gen_single_atom_image(symbol, bonds, base_size, y_scale, x_scale, y, x, mips):
+def gen_single_atom_shape_image(base_size, y_scale, x_scale, y, x, mips, color):
 	#set the base color for this atom
-	image = filled_mip_image(base_size, mips, COLOR_FOR_BONDS[bonds])
+	image = filled_mip_image(base_size, mips, color)
+	mip_datas = get_circle_mip_datas(base_size, y_scale, x_scale, y, x, mips)
+	for (mip, place_x, size) in iter_mips(base_size, mips):
+		#patch over the circle alpha mask for each mip
+		image[0:size, place_x:place_x + size, 3] = mip_datas[mip]["alpha"]
+	return image
+
+def gen_single_atom_image(symbol, bonds, base_size, y_scale, x_scale, y, x, mips):
+	image = gen_single_atom_shape_image(base_size, y_scale, x_scale, y, x, mips, COLOR_FOR_BONDS[bonds])
 	mip_datas = get_circle_mip_datas(base_size, y_scale, x_scale, y, x, mips)
 	scale = max(x_scale, y_scale)
 	for (mip, place_x, size) in iter_mips(base_size, mips):
-		#patch over the circle alpha mask for each mip
-		mip_data = mip_datas[mip]
-		image[0:size, place_x:place_x + size, 3] = mip_data["alpha"]
-
 		#overlay text by finding the best section to resize to match the target size and position
 		#first determine the area we're going to draw to, in full pixel dimensions
 		text_data = get_text_data(symbol, base_size, mips)
 		text = text_data["image"]
 		text_scale = scale << mip
+		mip_data = mip_datas[mip]
 		mip_center_x = place_x + mip_data["center_x"]
 		mip_center_y = mip_data["center_y"]
 		text_dst_left = math.floor(mip_center_x - text_data["half_width"] / text_scale)
@@ -624,6 +631,69 @@ def gen_moleculify_recipe_icons(base_size, mips):
 	print("Moleculify recipe icons written")
 
 
+#Generate molecule shape backgrounds
+def gen_molecule_shape_backgrounds(base_size, mips):
+	shapes_folder = "shapes"
+	if not os.path.exists(shapes_folder):
+		os.mkdir(shapes_folder)
+	max_grid_area = MAX_GRID_WIDTH * MAX_GRID_HEIGHT
+	for shape_n in range(2, 1 << max_grid_area):
+		if not any((shape_n & 1 << i) != 0 for i in range(MAX_GRID_WIDTH)) \
+				or not any((shape_n & 1 << i) != 0 for i in range(0, max_grid_area, MAX_GRID_WIDTH)):
+			continue
+		grid = []
+		for i in range(max_grid_area):
+			grid.append(1 if shape_n & 1 << i != 0 else 0)
+		atom_count = sum(grid)
+
+		#stop if we have too many atoms
+		if atom_count > MAX_ATOMS:
+			continue
+
+		#BFS to check if all atoms are reachable
+		first_slot_i = next(i for (i, slot) in enumerate(grid) if slot == 1)
+		grid[first_slot_i] = 2
+		check_slot_is = [first_slot_i]
+		check_slot_i_i = 0
+		x_scale = 1
+		y_scale = 1
+		while check_slot_i_i < len(check_slot_is):
+			check_slot_i = check_slot_is[check_slot_i_i]
+			adjacent_slot_is = []
+			x = check_slot_i % MAX_GRID_WIDTH
+			y = check_slot_i // MAX_GRID_WIDTH
+			if x + 1 > x_scale:
+				x_scale = x + 1
+			if y + 1 > y_scale:
+				y_scale = y + 1
+			if x > 0:
+				adjacent_slot_is.append(check_slot_i - 1)
+			if y > 0:
+				adjacent_slot_is.append(check_slot_i - MAX_GRID_WIDTH)
+			if x < MAX_GRID_WIDTH - 1:
+				adjacent_slot_is.append(check_slot_i + 1)
+			if y < MAX_GRID_HEIGHT - 1:
+				adjacent_slot_is.append(check_slot_i + MAX_GRID_WIDTH)
+			for adjacent_slot_i in adjacent_slot_is:
+				if grid[adjacent_slot_i] == 1:
+					grid[adjacent_slot_i] = 2
+					check_slot_is.append(adjacent_slot_i)
+			check_slot_i_i += 1
+		if len(check_slot_is) < atom_count:
+			continue
+		image = filled_mip_image(base_size, mips, (0, 0, 0, 0))
+		for (i, slot) in enumerate(grid):
+			if slot == 0:
+				continue
+			x = i % MAX_GRID_WIDTH
+			y = i // MAX_GRID_WIDTH
+			simple_overlay_image(
+				image,
+				gen_single_atom_shape_image(base_size, y_scale, x_scale, y, x, mips, SHAPE_BACKGROUND_COLOR))
+		imwrite(os.path.join(shapes_folder, f"{shape_n:03X}.png"), image)
+	print("Molecule shape backgrounds written")
+
+
 #Generate all graphics
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 gen_all_atom_images(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
@@ -635,3 +705,4 @@ gen_building_overlays(BASE_OVERLAY_SIZE)
 gen_icon_overlays(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_building_recipe_icons(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_moleculify_recipe_icons(BASE_ICON_SIZE, BASE_ICON_MIPS)
+gen_molecule_shape_backgrounds(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)

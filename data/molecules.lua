@@ -50,6 +50,7 @@ local MOLECULE_DISPLAY_COUNTER = {}
 local MOLECULE_DISPLAY_BUILDER = empty_array()
 local ATOM_ICON_ROOT = GRAPHICS_ROOT.."atoms/"
 local BOND_ICON_ROOT = GRAPHICS_ROOT.."bonds/"
+local SHAPE_ICON_ROOT = GRAPHICS_ROOT.."shapes/"
 local MOLECULE_DESCRIPTION_CACHE = {}
 local ITEM_GROUP_ICON_SIZE = 128
 local ITEM_GROUP_ICON_MIPMAPS = 2
@@ -158,7 +159,12 @@ local function gen_molecules(grid_i_i, grid_is)
 		total_molecules = total_molecules + 1
 	else
 		array_clear(MOLECULE_BUILDER)
-		local icons = {{icon = "__core__/graphics/empty.png", icon_size = 1}}
+		local shape = string.format("%03X", current_shape_n)
+		local icons = {{
+			icon = SHAPE_ICON_ROOT..shape..".png",
+			icon_size = ITEM_ICON_SIZE,
+			icon_mipmaps = MOLECULE_ICON_MIPMAPS,
+		}}
 		local last_row = 0
 		local last_col = 0
 		for grid_i = 1, GRID_AREA do
@@ -256,7 +262,7 @@ local function gen_molecules(grid_i_i, grid_is)
 			type = "item",
 			name = MOLECULE_ITEM_PREFIX..table.concat(MOLECULE_BUILDER),
 			subgroup = MOLECULES_SUBGROUP_NAME,
-			order = current_shape_order_prefix..current_atom_count..string.format("%03X", current_shape_n),
+			order = current_shape_order_prefix..current_atom_count..shape,
 			localised_name = table.concat(MOLECULE_DISPLAY_BUILDER),
 			localised_description = description_cache[0],
 			icons = icons,
