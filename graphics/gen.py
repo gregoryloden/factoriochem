@@ -41,7 +41,8 @@ ATOM_ROWS = [
 		"Lr", "Rf", "Db", "Sg", "Bh", "Hs", "Mt", "Ds", "Rg", "Cn", "Nh", "Fl", "Mc", "Lv", "Ts", "Og",
 	],
 ]
-RADIUS_FRACTION = 30 / 64
+ATOM_RADIUS_FRACTION = 30 / 64
+ATOM_OUTLINE_RADIUS_FRACTION = 42 / 64
 PRECISION_BITS = 8
 PRECISION_MULTIPLIER = 1 << PRECISION_BITS
 CIRCLE_DATA = {}
@@ -113,6 +114,13 @@ def simple_overlay_image_at(back_image, back_left, back_top, front_image):
 	shape = front_image.shape
 	overlay_image(back_image, back_left, back_top, front_image, 0, 0, shape[1], shape[0])
 
+def iter_mips(base_size, mips):
+	place_x = 0
+	for mip in range(mips):
+		size = base_size >> mip
+		yield (mip, place_x, size)
+		place_x += size
+
 def easy_mips(image, base_size, mips):
 	#copy the entire outer mip, performance isn't really an issue
 	mip_0 = image[:, 0:base_size]
@@ -139,7 +147,8 @@ def get_circle_mip_datas(base_size, y_scale, x_scale, y, x, mips):
 		scale = max(x_scale, y_scale)
 		scale_data = {
 			"scale": scale,
-			"radius": RADIUS_FRACTION * base_size / scale,
+			"radius": ATOM_RADIUS_FRACTION * base_size / scale,
+			"outline_radius": ATOM_OUTLINE_RADIUS_FRACTION * base_size / scale,
 			"center_y_min": 0.5 * (1 + scale - y_scale),
 			"center_x_min": 0.5 * (1 + scale - x_scale),
 		}
@@ -160,16 +169,21 @@ def get_circle_mip_datas(base_size, y_scale, x_scale, y, x, mips):
 		if mip_datas.get(mip, False):
 			continue
 		size = base_size >> mip
-		alpha = numpy.zeros((size, size), numpy.uint8)
 		shrink = 1 / (1 << mip)
 		mip_center_x = center_x * shrink
 		mip_center_y = center_y * shrink
 		draw_center_x = round((mip_center_x - 0.5) * PRECISION_MULTIPLIER)
 		draw_center_y = round((mip_center_y - 0.5) * PRECISION_MULTIPLIER)
+		draw_center = (draw_center_x, draw_center_y)
+		alpha = numpy.zeros((size, size), numpy.uint8)
 		draw_radius = round((scale_data["radius"] * shrink - 0.5) * PRECISION_MULTIPLIER)
-		cv2.circle(alpha, (draw_center_x, draw_center_y), draw_radius, 255, -1, cv2.LINE_AA, PRECISION_BITS)
+		cv2.circle(alpha, draw_center, draw_radius, 255, -1, cv2.LINE_AA, PRECISION_BITS)
+		outline_alpha = numpy.zeros((size, size), numpy.uint8)
+		draw_outline_radius = round((scale_data["outline_radius"] * shrink - 0.5) * PRECISION_MULTIPLIER)
+		cv2.circle(outline_alpha, draw_center, draw_outline_radius, 255, -1, cv2.LINE_AA, PRECISION_BITS)
 		mip_datas[mip] = {
 			"alpha": alpha,
+			"outline_alpha": outline_alpha,
 			"center_x": mip_center_x,
 			"center_y": mip_center_y,
 		}
@@ -231,12 +245,10 @@ def get_text_data(symbol, base_size, mips):
 def gen_single_atom_image(symbol, bonds, base_size, y_scale, x_scale, y, x, mips):
 	#set the base color for this atom
 	image = filled_mip_image(base_size, mips, COLOR_FOR_BONDS[bonds])
-	place_x = 0
 	mip_datas = get_circle_mip_datas(base_size, y_scale, x_scale, y, x, mips)
 	scale = max(x_scale, y_scale)
-	for mip in range(mips):
+	for (mip, place_x, size) in iter_mips(base_size, mips):
 		#patch over the circle alpha mask for each mip
-		size = base_size >> mip
 		mip_data = mip_datas[mip]
 		image[0:size, place_x:place_x + size, 3] = mip_data["alpha"]
 
@@ -246,17 +258,18 @@ def gen_single_atom_image(symbol, bonds, base_size, y_scale, x_scale, y, x, mips
 		text = text_data["image"]
 		text_scale = scale << mip
 		mip_center_x = place_x + mip_data["center_x"]
+		mip_center_y = mip_data["center_y"]
 		text_dst_left = math.floor(mip_center_x - text_data["half_width"] / text_scale)
-		text_dst_top = math.floor(mip_data["center_y"] - text_data["half_height"] / text_scale)
+		text_dst_top = math.floor(mip_center_y - text_data["half_height"] / text_scale)
 		text_dst_right = math.ceil(mip_center_x + text_data["half_width"] / text_scale)
-		text_dst_bottom = math.ceil(mip_data["center_y"] + text_data["half_height"] / text_scale)
+		text_dst_bottom = math.ceil(mip_center_y + text_data["half_height"] / text_scale)
 		text_dst_width = text_dst_right - text_dst_left
 		text_dst_height = text_dst_bottom - text_dst_top
 
 		#next, find the corresponding spot in the text image to retrieve, and in most cases, shrink the image to fit the
 		#	area we're going to draw to
 		text_src_left = round(text_data["center_x"] - (mip_center_x - text_dst_left) * text_scale)
-		text_src_top = round(text_data["center_y"] - (mip_data["center_y"] - text_dst_top) * text_scale)
+		text_src_top = round(text_data["center_y"] - (mip_center_y - text_dst_top) * text_scale)
 		if text_scale > 0:
 			text_src_right = text_src_left + text_dst_width * text_scale
 			text_src_bottom = text_src_top + text_dst_height * text_scale
@@ -268,8 +281,6 @@ def gen_single_atom_image(symbol, bonds, base_size, y_scale, x_scale, y, x, mips
 		#finally, overlay the text image over the atom image
 		overlay_image(
 			image, text_dst_left, text_dst_top, text, text_src_left, text_src_top, text_dst_width, text_dst_height)
-
-		place_x += size
 	return image
 
 def gen_atom_images(symbol, bonds, molecule_max_atoms, base_size, mips):
@@ -373,7 +384,15 @@ def gen_all_bond_images(base_size, mips):
 
 
 #Generate specific full molecule images
-def gen_specific_molecule(molecule, base_size, mips):
+def gen_single_atom_outline_image(base_size, y_scale, x_scale, y, x, mips):
+	mip_datas = get_circle_mip_datas(base_size, y_scale, x_scale, y, x, mips)
+	image = filled_mip_image(base_size, mips, ICON_OVERLAY_OUTLINE_COLOR)
+	for (mip, place_x, size) in iter_mips(base_size, mips):
+		#patch over the circle alpha mask for each mip
+		image[0:size, place_x:place_x + size, 3] = mip_datas[mip]["outline_alpha"]
+	return image
+
+def gen_specific_molecule(molecule, base_size, mips, include_outline = False):
 	image = filled_mip_image(base_size, mips, (0, 0, 0, 0))
 	shape = [row.split("-") for row in molecule.split("|")]
 	bonds = {"H": 1, "C": 4, "N": 3, "O": 2, "He": 0}
@@ -394,6 +413,10 @@ def gen_specific_molecule(molecule, base_size, mips):
 			if symbol[-1].isdigit():
 				right_bonds = int(symbol[-1])
 				symbol = symbol[:-1]
+			if include_outline:
+				atom_outline_image = gen_single_atom_outline_image(base_size, y_scale, x_scale, y, x, mips)
+				simple_overlay_image(atom_outline_image, image)
+				image = atom_outline_image
 			atom_image = gen_single_atom_image(symbol, bonds[symbol], base_size, y_scale, x_scale, y, x, mips)
 			simple_overlay_image(image, atom_image)
 			if left_bonds > 0:
@@ -573,7 +596,7 @@ def gen_icon_overlays(base_size, mips):
 	simple_overlay_image(
 		molecule_rotater_image, gen_flip_rotation_selector_image(base_size, mips, color=MOLECULE_ROTATER_ICON_COLOR))
 	imwrite(os.path.join(icon_overlays_folder, "molecule-rotater.png"), molecule_rotater_image)
-	moleculifier_image = gen_specific_molecule(MOLECULIFIER_MOLECULE, base_size, mips)
+	moleculifier_image = gen_specific_molecule(MOLECULIFIER_MOLECULE, base_size, mips, include_outline=True)
 	imwrite(os.path.join(icon_overlays_folder, "moleculifier.png"), moleculifier_image)
 	print("Icon overlays written")
 
