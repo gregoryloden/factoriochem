@@ -2,6 +2,7 @@ import os
 import cv2
 import numpy
 import math
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
 #Constants
@@ -73,7 +74,12 @@ ROTATION_SELECTOR_OUTLINE_FRACTION = 4 / 64
 ICON_OVERLAY_OUTLINE_COLOR = (64, 64, 64, 0)
 MOLECULE_ROTATER_ICON_COLOR = (192, 192, 224, 0)
 BASE_OVERLAY_SIZE = 32
+with open("base-graphics-path.txt", "r") as file:
+	BASE_GRAPHICS_PATH = file.read()
 MOLECULIFIER_MOLECULE = "H--C|-He|N--O"
+MOLECULIFY_ARROW_COLOR = (64, 64, 224, 0)
+MOLECULIFY_ARROW_THICKNESS_FRACTION = 6 / 64
+MOLECULIFY_ARROW_SIZE_FRACTION = 8 / 64
 SHAPE_BACKGROUND_COLOR = (128, 128, 128, 0)
 
 
@@ -627,7 +633,40 @@ def gen_building_recipe_icons(base_size, mips):
 #Generate moleculify recipe icons
 def gen_moleculify_recipe_icons(base_size, mips):
 	recipes_folder = get_recipes_folder()
-	imwrite(os.path.join(recipes_folder, "moleculify-water.png"), gen_specific_molecule("|--H|-H1-1O", base_size, mips))
+	base_icons_folder = os.path.join(BASE_GRAPHICS_PATH, "icons")
+	base_fluid_icons_folder = os.path.join(base_icons_folder, "fluid")
+	half_size = base_size // 2
+	image_pairs = [
+		(
+			"water",
+			gen_specific_molecule("-H|H1-1O", base_size, mips),
+			os.path.join(base_fluid_icons_folder, "water.png"),
+		),
+	]
+	for (name, moleculify_result_image, moleculify_source_image_path) in image_pairs:
+		moleculify_source_image = cv2.imread(moleculify_source_image_path, cv2.IMREAD_UNCHANGED)
+		image = filled_mip_image(base_size, mips, (0, 0, 0, 0))
+		image[0:half_size, 0:half_size] = cv2.resize(
+			moleculify_source_image[0:base_size, 0:base_size], (half_size, half_size), interpolation=cv2.INTER_AREA)
+		image[half_size:base_size, half_size:base_size] = cv2.resize(
+			moleculify_result_image[0:base_size, 0:base_size], (half_size, half_size), interpolation=cv2.INTER_AREA)
+		arrow_image = numpy.full((base_size, base_size, 4), MOLECULIFY_ARROW_COLOR, numpy.uint8)
+		arrow_thickness = int(MOLECULIFY_ARROW_THICKNESS_FRACTION * base_size)
+		draw_start = (round((base_size * 0.375 - 0.5) * PRECISION_MULTIPLIER),) * 2
+		end_xy = base_size * 0.625
+		draw_end = (round((end_xy - 0.5) * PRECISION_MULTIPLIER),) * 2
+		def draw_arrow_line(mask):
+			cv2.line(mask, draw_start, draw_end, 255, arrow_thickness, cv2.LINE_AA, PRECISION_BITS)
+		draw_alpha_on(arrow_image, draw_arrow_line)
+		simple_overlay_image(image, arrow_image)
+		arrow_image[:, :, 3] = 0
+		arrow_size_offset = MOLECULIFY_ARROW_SIZE_FRACTION * base_size / -math.sqrt(2)
+		draw_arrow_points = get_draw_arrow_points(end_xy, end_xy, arrow_size_offset, arrow_size_offset)
+		def draw_arrow_tip(mask):
+			cv2.fillPoly(mask, numpy.array([draw_arrow_points]), 255, cv2.LINE_AA, PRECISION_BITS)
+		draw_alpha_on(arrow_image, draw_arrow_tip)
+		simple_overlay_image(image, arrow_image)
+		imwrite(os.path.join(recipes_folder, f"moleculify-{name}.png"), easy_mips(image))
 	print("Moleculify recipe icons written")
 
 
