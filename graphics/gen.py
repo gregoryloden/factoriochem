@@ -479,15 +479,7 @@ def gen_molecule_reaction_reactants_icon(base_size, mips):
 	print("Molecule reaction reactants written")
 
 
-#Shared selectors utilities
-def get_selectors_folder():
-	selectors_folder = "selectors"
-	if not os.path.exists(selectors_folder):
-		os.mkdir(selectors_folder)
-	return selectors_folder
-
-
-#Generate rotation selectors
+#Generate selector icons
 def get_rotation_selector_arc_values(base_size):
 	radius = ROTATION_SELECTOR_RADIUS_FRACTION * base_size
 	center = base_size / 2
@@ -548,19 +540,14 @@ def gen_flip_rotation_selector_image(base_size, mips, is_outline = False, color 
 	return gen_prepared_rotation_selector_image(
 		base_size, mips, [(120, 120), (300, 120)], draw_arrow_pointss, is_outline, color)
 
-def gen_rotation_selectors(base_size, mips):
-	selectors_folder = get_selectors_folder()
+def gen_rotation_selectors(selectors_folder, base_size, mips):
 	left_image = gen_left_right_rotation_selector_image(base_size, mips, 180, -1)
 	imwrite(os.path.join(selectors_folder, "rotation-l.png"), left_image)
 	right_image = gen_left_right_rotation_selector_image(base_size, mips, 270, 1)
 	imwrite(os.path.join(selectors_folder, "rotation-r.png"), right_image)
 	imwrite(os.path.join(selectors_folder, "rotation-f.png"), gen_flip_rotation_selector_image(base_size, mips))
-	print("Rotation selectors written")
 
-
-#Generate target selectors
-def gen_target_selectors(base_size, mips):
-	selectors_folder = get_selectors_folder()
+def gen_target_selectors(selectors_folder, base_size, mips):
 	for y_scale in range(1, MAX_GRID_HEIGHT + 1):
 		for x_scale in range(1, MAX_GRID_WIDTH + 1):
 			grid_area = y_scale * x_scale
@@ -578,7 +565,14 @@ def gen_target_selectors(base_size, mips):
 				highlight_y = highlight_i // x_scale
 				file_name = f"target-{y_scale}{x_scale}{highlight_y}{highlight_x}.png"
 				imwrite(os.path.join(selectors_folder, file_name), image)
-	print("Target selectors written")
+
+def gen_all_selectors(base_size, mips):
+	selectors_folder = "selectors"
+	if not os.path.exists(selectors_folder):
+		os.mkdir(selectors_folder)
+	gen_rotation_selectors(selectors_folder, base_size, mips)
+	gen_target_selectors(selectors_folder, base_size, mips)
+	print("Selectors written")
 
 
 #Generate building overlays
@@ -664,25 +658,12 @@ def gen_icon_overlays(base_size, mips):
 	print("Icon overlays written")
 
 
-#Shared recipes utilities
-def get_recipes_folder():
-	recipes_folder = "recipes"
-	if not os.path.exists(recipes_folder):
-		os.mkdir(recipes_folder)
-	return recipes_folder
-
-
-#Generate building recipe icons
-def gen_building_recipe_icons(base_size, mips):
-	recipes_folder = get_recipes_folder()
+#Generate recipe icons
+def gen_building_recipe_icons(recipes_folder, base_size, mips):
 	molecule_rotater_image = gen_flip_rotation_selector_image(base_size, mips, color=MOLECULE_ROTATER_ICON_COLOR)
 	imwrite(os.path.join(recipes_folder, "molecule-rotater.png"), molecule_rotater_image)
-	print("Building recipe icons written")
 
-
-#Generate moleculify recipe icons
-def gen_moleculify_recipe_icons(base_size, mips):
-	recipes_folder = get_recipes_folder()
+def gen_moleculify_recipe_icons(recipes_folder, base_size, mips):
 	base_icons_folder = os.path.join(BASE_GRAPHICS_PATH, "icons")
 	base_fluid_icons_folder = os.path.join(base_icons_folder, "fluid")
 	image_pairs = [
@@ -721,7 +702,14 @@ def gen_moleculify_recipe_icons(base_size, mips):
 		#combine arrow images, add mips, and then combine it with the rest of the image
 		image = simple_overlay_image(image, easy_mips(simple_overlay_image(arrow_image, arrow_tip_image)))
 		imwrite(os.path.join(recipes_folder, f"moleculify-{name}.png"), image)
-	print("Moleculify recipe icons written")
+
+def gen_all_recipe_icons(base_size, mips):
+	recipes_folder = "recipes"
+	if not os.path.exists(recipes_folder):
+		os.mkdir(recipes_folder)
+	gen_building_recipe_icons(recipes_folder, base_size, mips)
+	gen_moleculify_recipe_icons(recipes_folder, base_size, mips)
+	print("Recipe icons written")
 
 
 #Generate molecule shape backgrounds
@@ -791,10 +779,8 @@ gen_all_atom_images(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_all_bond_images(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_item_group_icon(ITEM_GROUP_SIZE, ITEM_GROUP_MIPS)
 gen_molecule_reaction_reactants_icon(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
-gen_rotation_selectors(BASE_ICON_SIZE, BASE_ICON_MIPS)
-gen_target_selectors(BASE_ICON_SIZE, BASE_ICON_MIPS)
+gen_all_selectors(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_building_overlays(BASE_OVERLAY_SIZE)
 gen_icon_overlays(BASE_ICON_SIZE, BASE_ICON_MIPS)
-gen_building_recipe_icons(BASE_ICON_SIZE, BASE_ICON_MIPS)
-gen_moleculify_recipe_icons(BASE_ICON_SIZE, BASE_ICON_MIPS)
+gen_all_recipe_icons(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_molecule_shape_backgrounds(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
