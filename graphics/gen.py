@@ -78,6 +78,7 @@ BASE_OVERLAY_SIZE = 32
 MOLECULIFIER_MOLECULE = "H--C|-He|N--O"
 MOLECULE_ROTATER_NAME = "molecule-rotater"
 MOLECULE_ROTATER_ICON_COLOR = (192, 192, 224, 0)
+MOLECULE_BENDER_NAME = "molecule-bender"
 with open("base-graphics-path.txt", "r") as file:
 	BASE_GRAPHICS_PATH = file.read()
 MOLECULIFY_ARROW_COLOR = (64, 64, 224, 0)
@@ -496,8 +497,18 @@ def get_draw_arrow_points(center_x, center_y, x_offset, y_offset):
 		draw_arrow_points.append((round(x * PRECISION_MULTIPLIER), round(y * PRECISION_MULTIPLIER)))
 	return draw_arrow_points
 
-def gen_prepared_rotation_selector_image(base_size, mips, arcs, draw_arrow_pointss, is_outline = False, color = None):
+def gen_prepared_rotation_selector_image(
+		base_size,
+		mips,
+		arcs,
+		draw_arrow_pointss,
+		is_outline = False,
+		color = None,
+		include_dot = True,
+		center_offset = None):
 	(radius, center, _) = get_rotation_selector_arc_values(base_size)
+	if center_offset is not None:
+		center += center_offset
 	thickness = int(ROTATION_SELECTOR_THICKNESS_FRACTION * base_size)
 	dot_radius = ROTATION_SELECTOR_DOT_RADIUS_FRACTION * base_size
 	if is_outline:
@@ -514,7 +525,8 @@ def gen_prepared_rotation_selector_image(base_size, mips, arcs, draw_arrow_point
 		for (start_angle, arc) in arcs:
 			cv2.ellipse(
 				mask, draw_center, draw_axes, start_angle, 0, arc, 255, thickness, cv2.LINE_AA, PRECISION_BITS)
-		cv2.circle(mask, draw_center, draw_dot_radius, 255, -1, cv2.LINE_AA, PRECISION_BITS)
+		if include_dot:
+			cv2.circle(mask, draw_center, draw_dot_radius, 255, -1, cv2.LINE_AA, PRECISION_BITS)
 	draw_alpha_on(image, draw_arcs_and_dot)
 	arrows_image = filled_mip_image(base_size, mips, color)
 	def draw_arrows(mask):
@@ -646,14 +658,34 @@ def gen_building_overlays(base_size):
 
 
 #Generate recipe icons
+def get_molecule_bender_rotation_image(base_size, mips, is_outline):
+	(radius, center, arrow_size) = get_rotation_selector_arc_values(base_size)
+	if is_outline:
+		arrow_size += ROTATION_SELECTOR_OUTLINE_FRACTION * base_size
+	center_offset = base_size / -8
+	return gen_prepared_rotation_selector_image(
+		base_size,
+		mips,
+		[(0, 90)],
+		[get_draw_arrow_points(center + radius + center_offset, center + center_offset, 0, arrow_size)],
+		is_outline,
+		ICON_OVERLAY_OUTLINE_COLOR if is_outline else MOLECULE_ROTATER_ICON_COLOR,
+		include_dot=False,
+		center_offset=center_offset)
+
 def get_all_building_recipe_icons(base_size, mips, include_outline):
 	images = {
 		MOLECULE_ROTATER_NAME: gen_flip_rotation_selector_image(base_size, mips, color=MOLECULE_ROTATER_ICON_COLOR),
+		MOLECULE_BENDER_NAME: simple_overlay_image(
+			gen_specific_molecule("H1-H-|1H|", base_size, mips, include_outline),
+			get_molecule_bender_rotation_image(base_size, mips, False)),
 	}
 	if include_outline:
 		images[MOLECULE_ROTATER_NAME] = simple_overlay_image(
 			gen_flip_rotation_selector_image(base_size, mips, is_outline=True, color=ICON_OVERLAY_OUTLINE_COLOR),
 			images[MOLECULE_ROTATER_NAME])
+		images[MOLECULE_BENDER_NAME] = simple_overlay_image(
+			get_molecule_bender_rotation_image(base_size, mips, True), images[MOLECULE_BENDER_NAME])
 	return images
 
 def gen_moleculify_recipe_icons(recipes_folder, base_size, mips):
