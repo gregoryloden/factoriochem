@@ -148,8 +148,8 @@ def resize(image, width, height, multi_color_alpha_weighting = True):
 		alpha = alpha[has_alpha]
 		for channel in range(3):
 			image[:, :, channel][has_alpha] /= alpha
-		#and now convert back to 8-bit
-		return image.astype(numpy.uint8)
+		#and now convert back to 8-bit, after rounding
+		return numpy.around(image).astype(numpy.uint8)
 	else:
 		#every pixel color is the same already, we don't need to weight colors since the average will always be the same
 		return cv2.resize(image, (width, height), interpolation=cv2.INTER_AREA)
@@ -679,8 +679,8 @@ def gen_moleculify_recipe_icons(base_size, mips):
 		#draw the arrow line
 		arrow_image = filled_mip_image(base_size, mips, MOLECULIFY_ARROW_COLOR)
 		arrow_thickness = int(MOLECULIFY_ARROW_THICKNESS_FRACTION * base_size)
-		draw_start = (round((base_size * 0.375 - 0.5) * PRECISION_MULTIPLIER),) * 2
-		end_xy = base_size * 0.625
+		draw_start = (round((base_size * 3 / 8 - 0.5) * PRECISION_MULTIPLIER),) * 2
+		end_xy = base_size * 5 / 8
 		draw_end = (round((end_xy - 0.5) * PRECISION_MULTIPLIER),) * 2
 		def draw_arrow_line(mask):
 			cv2.line(mask, draw_start, draw_end, 255, arrow_thickness, cv2.LINE_AA, PRECISION_BITS)
