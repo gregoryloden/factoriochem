@@ -762,7 +762,6 @@ def gen_molecule_shape_backgrounds(base_size, mips):
 
 
 #Generate all graphics
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
 gen_all_atom_images(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_all_bond_images(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_item_group_icon(ITEM_GROUP_SIZE, ITEM_GROUP_MIPS)

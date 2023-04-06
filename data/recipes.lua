@@ -29,10 +29,9 @@ data:extend({
 			{name = MOLECULE_ITEM_PREFIX.."H|1O|1H", amount = 1, probability = 0.05},
 			{name = MOLECULE_ITEM_PREFIX.."H1-O1-H", amount = 1, probability = 0.05},
 		},
-		icons = {
-			{icon = "__base__/graphics/icons/fluid/water.png", icon_size = 64, icon_mipmaps = 4},
-			{icon = GRAPHICS_ROOT.."recipes/"..MOLECULIFY_PREFIX.."water.png", icon_size = 64, icon_mipmaps = 4},
-		},
+		icon = GRAPHICS_ROOT.."recipes/"..MOLECULIFY_PREFIX.."water.png",
+		icon_size = 64,
+		icon_mipmaps = 4,
 		energy_required = 1,
 	},
 })
