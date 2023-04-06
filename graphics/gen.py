@@ -74,15 +74,15 @@ ROTATION_SELECTOR_DOT_RADIUS_FRACTION = 4 / 64
 ROTATION_SELECTOR_OUTLINE_FRACTION = 4 / 64
 TARGET_SELECTOR_DEFAULT_COLOR = (128, 128, 128, 0)
 TARGET_SELECTOR_HIGHLIGHT_COLOR = (128, 224, 255, 0)
-ICON_OVERLAY_OUTLINE_COLOR = (64, 64, 64, 0)
-MOLECULE_ROTATER_ICON_COLOR = (192, 192, 224, 0)
 BASE_OVERLAY_SIZE = 32
+MOLECULIFIER_MOLECULE = "H--C|-He|N--O"
+MOLECULE_ROTATER_ICON_COLOR = (192, 192, 224, 0)
 with open("base-graphics-path.txt", "r") as file:
 	BASE_GRAPHICS_PATH = file.read()
-MOLECULIFIER_MOLECULE = "H--C|-He|N--O"
 MOLECULIFY_ARROW_COLOR = (64, 64, 224, 0)
 MOLECULIFY_ARROW_THICKNESS_FRACTION = 6 / 64
 MOLECULIFY_ARROW_SIZE_FRACTION = 8 / 64
+ICON_OVERLAY_OUTLINE_COLOR = (64, 64, 64, 0)
 SHAPE_BACKGROUND_COLOR = (128, 128, 128, 0)
 
 
@@ -644,20 +644,6 @@ def gen_building_overlays(base_size):
 	print("Building overlays written")
 
 
-#Generate building icon overlays
-def gen_icon_overlays(base_size, mips):
-	icon_overlays_folder = "icon-overlays"
-	if not os.path.exists(icon_overlays_folder):
-		os.mkdir(icon_overlays_folder)
-	molecule_rotater_image = simple_overlay_image(
-		gen_flip_rotation_selector_image(base_size, mips, is_outline=True, color=ICON_OVERLAY_OUTLINE_COLOR),
-		gen_flip_rotation_selector_image(base_size, mips, color=MOLECULE_ROTATER_ICON_COLOR))
-	imwrite(os.path.join(icon_overlays_folder, "molecule-rotater.png"), molecule_rotater_image)
-	moleculifier_image = gen_specific_molecule(MOLECULIFIER_MOLECULE, base_size, mips, include_outline=True)
-	imwrite(os.path.join(icon_overlays_folder, "moleculifier.png"), moleculifier_image)
-	print("Icon overlays written")
-
-
 #Generate recipe icons
 def gen_building_recipe_icons(recipes_folder, base_size, mips):
 	molecule_rotater_image = gen_flip_rotation_selector_image(base_size, mips, color=MOLECULE_ROTATER_ICON_COLOR)
@@ -710,6 +696,20 @@ def gen_all_recipe_icons(base_size, mips):
 	gen_building_recipe_icons(recipes_folder, base_size, mips)
 	gen_moleculify_recipe_icons(recipes_folder, base_size, mips)
 	print("Recipe icons written")
+
+
+#Generate building icon overlays
+def gen_icon_overlays(base_size, mips):
+	icon_overlays_folder = "icon-overlays"
+	if not os.path.exists(icon_overlays_folder):
+		os.mkdir(icon_overlays_folder)
+	molecule_rotater_image = simple_overlay_image(
+		gen_flip_rotation_selector_image(base_size, mips, is_outline=True, color=ICON_OVERLAY_OUTLINE_COLOR),
+		gen_flip_rotation_selector_image(base_size, mips, color=MOLECULE_ROTATER_ICON_COLOR))
+	imwrite(os.path.join(icon_overlays_folder, "molecule-rotater.png"), molecule_rotater_image)
+	moleculifier_image = gen_specific_molecule(MOLECULIFIER_MOLECULE, base_size, mips, include_outline=True)
+	imwrite(os.path.join(icon_overlays_folder, "moleculifier.png"), moleculifier_image)
+	print("Icon overlays written")
 
 
 #Generate molecule shape backgrounds
@@ -781,6 +781,6 @@ gen_item_group_icon(ITEM_GROUP_SIZE, ITEM_GROUP_MIPS)
 gen_molecule_reaction_reactants_icon(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_all_selectors(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_building_overlays(BASE_OVERLAY_SIZE)
-gen_icon_overlays(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_all_recipe_icons(BASE_ICON_SIZE, BASE_ICON_MIPS)
+gen_icon_overlays(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_molecule_shape_backgrounds(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
