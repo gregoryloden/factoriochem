@@ -76,6 +76,7 @@ TARGET_SELECTOR_DEFAULT_COLOR = (128, 128, 128, 0)
 TARGET_SELECTOR_HIGHLIGHT_COLOR = (128, 224, 255, 0)
 BASE_OVERLAY_SIZE = 32
 MOLECULIFIER_MOLECULE = "H--C|-He|N--O"
+MOLECULE_ROTATER_NAME = "molecule-rotater"
 MOLECULE_ROTATER_ICON_COLOR = (192, 192, 224, 0)
 with open("base-graphics-path.txt", "r") as file:
 	BASE_GRAPHICS_PATH = file.read()
@@ -645,9 +646,15 @@ def gen_building_overlays(base_size):
 
 
 #Generate recipe icons
-def gen_building_recipe_icons(recipes_folder, base_size, mips):
-	molecule_rotater_image = gen_flip_rotation_selector_image(base_size, mips, color=MOLECULE_ROTATER_ICON_COLOR)
-	imwrite(os.path.join(recipes_folder, "molecule-rotater.png"), molecule_rotater_image)
+def get_all_building_recipe_icons(base_size, mips, include_outline):
+	images = {
+		MOLECULE_ROTATER_NAME: gen_flip_rotation_selector_image(base_size, mips, color=MOLECULE_ROTATER_ICON_COLOR),
+	}
+	if include_outline:
+		images[MOLECULE_ROTATER_NAME] = simple_overlay_image(
+			gen_flip_rotation_selector_image(base_size, mips, is_outline=True, color=ICON_OVERLAY_OUTLINE_COLOR),
+			images[MOLECULE_ROTATER_NAME])
+	return images
 
 def gen_moleculify_recipe_icons(recipes_folder, base_size, mips):
 	base_icons_folder = os.path.join(BASE_GRAPHICS_PATH, "icons")
@@ -693,7 +700,8 @@ def gen_all_recipe_icons(base_size, mips):
 	recipes_folder = "recipes"
 	if not os.path.exists(recipes_folder):
 		os.mkdir(recipes_folder)
-	gen_building_recipe_icons(recipes_folder, base_size, mips)
+	for (name, image) in get_all_building_recipe_icons(base_size, mips, False).items():
+		imwrite(os.path.join(recipes_folder, name + ".png"), image)
 	gen_moleculify_recipe_icons(recipes_folder, base_size, mips)
 	print("Recipe icons written")
 
@@ -703,10 +711,8 @@ def gen_icon_overlays(base_size, mips):
 	icon_overlays_folder = "icon-overlays"
 	if not os.path.exists(icon_overlays_folder):
 		os.mkdir(icon_overlays_folder)
-	molecule_rotater_image = simple_overlay_image(
-		gen_flip_rotation_selector_image(base_size, mips, is_outline=True, color=ICON_OVERLAY_OUTLINE_COLOR),
-		gen_flip_rotation_selector_image(base_size, mips, color=MOLECULE_ROTATER_ICON_COLOR))
-	imwrite(os.path.join(icon_overlays_folder, "molecule-rotater.png"), molecule_rotater_image)
+	for (name, image) in get_all_building_recipe_icons(base_size, mips, True).items():
+		imwrite(os.path.join(icon_overlays_folder, name + ".png"), image)
 	moleculifier_image = gen_specific_molecule(MOLECULIFIER_MOLECULE, base_size, mips, include_outline=True)
 	imwrite(os.path.join(icon_overlays_folder, "moleculifier.png"), moleculifier_image)
 	print("Icon overlays written")
