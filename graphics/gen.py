@@ -91,6 +91,10 @@ SHAPE_BACKGROUND_COLOR = (128, 128, 128, 0)
 #Utility functions
 def imwrite(file_path, image):
 	cv2.imwrite(file_path, image, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+
+def write_images(folder, images):
+	for (name, image) in images:
+		imwrite(os.path.join(folder, name + ".png"), image)
 	
 def filled_mip_image(base_size, mips, color):
 	return numpy.full((base_size, sum(base_size >> i for i in range(mips)), 4), color, numpy.uint8)
@@ -405,26 +409,27 @@ def gen_bond_images(base_size, mips, y_scale, x_scale, y, x):
 		images["U"][bond_count] = easy_mips(u, multi_color_alpha_weighting=False)
 	return images
 
-def gen_and_write_bond_images(base_size, mips, bond_folder, y_scale, x_scale, y, x):
-	#L and U images are identical only with X and Y swapped, so do them at the same time
-	#generate "left" bonds: generate a bond only if x >= 1
-	if x == 0:
-		return
-	name_specs = {"L": f"{y_scale}{x_scale}{y}{x}", "U":f"{x_scale}{y_scale}{x}{y}"}
-	for (direction, bond_images) in gen_bond_images(base_size, mips, y_scale, x_scale, y, x).items():
-		for (bonds, image) in bond_images.items():
-			#file names represent left and up bonds for an atom with the same number set
-			imwrite(os.path.join(bond_folder, f"{direction}{name_specs[direction]}{bonds}.png"), image)
+def iter_bond_images(bond_images, name_specs):
+	for (direction, direction_bond_images) in bond_images.items():
+		for (bonds, image) in direction_bond_images.items():
+			yield (f"{direction}{name_specs[direction]}{bonds}", image)
 
 def gen_all_bond_images(base_size, mips):
-	bond_folder = "bonds"
-	if not os.path.exists(bond_folder):
-		os.mkdir(bond_folder)
+	bonds_folder = "bonds"
+	if not os.path.exists(bonds_folder):
+		os.mkdir(bonds_folder)
 	for y_scale in range(1, MAX_GRID_HEIGHT + 1):
 		for x_scale in range(1, MAX_GRID_WIDTH + 1):
 			for y in range(y_scale):
 				for x in range(x_scale):
-					gen_and_write_bond_images(base_size, mips, bond_folder, y_scale, x_scale, y, x)
+					#L and U images are identical only with X and Y swapped, so do them at the same time
+					#generate "left" bonds: generate a bond only if x >= 1
+					if x == 0:
+						continue
+					#file names represent left and up bonds for an atom with the same number set
+					name_specs = {"L": f"{y_scale}{x_scale}{y}{x}", "U":f"{x_scale}{y_scale}{x}{y}"}
+					bond_images = gen_bond_images(base_size, mips, y_scale, x_scale, y, x)
+					write_images(bonds_folder, iter_bond_images(bond_images, name_specs))
 	print("Bond images written")
 
 
@@ -553,14 +558,12 @@ def gen_flip_rotation_selector_image(base_size, mips, is_outline = False, color 
 	return gen_prepared_rotation_selector_image(
 		base_size, mips, [(120, 120), (300, 120)], draw_arrow_pointss, is_outline, color)
 
-def gen_rotation_selectors(base_size, mips, selectors_folder):
-	left_image = gen_left_right_rotation_selector_image(base_size, mips, 180, -1)
-	imwrite(os.path.join(selectors_folder, "rotation-l.png"), left_image)
-	right_image = gen_left_right_rotation_selector_image(base_size, mips, 270, 1)
-	imwrite(os.path.join(selectors_folder, "rotation-r.png"), right_image)
-	imwrite(os.path.join(selectors_folder, "rotation-f.png"), gen_flip_rotation_selector_image(base_size, mips))
+def iter_gen_rotation_selectors(base_size, mips):
+	yield ("rotation-l", gen_left_right_rotation_selector_image(base_size, mips, 180, -1))
+	yield ("rotation-r", gen_left_right_rotation_selector_image(base_size, mips, 270, 1))
+	yield ("rotation-f", gen_flip_rotation_selector_image(base_size, mips))
 
-def gen_target_selectors(base_size, mips, selectors_folder):
+def iter_gen_target_selectors(base_size, mips):
 	for y_scale in range(1, MAX_GRID_HEIGHT + 1):
 		for x_scale in range(1, MAX_GRID_WIDTH + 1):
 			grid_area = y_scale * x_scale
@@ -576,15 +579,14 @@ def gen_target_selectors(base_size, mips, selectors_folder):
 					simple_overlay_image(image, atom_image)
 				highlight_x = highlight_i % x_scale
 				highlight_y = highlight_i // x_scale
-				file_name = f"target-{y_scale}{x_scale}{highlight_y}{highlight_x}.png"
-				imwrite(os.path.join(selectors_folder, file_name), image)
+				yield (f"target-{y_scale}{x_scale}{highlight_y}{highlight_x}", image)
 
 def gen_all_selectors(base_size, mips):
 	selectors_folder = "selectors"
 	if not os.path.exists(selectors_folder):
 		os.mkdir(selectors_folder)
-	gen_rotation_selectors(base_size, mips, selectors_folder)
-	gen_target_selectors(base_size, mips, selectors_folder)
+	write_images(selectors_folder, iter_gen_rotation_selectors(base_size, mips))
+	write_images(selectors_folder, iter_gen_target_selectors(base_size, mips))
 	print("Selectors written")
 
 
@@ -673,7 +675,7 @@ def get_molecule_bender_rotation_image(base_size, mips, is_outline):
 		include_dot=False,
 		center_offset=center_offset)
 
-def get_all_building_recipe_icons(base_size, mips, include_outline):
+def iter_gen_all_building_recipe_icons(base_size, mips, include_outline):
 	images = {
 		MOLECULE_ROTATER_NAME: gen_flip_rotation_selector_image(base_size, mips, color=MOLECULE_ROTATER_ICON_COLOR),
 		MOLECULE_BENDER_NAME: simple_overlay_image(
@@ -686,9 +688,9 @@ def get_all_building_recipe_icons(base_size, mips, include_outline):
 			images[MOLECULE_ROTATER_NAME])
 		images[MOLECULE_BENDER_NAME] = simple_overlay_image(
 			get_molecule_bender_rotation_image(base_size, mips, True), images[MOLECULE_BENDER_NAME])
-	return images
+	return images.items()
 
-def gen_moleculify_recipe_icons(base_size, mips, recipes_folder):
+def iter_gen_moleculify_recipe_icons(base_size, mips):
 	base_icons_folder = os.path.join(BASE_GRAPHICS_PATH, "icons")
 	base_fluid_icons_folder = os.path.join(base_icons_folder, "fluid")
 	image_pairs = [
@@ -726,15 +728,14 @@ def gen_moleculify_recipe_icons(base_size, mips, recipes_folder):
 		draw_alpha_on(arrow_tip_image, draw_arrow_tip)
 		#combine arrow images, add mips, and then combine it with the rest of the image
 		image = simple_overlay_image(image, easy_mips(simple_overlay_image(arrow_image, arrow_tip_image)))
-		imwrite(os.path.join(recipes_folder, f"moleculify-{name}.png"), image)
+		yield (f"moleculify-{name}", image)
 
 def gen_all_recipe_icons(base_size, mips):
 	recipes_folder = "recipes"
 	if not os.path.exists(recipes_folder):
 		os.mkdir(recipes_folder)
-	for (name, image) in get_all_building_recipe_icons(base_size, mips, False).items():
-		imwrite(os.path.join(recipes_folder, name + ".png"), image)
-	gen_moleculify_recipe_icons(base_size, mips, recipes_folder)
+	write_images(recipes_folder, iter_gen_all_building_recipe_icons(base_size, mips, False))
+	write_images(recipes_folder, iter_gen_moleculify_recipe_icons(base_size, mips))
 	print("Recipe icons written")
 
 
@@ -743,8 +744,7 @@ def gen_icon_overlays(base_size, mips):
 	icon_overlays_folder = "icon-overlays"
 	if not os.path.exists(icon_overlays_folder):
 		os.mkdir(icon_overlays_folder)
-	for (name, image) in get_all_building_recipe_icons(base_size, mips, True).items():
-		imwrite(os.path.join(icon_overlays_folder, name + ".png"), image)
+	write_images(icon_overlays_folder, iter_gen_all_building_recipe_icons(base_size, mips, True))
 	moleculifier_image = gen_specific_molecule(base_size, mips, MOLECULIFIER_MOLECULE, include_outline=True)
 	imwrite(os.path.join(icon_overlays_folder, "moleculifier.png"), moleculifier_image)
 	print("Icon overlays written")
