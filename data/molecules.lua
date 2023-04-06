@@ -123,7 +123,6 @@ local current_atom_count = 0
 local current_shape_n = 0
 local current_shape_height = 0
 local current_shape_width = 0
-local current_shape_order_prefix = 0
 local total_molecules = 0
 
 local function assign_valid_atoms(grid_is)
@@ -262,11 +261,11 @@ local function gen_molecules(grid_i_i, grid_is)
 			type = "item",
 			name = MOLECULE_ITEM_PREFIX..table.concat(MOLECULE_BUILDER),
 			subgroup = MOLECULES_SUBGROUP_NAME,
-			order = current_shape_order_prefix..current_atom_count..shape,
 			localised_name = table.concat(MOLECULE_DISPLAY_BUILDER),
 			localised_description = description_cache[0],
 			icons = icons,
 			stack_size = 1,
+			flags = {"hidden"},
 		}})
 		total_molecules = total_molecules + 1
 	end
@@ -531,8 +530,6 @@ local function try_gen_molecule_bonds(shape_n)
 	current_shape_n = shape_n
 	local max_scale = math.max(current_shape_width, current_shape_height)
 	local min_scale = math.min(current_shape_width, current_shape_height)
-	current_shape_order_prefix = (max_scale - 1) * (max_scale - 1) + min_scale * 2
-	if current_shape_width >= current_shape_height then current_shape_order_prefix = current_shape_order_prefix - 1 end
 	gen_molecule_bonds(1, array_with_contents({first_grid_i}))
 end
 
