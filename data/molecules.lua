@@ -121,6 +121,7 @@ end
 -- Molecule generation
 local current_atom_count = 0
 local current_shape_n = 0
+local current_shape_icon = nil
 local current_shape_height = 0
 local current_shape_width = 0
 local total_molecules = 0
@@ -158,12 +159,7 @@ local function gen_molecules(grid_i_i, grid_is)
 		total_molecules = total_molecules + 1
 	else
 		array_clear(MOLECULE_BUILDER)
-		local shape = string.format("%03X", current_shape_n)
-		local icons = {{
-			icon = SHAPE_ICON_ROOT..shape..".png",
-			icon_size = ITEM_ICON_SIZE,
-			icon_mipmaps = MOLECULE_ICON_MIPMAPS,
-		}}
+		local icons = {current_shape_icon}
 		local last_row = 0
 		local last_col = 0
 		for grid_i = 1, GRID_AREA do
@@ -528,6 +524,11 @@ local function try_gen_molecule_bonds(shape_n)
 	-- this is a valid shape, set the first bond depth and start searching for molecules
 	GRID[first_grid_i].bond_depth = 1
 	current_shape_n = shape_n
+	current_shape_icon = {
+		icon = SHAPE_ICON_ROOT..string.format("%03X", current_shape_n)..".png",
+		icon_size = ITEM_ICON_SIZE,
+		icon_mipmaps = MOLECULE_ICON_MIPMAPS,
+	}
 	local max_scale = math.max(current_shape_width, current_shape_height)
 	local min_scale = math.min(current_shape_width, current_shape_height)
 	gen_molecule_bonds(1, array_with_contents({first_grid_i}))
