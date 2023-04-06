@@ -173,7 +173,7 @@ def easy_mips(image, multi_color_alpha_weighting = True):
 
 
 #Sub-image generation
-def get_circle_mip_datas(base_size, y_scale, x_scale, y, x, mips):
+def get_circle_mip_datas(base_size, mips, y_scale, x_scale, y, x):
 	base_size_data = CIRCLE_DATA.get(base_size, None)
 	if not base_size_data:
 		base_size_data = {}
@@ -229,7 +229,7 @@ def get_circle_mip_datas(base_size, y_scale, x_scale, y, x, mips):
 		}
 	return mip_datas
 
-def get_text_data(symbol, base_size, mips):
+def get_text_data(base_size, mips, symbol):
 	base_size_data = TEXT_DATAS.get(base_size, None)
 	if not base_size_data:
 		base_size_data = {}
@@ -282,23 +282,23 @@ def get_text_data(symbol, base_size, mips):
 
 
 #Generate atom images
-def gen_single_atom_shape_image(base_size, y_scale, x_scale, y, x, mips, color):
+def gen_single_atom_shape_image(base_size, mips, y_scale, x_scale, y, x, color):
 	#set the base color for this atom
 	image = filled_mip_image(base_size, mips, color)
-	mip_datas = get_circle_mip_datas(base_size, y_scale, x_scale, y, x, mips)
+	mip_datas = get_circle_mip_datas(base_size, mips, y_scale, x_scale, y, x)
 	for (mip, place_x, size) in iter_mips(base_size, mips):
 		#patch over the circle alpha mask for each mip
 		image[0:size, place_x:place_x + size, 3] = mip_datas[mip]["alpha"]
 	return image
 
-def gen_single_atom_image(symbol, bonds, base_size, y_scale, x_scale, y, x, mips):
-	image = gen_single_atom_shape_image(base_size, y_scale, x_scale, y, x, mips, COLOR_FOR_BONDS[bonds])
-	mip_datas = get_circle_mip_datas(base_size, y_scale, x_scale, y, x, mips)
+def gen_single_atom_image(base_size, mips, symbol, bonds, y_scale, x_scale, y, x):
+	image = gen_single_atom_shape_image(base_size, mips, y_scale, x_scale, y, x, COLOR_FOR_BONDS[bonds])
+	mip_datas = get_circle_mip_datas(base_size, mips, y_scale, x_scale, y, x)
 	scale = max(x_scale, y_scale)
 	for (mip, place_x, size) in iter_mips(base_size, mips):
 		#overlay text by finding the best section to resize to match the target size and position
 		#first determine the area we're going to draw to, in full pixel dimensions
-		text_data = get_text_data(symbol, base_size, mips)
+		text_data = get_text_data(base_size, mips, symbol)
 		text = text_data["image"]
 		text_scale = scale << mip
 		mip_data = mip_datas[mip]
@@ -328,7 +328,7 @@ def gen_single_atom_image(symbol, bonds, base_size, y_scale, x_scale, y, x, mips
 			image, text_dst_left, text_dst_top, text, text_src_left, text_src_top, text_dst_width, text_dst_height)
 	return image
 
-def gen_atom_images(symbol, bonds, molecule_max_atoms, base_size, mips):
+def gen_atom_images(base_size, mips, symbol, bonds, molecule_max_atoms):
 	atom_folder = os.path.join("atoms", symbol)
 	if not os.path.exists(atom_folder):
 		os.makedirs(atom_folder)
@@ -336,7 +336,7 @@ def gen_atom_images(symbol, bonds, molecule_max_atoms, base_size, mips):
 		for x_scale in range(1, min(molecule_max_atoms + 1 - y_scale, MAX_GRID_WIDTH) + 1):
 			for y in range(y_scale):
 				for x in range(x_scale):
-					image = gen_single_atom_image(symbol, bonds, base_size, y_scale, x_scale, y, x, mips)
+					image = gen_single_atom_image(base_size, mips, symbol, bonds, y_scale, x_scale, y, x)
 					imwrite(os.path.join(atom_folder, f"{y_scale}{x_scale}{y}{x}.png"), image)
 
 def gen_all_atom_images(base_size, mips):
@@ -370,12 +370,12 @@ def gen_all_atom_images(base_size, mips):
 			molecule_min_atoms = math.ceil(bonds / MAX_SINGLE_BONDS) + 1
 			if molecule_min_atoms > molecule_max_atoms:
 				molecule_max_atoms = 1
-			gen_atom_images(symbol, bonds, molecule_max_atoms, base_size, mips)
+			gen_atom_images(base_size, mips, symbol, bonds, molecule_max_atoms)
 		print(f"Atom row {atom_row_i + 1} written")
 
 
 #Generate bond images
-def gen_bond_images(base_size, y_scale, x_scale, y, x, mips):
+def gen_bond_images(base_size, mips, y_scale, x_scale, y, x):
 	#generate both L and U images at once
 	#L bond images will use the original values, U bond images will use the inverse
 	scale = max(x_scale, y_scale)
@@ -405,13 +405,13 @@ def gen_bond_images(base_size, y_scale, x_scale, y, x, mips):
 		images["U"][bond_count] = easy_mips(u, multi_color_alpha_weighting=False)
 	return images
 
-def gen_and_write_bond_images(bond_folder, base_size, y_scale, x_scale, y, x, mips):
+def gen_and_write_bond_images(base_size, mips, bond_folder, y_scale, x_scale, y, x):
 	#L and U images are identical only with X and Y swapped, so do them at the same time
 	#generate "left" bonds: generate a bond only if x >= 1
 	if x == 0:
 		return
 	name_specs = {"L": f"{y_scale}{x_scale}{y}{x}", "U":f"{x_scale}{y_scale}{x}{y}"}
-	for (direction, bond_images) in gen_bond_images(base_size, y_scale, x_scale, y, x, mips).items():
+	for (direction, bond_images) in gen_bond_images(base_size, mips, y_scale, x_scale, y, x).items():
 		for (bonds, image) in bond_images.items():
 			#file names represent left and up bonds for an atom with the same number set
 			imwrite(os.path.join(bond_folder, f"{direction}{name_specs[direction]}{bonds}.png"), image)
@@ -424,20 +424,20 @@ def gen_all_bond_images(base_size, mips):
 		for x_scale in range(1, MAX_GRID_WIDTH + 1):
 			for y in range(y_scale):
 				for x in range(x_scale):
-					gen_and_write_bond_images(bond_folder, base_size, y_scale, x_scale, y, x, mips)
+					gen_and_write_bond_images(base_size, mips, bond_folder, y_scale, x_scale, y, x)
 	print("Bond images written")
 
 
 #Generate specific full molecule images
-def gen_single_atom_outline_image(base_size, y_scale, x_scale, y, x, mips):
-	mip_datas = get_circle_mip_datas(base_size, y_scale, x_scale, y, x, mips)
+def gen_single_atom_outline_image(base_size, mips, y_scale, x_scale, y, x):
+	mip_datas = get_circle_mip_datas(base_size, mips, y_scale, x_scale, y, x)
 	image = filled_mip_image(base_size, mips, ICON_OVERLAY_OUTLINE_COLOR)
 	for (mip, place_x, size) in iter_mips(base_size, mips):
 		#patch over the circle alpha mask for each mip
 		image[0:size, place_x:place_x + size, 3] = mip_datas[mip]["outline_alpha"]
 	return image
 
-def gen_specific_molecule(molecule, base_size, mips, include_outline = False):
+def gen_specific_molecule(base_size, mips, molecule, include_outline = False):
 	image = filled_mip_image(base_size, mips, (0, 0, 0, 0))
 	shape = [row.split("-") for row in molecule.split("|")]
 	bonds = {"H": 1, "C": 4, "N": 3, "O": 2, "He": 0}
@@ -460,24 +460,24 @@ def gen_specific_molecule(molecule, base_size, mips, include_outline = False):
 				symbol = symbol[:-1]
 			if include_outline:
 				image = simple_overlay_image(
-					gen_single_atom_outline_image(base_size, y_scale, x_scale, y, x, mips), image)
+					gen_single_atom_outline_image(base_size, mips, y_scale, x_scale, y, x), image)
 			simple_overlay_image(
-				image, gen_single_atom_image(symbol, bonds[symbol], base_size, y_scale, x_scale, y, x, mips))
+				image, gen_single_atom_image(base_size, mips, symbol, bonds[symbol], y_scale, x_scale, y, x))
 			if left_bonds > 0:
 				simple_overlay_image(
-					image, gen_bond_images(base_size, y_scale, x_scale, y, x, mips)["L"][left_bonds])
+					image, gen_bond_images(base_size, mips, y_scale, x_scale, y, x)["L"][left_bonds])
 			if up_bonds > 0:
 				simple_overlay_image(
-					image, gen_bond_images(base_size, x_scale, y_scale, x, y, mips)["U"][up_bonds])
+					image, gen_bond_images(base_size, mips, x_scale, y_scale, x, y)["U"][up_bonds])
 			left_bonds = right_bonds
 	return image
 
 def gen_item_group_icon(base_size, mips):
-	imwrite("item-group.png", gen_specific_molecule("O1-C2-N|1N1-1O-1H|1H", base_size, mips))
+	imwrite("item-group.png", gen_specific_molecule(base_size, mips, "O1-C2-N|1N1-1O-1H|1H"))
 	print("Item group written")
 
 def gen_molecule_reaction_reactants_icon(base_size, mips):
-	imwrite("molecule-reaction-reactants.png", gen_specific_molecule("-H1-O|H--1H|1O1-H", base_size, mips))
+	imwrite("molecule-reaction-reactants.png", gen_specific_molecule(base_size, mips, "-H1-O|H--1H|1O1-H"))
 	print("Molecule reaction reactants written")
 
 
@@ -553,14 +553,14 @@ def gen_flip_rotation_selector_image(base_size, mips, is_outline = False, color 
 	return gen_prepared_rotation_selector_image(
 		base_size, mips, [(120, 120), (300, 120)], draw_arrow_pointss, is_outline, color)
 
-def gen_rotation_selectors(selectors_folder, base_size, mips):
+def gen_rotation_selectors(base_size, mips, selectors_folder):
 	left_image = gen_left_right_rotation_selector_image(base_size, mips, 180, -1)
 	imwrite(os.path.join(selectors_folder, "rotation-l.png"), left_image)
 	right_image = gen_left_right_rotation_selector_image(base_size, mips, 270, 1)
 	imwrite(os.path.join(selectors_folder, "rotation-r.png"), right_image)
 	imwrite(os.path.join(selectors_folder, "rotation-f.png"), gen_flip_rotation_selector_image(base_size, mips))
 
-def gen_target_selectors(selectors_folder, base_size, mips):
+def gen_target_selectors(base_size, mips, selectors_folder):
 	for y_scale in range(1, MAX_GRID_HEIGHT + 1):
 		for x_scale in range(1, MAX_GRID_WIDTH + 1):
 			grid_area = y_scale * x_scale
@@ -572,7 +572,7 @@ def gen_target_selectors(selectors_folder, base_size, mips):
 					color = TARGET_SELECTOR_HIGHLIGHT_COLOR \
 						if slot_i == highlight_i \
 						else TARGET_SELECTOR_DEFAULT_COLOR
-					atom_image = gen_single_atom_shape_image(base_size, y_scale, x_scale, y, x, mips, color)
+					atom_image = gen_single_atom_shape_image(base_size, mips, y_scale, x_scale, y, x, color)
 					simple_overlay_image(image, atom_image)
 				highlight_x = highlight_i % x_scale
 				highlight_y = highlight_i // x_scale
@@ -583,8 +583,8 @@ def gen_all_selectors(base_size, mips):
 	selectors_folder = "selectors"
 	if not os.path.exists(selectors_folder):
 		os.mkdir(selectors_folder)
-	gen_rotation_selectors(selectors_folder, base_size, mips)
-	gen_target_selectors(selectors_folder, base_size, mips)
+	gen_rotation_selectors(base_size, mips, selectors_folder)
+	gen_target_selectors(base_size, mips, selectors_folder)
 	print("Selectors written")
 
 
@@ -652,7 +652,7 @@ def gen_building_overlays(base_size):
 				rotated = cv2.rotate(base_image, rotation)
 				image[top:top + rotated.shape[0], left:left + rotated.shape[1]] = rotated
 			imwrite(os.path.join(building_overlays_folder, component + suffix + ".png"), image)
-		moleculifier_image = gen_specific_molecule(MOLECULIFIER_MOLECULE, base_size * 2, 1)
+		moleculifier_image = gen_specific_molecule(base_size * 2, 1, MOLECULIFIER_MOLECULE)
 		imwrite(os.path.join(building_overlays_folder, f"moleculifier{suffix}.png"), moleculifier_image)
 	print("Building overlays written")
 
@@ -677,7 +677,7 @@ def get_all_building_recipe_icons(base_size, mips, include_outline):
 	images = {
 		MOLECULE_ROTATER_NAME: gen_flip_rotation_selector_image(base_size, mips, color=MOLECULE_ROTATER_ICON_COLOR),
 		MOLECULE_BENDER_NAME: simple_overlay_image(
-			gen_specific_molecule("H1-H-|1H|", base_size, mips, include_outline),
+			gen_specific_molecule(base_size, mips, "H1-H-|1H|", include_outline),
 			get_molecule_bender_rotation_image(base_size, mips, False)),
 	}
 	if include_outline:
@@ -688,13 +688,13 @@ def get_all_building_recipe_icons(base_size, mips, include_outline):
 			get_molecule_bender_rotation_image(base_size, mips, True), images[MOLECULE_BENDER_NAME])
 	return images
 
-def gen_moleculify_recipe_icons(recipes_folder, base_size, mips):
+def gen_moleculify_recipe_icons(base_size, mips, recipes_folder):
 	base_icons_folder = os.path.join(BASE_GRAPHICS_PATH, "icons")
 	base_fluid_icons_folder = os.path.join(base_icons_folder, "fluid")
 	image_pairs = [
 		(
 			"water",
-			gen_specific_molecule("-H|H1-1O", base_size, mips),
+			gen_specific_molecule(base_size, mips, "-H|H1-1O"),
 			os.path.join(base_fluid_icons_folder, "water.png"),
 		),
 	]
@@ -734,7 +734,7 @@ def gen_all_recipe_icons(base_size, mips):
 		os.mkdir(recipes_folder)
 	for (name, image) in get_all_building_recipe_icons(base_size, mips, False).items():
 		imwrite(os.path.join(recipes_folder, name + ".png"), image)
-	gen_moleculify_recipe_icons(recipes_folder, base_size, mips)
+	gen_moleculify_recipe_icons(base_size, mips, recipes_folder)
 	print("Recipe icons written")
 
 
@@ -745,7 +745,7 @@ def gen_icon_overlays(base_size, mips):
 		os.mkdir(icon_overlays_folder)
 	for (name, image) in get_all_building_recipe_icons(base_size, mips, True).items():
 		imwrite(os.path.join(icon_overlays_folder, name + ".png"), image)
-	moleculifier_image = gen_specific_molecule(MOLECULIFIER_MOLECULE, base_size, mips, include_outline=True)
+	moleculifier_image = gen_specific_molecule(base_size, mips, MOLECULIFIER_MOLECULE, include_outline=True)
 	imwrite(os.path.join(icon_overlays_folder, "moleculifier.png"), moleculifier_image)
 	print("Icon overlays written")
 
@@ -807,7 +807,7 @@ def gen_molecule_shape_backgrounds(base_size, mips):
 			y = i // MAX_GRID_WIDTH
 			simple_overlay_image(
 				image,
-				gen_single_atom_shape_image(base_size, y_scale, x_scale, y, x, mips, SHAPE_BACKGROUND_COLOR))
+				gen_single_atom_shape_image(base_size, mips, y_scale, x_scale, y, x, SHAPE_BACKGROUND_COLOR))
 		imwrite(os.path.join(shapes_folder, f"{shape_n:03X}.png"), image)
 	print("Molecule shape backgrounds written")
 
