@@ -8,6 +8,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 #Constants
 MAX_GRID_WIDTH = 3
 MAX_GRID_HEIGHT = 3
+MAX_GRID_AREA = MAX_GRID_WIDTH * MAX_GRID_HEIGHT
 BASE_ICON_SIZE = 64
 BASE_ICON_MIPS = 4
 MOLECULE_ICON_MIPS = 3
@@ -703,13 +704,12 @@ def gen_molecule_shape_backgrounds(base_size, mips):
 	shapes_folder = "shapes"
 	if not os.path.exists(shapes_folder):
 		os.mkdir(shapes_folder)
-	max_grid_area = MAX_GRID_WIDTH * MAX_GRID_HEIGHT
-	for shape_n in range(2, 1 << max_grid_area):
+	for shape_n in range(2, 1 << MAX_GRID_AREA):
 		if not any((shape_n & 1 << i) != 0 for i in range(MAX_GRID_WIDTH)) \
-				or not any((shape_n & 1 << i) != 0 for i in range(0, max_grid_area, MAX_GRID_WIDTH)):
+				or not any((shape_n & 1 << i) != 0 for i in range(0, MAX_GRID_AREA, MAX_GRID_WIDTH)):
 			continue
 		grid = []
-		for i in range(max_grid_area):
+		for i in range(MAX_GRID_AREA):
 			grid.append(1 if shape_n & 1 << i != 0 else 0)
 		atom_count = sum(grid)
 
