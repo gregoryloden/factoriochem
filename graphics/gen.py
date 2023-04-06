@@ -130,14 +130,38 @@ def iter_mips(base_size, mips):
 		yield (mip, place_x, size)
 		place_x += size
 
-def easy_mips(image):
+def resize(image, width, height, multi_color_alpha_weighting = True):
+	if multi_color_alpha_weighting:
+		#in an image with different colors, each color should only affect its resulting pixel based on its alpha
+		#to apply weights, multiply all colors by their alpha, then after resizing, divide by the alpha at that pixel
+		#to start, we'll need the precision of floats
+		image = image.astype(numpy.float32)
+		#multiply each channel by the alpha
+		alpha = image[:, :, 3]
+		for channel in range(3):
+			image[:, :, channel] *= alpha
+		#resize the image now
+		image = cv2.resize(image, (width, height), interpolation=cv2.INTER_AREA)
+		#divide away the alpha, where it's not 0
+		alpha = image[:, :, 3]
+		has_alpha = alpha > 0
+		alpha = alpha[has_alpha]
+		for channel in range(3):
+			image[:, :, channel][has_alpha] /= alpha
+		#and now convert back to 8-bit
+		return image.astype(numpy.uint8)
+	else:
+		#every pixel color is the same already, we don't need to weight colors since the average will always be the same
+		return cv2.resize(image, (width, height), interpolation=cv2.INTER_AREA)
+
+def easy_mips(image, multi_color_alpha_weighting = True):
 	#copy the entire outer mip, performance isn't really an issue
 	(base_size, total_size, _) = image.shape
 	mip_0 = image[:, 0:base_size]
 	place_x = base_size
 	for mip in range(1, 64):
 		size = base_size >> mip
-		image[0:size, place_x:place_x + size] = cv2.resize(mip_0, (size, size), interpolation=cv2.INTER_AREA)
+		image[0:size, place_x:place_x + size] = resize(mip_0, size, size, multi_color_alpha_weighting)
 		place_x += size
 		if place_x >= total_size:
 			return image
@@ -290,7 +314,7 @@ def gen_single_atom_image(symbol, bonds, base_size, y_scale, x_scale, y, x, mips
 			text_src_right = text_src_left + text_dst_width * text_scale
 			text_src_bottom = text_src_top + text_dst_height * text_scale
 			text_src = text[text_src_top:text_src_bottom, text_src_left:text_src_right]
-			text = cv2.resize(text_src, (text_dst_width, text_dst_height), interpolation=cv2.INTER_AREA)
+			text = resize(text_src, text_dst_width, text_dst_height, multi_color_alpha_weighting=False)
 			text_src_left = 0
 			text_src_top = 0
 
@@ -372,8 +396,8 @@ def gen_bond_images(base_size, y_scale, x_scale, y, x, mips):
 			draw_start = draw_start[::-1]
 			draw_end = draw_end[::-1]
 			draw_alpha_on(u, draw_bond)
-		images["L"][bond_count] = easy_mips(l)
-		images["U"][bond_count] = easy_mips(u)
+		images["L"][bond_count] = easy_mips(l, multi_color_alpha_weighting=False)
+		images["U"][bond_count] = easy_mips(u, multi_color_alpha_weighting=False)
 	return images
 
 def gen_and_write_bond_images(bond_folder, base_size, y_scale, x_scale, y, x, mips):
@@ -500,7 +524,7 @@ def gen_prepared_rotation_selector_image(base_size, mips, arcs, draw_arrow_point
 	def draw_arrows(mask):
 		cv2.fillPoly(mask, numpy.array(draw_arrow_pointss), 255, cv2.LINE_AA, PRECISION_BITS)
 	draw_alpha_on(arrows_image, draw_arrows)
-	return easy_mips(simple_overlay_image(image, arrows_image))
+	return easy_mips(simple_overlay_image(image, arrows_image), multi_color_alpha_weighting=False)
 
 def gen_left_right_rotation_selector_image(base_size, mips, start_angle, arrow_center_x_radius_multiplier):
 	(radius, center, arrow_size) = get_rotation_selector_arc_values(base_size)
@@ -635,7 +659,6 @@ def gen_moleculify_recipe_icons(base_size, mips):
 	recipes_folder = get_recipes_folder()
 	base_icons_folder = os.path.join(BASE_GRAPHICS_PATH, "icons")
 	base_fluid_icons_folder = os.path.join(base_icons_folder, "fluid")
-	half_size = base_size // 2
 	image_pairs = [
 		(
 			"water",
@@ -646,11 +669,15 @@ def gen_moleculify_recipe_icons(base_size, mips):
 	for (name, moleculify_result_image, moleculify_source_image_path) in image_pairs:
 		moleculify_source_image = cv2.imread(moleculify_source_image_path, cv2.IMREAD_UNCHANGED)
 		image = filled_mip_image(base_size, mips, (0, 0, 0, 0))
-		image[0:half_size, 0:half_size] = cv2.resize(
-			moleculify_source_image[0:base_size, 0:base_size], (half_size, half_size), interpolation=cv2.INTER_AREA)
-		image[half_size:base_size, half_size:base_size] = cv2.resize(
-			moleculify_result_image[0:base_size, 0:base_size], (half_size, half_size), interpolation=cv2.INTER_AREA)
-		arrow_image = numpy.full((base_size, base_size, 4), MOLECULIFY_ARROW_COLOR, numpy.uint8)
+		#overlay the sub images at half-size at each mip level
+		for (mip, place_x, size) in iter_mips(base_size, mips):
+			half_size = size // 2
+			image[0:half_size, place_x:place_x + half_size] = \
+				resize(moleculify_source_image[0:size, place_x:place_x + size], half_size, half_size)
+			image[half_size:size, place_x + half_size:place_x + size] = \
+				resize(moleculify_result_image[0:size, place_x:place_x + size], half_size, half_size)
+		#draw the arrow line
+		arrow_image = filled_mip_image(base_size, mips, MOLECULIFY_ARROW_COLOR)
 		arrow_thickness = int(MOLECULIFY_ARROW_THICKNESS_FRACTION * base_size)
 		draw_start = (round((base_size * 0.375 - 0.5) * PRECISION_MULTIPLIER),) * 2
 		end_xy = base_size * 0.625
@@ -658,15 +685,16 @@ def gen_moleculify_recipe_icons(base_size, mips):
 		def draw_arrow_line(mask):
 			cv2.line(mask, draw_start, draw_end, 255, arrow_thickness, cv2.LINE_AA, PRECISION_BITS)
 		draw_alpha_on(arrow_image, draw_arrow_line)
-		simple_overlay_image(image, arrow_image)
-		arrow_image[:, :, 3] = 0
+		#draw the arrow tip
+		arrow_tip_image = numpy.full((base_size, base_size, 4), MOLECULIFY_ARROW_COLOR, numpy.uint8)
 		arrow_size_offset = MOLECULIFY_ARROW_SIZE_FRACTION * base_size / -math.sqrt(2)
 		draw_arrow_points = get_draw_arrow_points(end_xy, end_xy, arrow_size_offset, arrow_size_offset)
 		def draw_arrow_tip(mask):
 			cv2.fillPoly(mask, numpy.array([draw_arrow_points]), 255, cv2.LINE_AA, PRECISION_BITS)
-		draw_alpha_on(arrow_image, draw_arrow_tip)
-		simple_overlay_image(image, arrow_image)
-		imwrite(os.path.join(recipes_folder, f"moleculify-{name}.png"), easy_mips(image))
+		draw_alpha_on(arrow_tip_image, draw_arrow_tip)
+		#combine arrow images, add mips, and then combine it with the rest of the image
+		image = simple_overlay_image(image, easy_mips(simple_overlay_image(arrow_image, arrow_tip_image)))
+		imwrite(os.path.join(recipes_folder, f"moleculify-{name}.png"), image)
 	print("Moleculify recipe icons written")
 
 
