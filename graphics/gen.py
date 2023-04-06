@@ -72,6 +72,8 @@ ROTATION_SELECTOR_THICKNESS_FRACTION = 4 / 64
 ROTATION_SELECTOR_ARROW_SIZE_FRACTION = 6 / 64
 ROTATION_SELECTOR_DOT_RADIUS_FRACTION = 4 / 64
 ROTATION_SELECTOR_OUTLINE_FRACTION = 4 / 64
+TARGET_SELECTOR_DEFAULT_COLOR = (128, 128, 128, 0)
+TARGET_SELECTOR_HIGHLIGHT_COLOR = (128, 224, 255, 0)
 ICON_OVERLAY_OUTLINE_COLOR = (64, 64, 64, 0)
 MOLECULE_ROTATER_ICON_COLOR = (192, 192, 224, 0)
 BASE_OVERLAY_SIZE = 32
@@ -556,6 +558,29 @@ def gen_rotation_selectors(base_size, mips):
 	print("Rotation selectors written")
 
 
+#Generate target selectors
+def gen_target_selectors(base_size, mips):
+	selectors_folder = get_selectors_folder()
+	for y_scale in range(1, MAX_GRID_HEIGHT + 1):
+		for x_scale in range(1, MAX_GRID_WIDTH + 1):
+			grid_area = y_scale * x_scale
+			for highlight_i in range(grid_area):
+				image = filled_mip_image(base_size, mips, (0, 0, 0, 0))
+				for slot_i in range(grid_area):
+					x = slot_i % x_scale
+					y = slot_i // x_scale
+					color = TARGET_SELECTOR_HIGHLIGHT_COLOR \
+						if slot_i == highlight_i \
+						else TARGET_SELECTOR_DEFAULT_COLOR
+					atom_image = gen_single_atom_shape_image(base_size, y_scale, x_scale, y, x, mips, color)
+					simple_overlay_image(image, atom_image)
+				highlight_x = highlight_i % x_scale
+				highlight_y = highlight_i // x_scale
+				file_name = f"target-{y_scale}{x_scale}{highlight_y}{highlight_x}.png"
+				imwrite(os.path.join(selectors_folder, file_name), image)
+	print("Target selectors written")
+
+
 #Generate building overlays
 def gen_building_overlays(base_size):
 	building_overlays_folder = "building-overlays"
@@ -767,6 +792,7 @@ gen_all_bond_images(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_item_group_icon(ITEM_GROUP_SIZE, ITEM_GROUP_MIPS)
 gen_molecule_reaction_reactants_icon(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_rotation_selectors(BASE_ICON_SIZE, BASE_ICON_MIPS)
+gen_target_selectors(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_building_overlays(BASE_OVERLAY_SIZE)
 gen_icon_overlays(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_building_recipe_icons(BASE_ICON_SIZE, BASE_ICON_MIPS)
