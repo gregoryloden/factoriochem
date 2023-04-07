@@ -46,10 +46,10 @@ end
 
 local function gen_grid(height, width)
 	local shape = {}
-	for _ = 1, height do
+	for y = 1, height do
 		local shape_row = {}
-		for _ = 1, width do table.insert(shape_row, {}) end
-		table.insert(shape, shape_row)
+		for x = 1, width do shape_row[x] = {} end
+		shape[y] = shape_row
 	end
 	return shape
 end
