@@ -60,6 +60,8 @@ local function parse_molecule(molecule)
 			end
 		end
 		return shape, grid_height, grid_width
+	elseif string.find(molecule, ATOM_ITEM_PREFIX_MATCH) then
+		return {{{symbol = string.sub(molecule, #ATOM_ITEM_PREFIX + 1), x = 1, y = 1}}}, 1, 1
 	else
 		error("Unexpected molecule ID \""..molecule.."\"")
 	end
