@@ -257,9 +257,9 @@ def get_text_data(base_size, mips, symbol):
 	text_full_height = text_height + font_thickness * 3 + text_buffer_border * 2
 	text_bottom_left = (text_buffer_border, text_buffer_border + text_height + font_thickness)
 	text = numpy.full((text_full_height, text_full_width, 4), TEXT_COLOR, numpy.uint8)
-	text_mask = draw_alpha_on(
-		text,
-		lambda mask: cv2.putText(mask, symbol, text_bottom_left, FONT, font_scale, 255, font_thickness, cv2.LINE_AA))
+	def draw_text(mask):
+		cv2.putText(mask, symbol, text_bottom_left, FONT, font_scale, 255, font_thickness, cv2.LINE_AA)
+	text_mask = draw_alpha_on(text, draw_text)
 
 	#find the edges of the text
 	for left_edge in range(text_full_width):
