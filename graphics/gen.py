@@ -592,14 +592,18 @@ def iter_gen_single_target_and_atom_bond_selectors(base_size, mips, y_scale, x_s
 		atom_bond_image = numpy.copy(target_image)
 		target_x = highlight_x + x_offset
 		target_y = highlight_y + y_offset
-		if target_x < 0 or target_x >= x_scale or target_y < 0 or target_y >= y_scale:
-			arrow_color = TARGET_SELECTOR_DEFAULT_COLOR
-			arrow_offset = inner_arrow_offset
-			negative_arrow_size = negative_inner_arrow_size
-		else:
+		inner_y = target_y >= 0 and target_y < y_scale
+		inner_x = target_x >= 0 and target_x < x_scale
+		if y_scale == 3 and not inner_y or x_scale == 3 and not inner_x:
+			continue
+		if inner_x and inner_y:
 			arrow_color = TARGET_SELECTOR_HIGHLIGHT_COLOR
 			arrow_offset = outer_arrow_offset
 			negative_arrow_size = negative_outer_arrow_size
+		else:
+			arrow_color = TARGET_SELECTOR_DEFAULT_COLOR
+			arrow_offset = inner_arrow_offset
+			negative_arrow_size = negative_inner_arrow_size
 		arrow_image = filled_mip_image(base_size, mips, arrow_color)
 		draw_arrow_points = get_draw_arrow_points(
 			mip_data_0["center_x"] + x_offset * arrow_offset,
