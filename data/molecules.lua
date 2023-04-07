@@ -30,9 +30,7 @@ end
 
 -- Constants
 local ATOMS_SUBGROUP_PREFIX = "atoms-"
-local GRID_WIDTH = 3
-local GRID_HEIGHT = 3
-local GRID_AREA = GRID_WIDTH * GRID_HEIGHT
+local GRID_AREA = MAX_GRID_WIDTH * MAX_GRID_HEIGHT
 local MAX_TOTAL_BONDS = 0
 local MOLECULE_ATOMS_ACCEPT_BONDS = {}
 local HCNO = {H = true, C = true, N = true, O = true}
@@ -42,8 +40,8 @@ local MAX_ATOMS_Ne = 4
 local MAX_ATOMS_Ar = 3
 local MAX_ATOMS_OTHER = 2
 local GRID = empty_array()
-local GRID_WIDTH_M1 = GRID_WIDTH - 1
-local GRID_HEIGHT_M1 = GRID_HEIGHT - 1
+local MAX_GRID_WIDTH_M1 = MAX_GRID_WIDTH - 1
+local MAX_GRID_HEIGHT_M1 = MAX_GRID_HEIGHT - 1
 local MAX_SINGLE_BONDS = 2
 local MOLECULE_BUILDER = empty_array()
 local MOLECULE_DISPLAY_COUNTER = {}
@@ -166,8 +164,8 @@ local function gen_molecules(grid_i_i, grid_is)
 			local slot = GRID[grid_i]
 			if slot then
 				local grid_0_i = grid_i - 1
-				local row = math.floor(grid_0_i / GRID_WIDTH)
-				local col = grid_0_i % GRID_WIDTH
+				local row = math.floor(grid_0_i / MAX_GRID_WIDTH)
+				local col = grid_0_i % MAX_GRID_WIDTH
 				if row > last_row then
 					last_row = row
 					array_push(MOLECULE_BUILDER, ATOM_ROW_SEPARATOR)
@@ -294,7 +292,7 @@ local function gen_molecule_bonds(grid_i_i, grid_is)
 	local left_grid_i
 	local left_slot
 	local expand_left
-	if grid_0_i % GRID_WIDTH >= 1 then
+	if grid_0_i % MAX_GRID_WIDTH >= 1 then
 		left_grid_i = grid_i - 1
 		left_slot = GRID[left_grid_i]
 		if left_slot then
@@ -312,8 +310,8 @@ local function gen_molecule_bonds(grid_i_i, grid_is)
 	local up_grid_i
 	local up_slot
 	local expand_up
-	if grid_0_i / GRID_WIDTH >= 1 then
-		up_grid_i = grid_i - GRID_WIDTH
+	if grid_0_i / MAX_GRID_WIDTH >= 1 then
+		up_grid_i = grid_i - MAX_GRID_WIDTH
 		up_slot = GRID[up_grid_i]
 		if up_slot then
 			expand_up = up_slot.bond_depth == 0
@@ -330,7 +328,7 @@ local function gen_molecule_bonds(grid_i_i, grid_is)
 	local right_grid_i
 	local right_slot
 	local expand_right
-	if grid_0_i % GRID_WIDTH < GRID_WIDTH_M1 then
+	if grid_0_i % MAX_GRID_WIDTH < MAX_GRID_WIDTH_M1 then
 		right_grid_i = grid_i + 1
 		right_slot = GRID[right_grid_i]
 		if right_slot then
@@ -348,8 +346,8 @@ local function gen_molecule_bonds(grid_i_i, grid_is)
 	local down_grid_i
 	local down_slot
 	local expand_down
-	if grid_0_i / GRID_WIDTH < GRID_HEIGHT_M1 then
-		down_grid_i = grid_i + GRID_WIDTH
+	if grid_0_i / MAX_GRID_WIDTH < MAX_GRID_HEIGHT_M1 then
+		down_grid_i = grid_i + MAX_GRID_WIDTH
 		down_slot = GRID[down_grid_i]
 		if down_slot then
 			expand_down = down_slot.bond_depth == 0
@@ -450,8 +448,8 @@ end
 local function is_top_left(shape_n)
 	local top_row_mask = 1
 	local left_col_mask = 1
-	for i = 1, GRID_WIDTH - 1 do top_row_mask = bit32.bor(top_row_mask, bit32.lshift(1, i)) end
-	for i = 1, GRID_HEIGHT - 1 do left_col_mask = bit32.bor(left_col_mask, bit32.lshift(1, i * GRID_WIDTH)) end
+	for i = 1, MAX_GRID_WIDTH - 1 do top_row_mask = bit32.bor(top_row_mask, bit32.lshift(1, i)) end
+	for i = 1, MAX_GRID_HEIGHT - 1 do left_col_mask = bit32.bor(left_col_mask, bit32.lshift(1, i * MAX_GRID_WIDTH)) end
 	return bit32.band(shape_n, top_row_mask) ~= 0 and bit32.band(shape_n, left_col_mask) ~= 0
 end
 
@@ -474,10 +472,12 @@ local function check_grid_connected(first_grid_i)
 		connected_slot_count = connected_slot_count + 1
 		local adjacent_grid_is = empty_array()
 		local check_grid_0_i = check_grid_i - 1
-		if check_grid_0_i % GRID_WIDTH >= 1 then array_push(adjacent_grid_is, check_grid_i - 1) end
-		if check_grid_0_i / GRID_WIDTH >= 1 then array_push(adjacent_grid_is, check_grid_i - GRID_WIDTH) end
-		if check_grid_0_i % GRID_WIDTH < GRID_WIDTH_M1 then array_push(adjacent_grid_is, check_grid_i + 1) end
-		if check_grid_0_i / GRID_WIDTH < GRID_HEIGHT_M1 then array_push(adjacent_grid_is, check_grid_i + GRID_WIDTH) end
+		if check_grid_0_i % MAX_GRID_WIDTH >= 1 then array_push(adjacent_grid_is, check_grid_i - 1) end
+		if check_grid_0_i / MAX_GRID_WIDTH >= 1 then array_push(adjacent_grid_is, check_grid_i - MAX_GRID_WIDTH) end
+		if check_grid_0_i % MAX_GRID_WIDTH < MAX_GRID_WIDTH_M1 then array_push(adjacent_grid_is, check_grid_i + 1) end
+		if check_grid_0_i / MAX_GRID_WIDTH < MAX_GRID_HEIGHT_M1 then
+			array_push(adjacent_grid_is, check_grid_i + MAX_GRID_WIDTH)
+		end
 		for _, adjacent_grid_i in ipairs(adjacent_grid_is) do
 			local adjacent_slot = GRID[adjacent_grid_i]
 			if adjacent_slot and adjacent_slot.bond_depth == 0 then
@@ -508,8 +508,8 @@ local function try_gen_molecule_bonds(shape_n)
 			if first_grid_i == 0 then first_grid_i = grid_i end
 			current_atom_count = current_atom_count + 1
 			local grid_0_i = grid_i - 1
-			local shape_height = math.floor(grid_0_i / GRID_WIDTH) + 1
-			local shape_width = grid_0_i % GRID_WIDTH + 1
+			local shape_height = math.floor(grid_0_i / MAX_GRID_WIDTH) + 1
+			local shape_width = grid_0_i % MAX_GRID_WIDTH + 1
 			if shape_height > current_shape_height then current_shape_height = shape_height end
 			if shape_width > current_shape_width then current_shape_width = shape_width end
 		else

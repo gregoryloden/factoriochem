@@ -1,3 +1,5 @@
+MAX_GRID_WIDTH = 3
+MAX_GRID_HEIGHT = 3
 MOLECULES_GROUP_NAME = "molecules"
 MOLECULE_REACTION_NAME = "molecule-reaction"
 ATOM_ITEM_PREFIX = "atom-"
