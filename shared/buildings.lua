@@ -13,20 +13,11 @@ local ROTATE = {
 }
 local ROTATE_ATOM = {
 	-- left
-	function(base_atom, atom)
-		atom.symbol, atom.left, atom.up, atom.right, atom.down =
-			base_atom.symbol, base_atom.up, base_atom.right, base_atom.down, base_atom.left
-	end,
+	function(atom) atom.left, atom.up, atom.right, atom.down = atom.up, atom.right, atom.down, atom.left end,
 	-- flip
-	function(base_atom, atom)
-		atom.symbol, atom.left, atom.up, atom.right, atom.down =
-			base_atom.symbol, base_atom.right, base_atom.down, base_atom.left, base_atom.up
-	end,
+	function(atom) atom.left, atom.up, atom.right, atom.down = atom.right, atom.down, atom.left, atom.up end,
 	-- right
-	function(base_atom, atom)
-		atom.symbol, atom.left, atom.up, atom.right, atom.down =
-			base_atom.symbol, base_atom.down, base_atom.left, base_atom.up, base_atom.right
-	end
+	function(atom) atom.left, atom.up, atom.right, atom.down = atom.down, atom.left, atom.up, atom.right end,
 }
 
 
@@ -37,55 +28,56 @@ local function parse_molecule(molecule)
 		local shape = {}
 
 		-- extract the initial data from the molecule
+		local grid_height = 0
+		local grid_width = 0
 		for molecule_row in string.gmatch(molecule..ATOM_ROW_SEPARATOR, PARSE_MOLECULE_ROW_MATCH) do
+			grid_height = grid_height + 1
 			local shape_row = {}
+			local x = 0
 			for atom_data in string.gmatch(molecule_row..ATOM_COL_SEPARATOR, PARSE_MOLECULE_ATOM_MATCH) do
-				local atom = {symbol = string.match(atom_data, "%a+")}
-				local up = string.match(atom_data, "^%d")
-				if up then atom.up = tonumber(up) end
-				local right = string.match(atom_data, "%d$")
-				if right then atom.right = tonumber(right) end
-				table.insert(shape_row, atom)
+				x = x + 1
+				local symbol = string.match(atom_data, "%a+")
+				if symbol then
+					local atom = {symbol = symbol}
+					local up = string.match(atom_data, "^%d")
+					if up then atom.up = tonumber(up) end
+					local right = string.match(atom_data, "%d$")
+					if right then atom.right = tonumber(right) end
+					shape_row[x] = atom
+				end
 			end
-			table.insert(shape, shape_row)
+			if x > grid_width then grid_width = x end
+			shape[grid_height] = shape_row
 		end
 
-		-- add corresponding down and left bonds, and also compute the grid width
-		local grid_width = 0
-		for y, shape_row in ipairs(shape) do
-			for x, atom in ipairs(shape_row) do
+		-- add corresponding down and left bonds
+		for y, shape_row in pairs(shape) do
+			for x, atom in pairs(shape_row) do
 				if atom.up then shape[y - 1][x].down = atom.up end
 				if atom.right then shape_row[x + 1].left = atom.right end
 			end
-			local shape_row_width = #shape_row
-			if shape_row_width > grid_width then grid_width = shape_row_width end
 		end
-
-		return shape, #shape, grid_width
-	elseif string.find(molecule, ATOM_ITEM_PREFIX_MATCH) then
-		return {{{symbol = string.sub(molecule, #ATOM_ITEM_PREFIX + 1)}}}, 1, 1
+		return shape, grid_height, grid_width
 	else
 		error("Unexpected molecule ID \""..molecule.."\"")
 	end
 end
 
-local function gen_grid(height, width)
+local function gen_grid(height)
 	local shape = {}
-	for y = 1, height do
-		local shape_row = {}
-		for x = 1, width do shape_row[x] = {} end
-		shape[y] = shape_row
-	end
+	for y = 1, height do shape[y] = {} end
 	return shape
 end
 
-local function assemble_molecule(shape)
+local function assemble_molecule(shape, height, width)
 	local builder = {MOLECULE_ITEM_PREFIX}
-	for y, shape_row in ipairs(shape) do
+	for y = 1, height do
+		shape_row = shape[y]
 		if y > 1 then table.insert(builder, ATOM_ROW_SEPARATOR) end
 		local next_col = 1
-		for x, atom in ipairs(shape_row) do
-			if atom.symbol then
+		for x = 1, width do
+			atom = shape_row[x]
+			if atom then
 				while next_col < x do
 					table.insert(builder, ATOM_COL_SEPARATOR)
 					next_col = next_col + 1
@@ -96,7 +88,6 @@ local function assemble_molecule(shape)
 			end
 		end
 	end
-	if #builder == 2 then builder[1] = ATOM_ITEM_PREFIX end
 	return table.concat(builder)
 end
 
@@ -121,30 +112,27 @@ BUILDING_DEFINITIONS = {
 				return true
 			end
 
-			-- build the shape of the new grid
+			-- capture stats about the old grid shape and build the shape of the new grid
 			local shape, height, width = parse_molecule(molecule)
-			local rotation = tonumber(string.sub(reaction.selectors[BASE_NAME], -1))
-			local new_shape
-			if rotation == 2 then
-				new_shape = gen_grid(height, width)
-			else
-				new_shape = gen_grid(width, height)
-			end
-
-			-- move all the atoms into the new shape
 			local center_x = (width + 1) / 2
 			local center_y = (height + 1) / 2
+			local rotation = tonumber(string.sub(reaction.selectors[BASE_NAME], -1))
+			if rotation == 2 then width, height = height, width end
+			local new_shape = gen_grid(height)
+
+			-- move all the atoms into the new shape
 			local rotate = ROTATE[rotation]
 			local rotate_atom = ROTATE_ATOM[rotation]
-			for y, shape_row in ipairs(shape) do
-				for x, atom in ipairs(shape_row) do
+			for y, shape_row in pairs(shape) do
+				for x, atom in pairs(shape_row) do
 					new_x, new_y = rotate(center_x, center_y, x, y)
-					rotate_atom(atom, new_shape[new_y][new_x])
+					rotate_atom(atom)
+					new_shape[new_y][new_x] = atom
 				end
 			end
 
 			-- turn the shape into a molecule and write it to the output
-			reaction.products[RESULT_NAME] = assemble_molecule(new_shape)
+			reaction.products[RESULT_NAME] = assemble_molecule(new_shape, height, width)
 			return true
 		end,
 	},
