@@ -96,8 +96,9 @@ def write_images(folder, images):
 	for (name, image) in images:
 		imwrite(os.path.join(folder, name + ".png"), image)
 	
-def filled_mip_image(base_size, mips, color):
-	return numpy.full((base_size, sum(base_size >> i for i in range(mips)), 4), color, numpy.uint8)
+def filled_mip_image(base_size, mips, color = None):
+	shape = (base_size, sum(base_size >> i for i in range(mips)), 4)
+	return numpy.full(shape, color, numpy.uint8) if color else numpy.zeros(shape, numpy.uint8)
 
 def draw_alpha_on(image, draw):
 	mask = numpy.zeros(image.shape[:2], numpy.uint8)
@@ -443,7 +444,7 @@ def gen_single_atom_outline_image(base_size, mips, y_scale, x_scale, y, x):
 	return image
 
 def gen_specific_molecule(base_size, mips, molecule, include_outline = False):
-	image = filled_mip_image(base_size, mips, (0, 0, 0, 0))
+	image = filled_mip_image(base_size, mips)
 	shape = [row.split("-") for row in molecule.split("|")]
 	bonds = {"H": 1, "C": 4, "N": 3, "O": 2, "He": 0}
 	y_scale = len(shape)
@@ -568,7 +569,7 @@ def iter_gen_target_selectors(base_size, mips):
 		for x_scale in range(1, MAX_GRID_WIDTH + 1):
 			grid_area = y_scale * x_scale
 			for highlight_i in range(grid_area):
-				image = filled_mip_image(base_size, mips, (0, 0, 0, 0))
+				image = filled_mip_image(base_size, mips)
 				for slot_i in range(grid_area):
 					x = slot_i % x_scale
 					y = slot_i // x_scale
@@ -702,7 +703,7 @@ def iter_gen_moleculify_recipe_icons(base_size, mips):
 	]
 	for (name, moleculify_result_image, moleculify_source_image_path) in image_pairs:
 		moleculify_source_image = cv2.imread(moleculify_source_image_path, cv2.IMREAD_UNCHANGED)
-		image = filled_mip_image(base_size, mips, (0, 0, 0, 0))
+		image = filled_mip_image(base_size, mips)
 		#overlay the sub images at half-size at each mip level
 		for (mip, place_x, size) in iter_mips(base_size, mips):
 			half_size = size // 2
@@ -799,7 +800,7 @@ def gen_molecule_shape_backgrounds(base_size, mips):
 			check_slot_i_i += 1
 		if len(check_slot_is) < atom_count:
 			continue
-		image = filled_mip_image(base_size, mips, (0, 0, 0, 0))
+		image = filled_mip_image(base_size, mips)
 		for (i, slot) in enumerate(grid):
 			if slot == 0:
 				continue
