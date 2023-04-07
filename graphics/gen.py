@@ -74,6 +74,8 @@ ROTATION_SELECTOR_DOT_RADIUS_FRACTION = 4 / 64
 ROTATION_SELECTOR_OUTLINE_FRACTION = 4 / 64
 TARGET_SELECTOR_DEFAULT_COLOR = (128, 128, 128, 0)
 TARGET_SELECTOR_HIGHLIGHT_COLOR = (128, 224, 255, 0)
+ATOM_BOND_SELECTOR_INNER_ARROW_SIZE_FRACTION = 18 / 64
+ATOM_BOND_SELECTOR_INNER_ARROW_OFFSET_FRACTION = 6 / 64
 BASE_OVERLAY_SIZE = 32
 MOLECULIFIER_MOLECULE = "H--C|-He|N--O"
 MOLECULE_ROTATER_NAME = "molecule-rotater"
@@ -208,8 +210,9 @@ def get_circle_mip_datas(base_size, mips, y_scale, x_scale, y, x):
 	elif mip_datas.get(mips - 1, False):
 		return mip_datas
 	y_data[x] = mip_datas
-	center_y = base_size * (y + scale_data["center_y_min"]) / scale_data["scale"]
-	center_x = base_size * (x + scale_data["center_x_min"]) / scale_data["scale"]
+	scale = scale_data["scale"]
+	center_y = base_size * (y + scale_data["center_y_min"]) / scale
+	center_x = base_size * (x + scale_data["center_x_min"]) / scale
 	for mip in range(mips):
 		if mip_datas.get(mip, False):
 			continue
@@ -231,6 +234,7 @@ def get_circle_mip_datas(base_size, mips, y_scale, x_scale, y, x):
 			"outline_alpha": outline_alpha,
 			"center_x": mip_center_x,
 			"center_y": mip_center_y,
+			"scale": scale,
 		}
 	return mip_datas
 
@@ -564,30 +568,64 @@ def iter_gen_rotation_selectors(base_size, mips):
 	yield ("rotation-r", gen_left_right_rotation_selector_image(base_size, mips, 270, 1))
 	yield ("rotation-f", gen_flip_rotation_selector_image(base_size, mips))
 
-def iter_gen_target_selectors(base_size, mips):
+def iter_gen_single_target_and_atom_bond_selectors(base_size, mips, y_scale, x_scale, grid_area, highlight_i):
+	#generate the base target image
+	target_image = filled_mip_image(base_size, mips)
+	for slot_i in range(grid_area):
+		x = slot_i % x_scale
+		y = slot_i // x_scale
+		color = TARGET_SELECTOR_HIGHLIGHT_COLOR if slot_i == highlight_i else TARGET_SELECTOR_DEFAULT_COLOR
+		simple_overlay_image(target_image, gen_single_atom_shape_image(base_size, mips, y_scale, x_scale, y, x, color))
+	highlight_x = highlight_i % x_scale
+	highlight_y = highlight_i // x_scale
+	name_spec = f"{y_scale}{x_scale}{highlight_y}{highlight_x}"
+	yield ("target-" + name_spec, target_image)
+
+	#generate the atom-bond images
+	atom_bond_directions = [(0, -1, "N"), (1, 0, "E"), (0, 1, "S"), (-1, 0, "W")]
+	mip_data_0 = get_circle_mip_datas(base_size, mips, y_scale, x_scale, highlight_y, highlight_x)[0]
+	negative_inner_arrow_size = -ATOM_BOND_SELECTOR_INNER_ARROW_SIZE_FRACTION * base_size / mip_data_0["scale"]
+	inner_arrow_offset = ATOM_BOND_SELECTOR_INNER_ARROW_OFFSET_FRACTION * base_size / mip_data_0["scale"]
+	negative_outer_arrow_size = -ATOM_RADIUS_FRACTION * base_size / math.sqrt(2) / mip_data_0["scale"]
+	outer_arrow_offset = (1 - ATOM_RADIUS_FRACTION) * base_size / mip_data_0["scale"]
+	for (x_offset, y_offset, direction) in atom_bond_directions:
+		atom_bond_image = numpy.copy(target_image)
+		target_x = highlight_x + x_offset
+		target_y = highlight_y + y_offset
+		if target_x < 0 or target_x >= x_scale or target_y < 0 or target_y >= y_scale:
+			arrow_color = TARGET_SELECTOR_DEFAULT_COLOR
+			arrow_offset = inner_arrow_offset
+			negative_arrow_size = negative_inner_arrow_size
+		else:
+			arrow_color = TARGET_SELECTOR_HIGHLIGHT_COLOR
+			arrow_offset = outer_arrow_offset
+			negative_arrow_size = negative_outer_arrow_size
+		arrow_image = filled_mip_image(base_size, mips, arrow_color)
+		draw_arrow_points = get_draw_arrow_points(
+			mip_data_0["center_x"] + x_offset * arrow_offset,
+			mip_data_0["center_y"] + y_offset * arrow_offset,
+			x_offset * negative_arrow_size,
+			y_offset * negative_arrow_size)
+		def draw_arrow(mask):
+			cv2.fillPoly(mask, numpy.array([draw_arrow_points]), 255, cv2.LINE_AA, PRECISION_BITS)
+		draw_alpha_on(arrow_image, draw_arrow)
+		easy_mips(arrow_image, multi_color_alpha_weighting=False)
+		yield (f"atom-bond-{name_spec}{direction}", simple_overlay_image(atom_bond_image, arrow_image))
+
+def iter_gen_target_and_atom_bond_selectors(base_size, mips):
 	for y_scale in range(1, MAX_GRID_HEIGHT + 1):
 		for x_scale in range(1, MAX_GRID_WIDTH + 1):
 			grid_area = y_scale * x_scale
 			for highlight_i in range(grid_area):
-				image = filled_mip_image(base_size, mips)
-				for slot_i in range(grid_area):
-					x = slot_i % x_scale
-					y = slot_i // x_scale
-					color = TARGET_SELECTOR_HIGHLIGHT_COLOR \
-						if slot_i == highlight_i \
-						else TARGET_SELECTOR_DEFAULT_COLOR
-					atom_image = gen_single_atom_shape_image(base_size, mips, y_scale, x_scale, y, x, color)
-					simple_overlay_image(image, atom_image)
-				highlight_x = highlight_i % x_scale
-				highlight_y = highlight_i // x_scale
-				yield (f"target-{y_scale}{x_scale}{highlight_y}{highlight_x}", image)
+				yield from iter_gen_single_target_and_atom_bond_selectors(
+					base_size, mips, y_scale, x_scale, grid_area, highlight_i)
 
 def gen_all_selectors(base_size, mips):
 	selectors_folder = "selectors"
 	if not os.path.exists(selectors_folder):
 		os.mkdir(selectors_folder)
 	write_images(selectors_folder, iter_gen_rotation_selectors(base_size, mips))
-	write_images(selectors_folder, iter_gen_target_selectors(base_size, mips))
+	write_images(selectors_folder, iter_gen_target_and_atom_bond_selectors(base_size, mips))
 	print("Selectors written")
 
 
