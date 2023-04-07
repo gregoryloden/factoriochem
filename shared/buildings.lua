@@ -3,6 +3,31 @@ local MOLECULE_ITEM_PREFIX_MATCH = "^"..MOLECULE_ITEM_PREFIX
 local ATOM_ITEM_PREFIX_MATCH = "^"..ATOM_ITEM_PREFIX
 local PARSE_MOLECULE_ROW_MATCH = "([^"..ATOM_ROW_SEPARATOR.."]+)"..ATOM_ROW_SEPARATOR
 local PARSE_MOLECULE_ATOM_MATCH = "([^"..ATOM_COL_SEPARATOR.."]*)"..ATOM_COL_SEPARATOR
+local ROTATE = {
+	-- left
+	function(center_x, center_y, x, y) return center_x - center_y + y, center_y + center_x - x end,
+	-- flip
+	function(center_x, center_y, x, y) return center_x + center_x - x, center_y + center_y - y end,
+	-- right
+	function(center_x, center_y, x, y) return center_x + center_y - y, center_y - center_x + x end,
+}
+local ROTATE_ATOM = {
+	-- left
+	function(base_atom, atom)
+		atom.symbol, atom.left, atom.up, atom.right, atom.down =
+			base_atom.symbol, base_atom.up, base_atom.right, base_atom.down, base_atom.left
+	end,
+	-- flip
+	function(base_atom, atom)
+		atom.symbol, atom.left, atom.up, atom.right, atom.down =
+			base_atom.symbol, base_atom.right, base_atom.down, base_atom.left, base_atom.up
+	end,
+	-- right
+	function(base_atom, atom)
+		atom.symbol, atom.left, atom.up, atom.right, atom.down =
+			base_atom.symbol, base_atom.down, base_atom.left, base_atom.up, base_atom.right
+	end
+}
 
 
 -- Reaction utilities
@@ -106,28 +131,16 @@ BUILDING_DEFINITIONS = {
 				new_shape = gen_grid(width, height)
 			end
 
-			-- setup the function to move atoms into the new shape
-			local write_atom
-			if rotation == 1 then
-				write_atom = function(base_atom, y, x)
-					atom = new_shape[width + 1 - x][y]
-					atom.symbol, atom.up, atom.right = base_atom.symbol, base_atom.right, base_atom.down
-				end
-			elseif rotation == 3 then
-				write_atom = function(base_atom, y, x)
-					atom = new_shape[x][height + 1 - y]
-					atom.symbol, atom.up, atom.right = base_atom.symbol, base_atom.left, base_atom.up
-				end
-			else
-				write_atom = function(base_atom, y, x)
-					atom = new_shape[height + 1 - y][width + 1 - x]
-					atom.symbol, atom.up, atom.right = base_atom.symbol, base_atom.down, base_atom.left
-				end
-			end
-
-			-- write all the corresponding atoms
+			-- move all the atoms into the new shape
+			local center_x = (width + 1) / 2
+			local center_y = (height + 1) / 2
+			local rotate = ROTATE[rotation]
+			local rotate_atom = ROTATE_ATOM[rotation]
 			for y, shape_row in ipairs(shape) do
-				for x, atom in ipairs(shape_row) do write_atom(atom, y, x) end
+				for x, atom in ipairs(shape_row) do
+					new_x, new_y = rotate(center_x, center_y, x, y)
+					rotate_atom(atom, new_shape[new_y][new_x])
+				end
 			end
 
 			-- turn the shape into a molecule and write it to the output
