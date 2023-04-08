@@ -160,15 +160,39 @@ BUILDING_DEFINITIONS = {
 		selectors = {[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME, [MODIFIER_NAME] = ROTATION_SELECTOR_NAME},
 		reaction = function(reaction)
 			local molecule = reaction.reactants[BASE_NAME]
-			local atom_bond = reaction.selectors[BASE_NAME]
 			local rotation = reaction.selectors[MODIFIER_NAME]
-			if not molecule or not atom_bond or not rotation then return false end
+			if not molecule or not rotation then return false end
 
 			local shape, height, width = parse_molecule(molecule)
 			rotation = tonumber(string.sub(rotation, -1))
 			local rotate = ROTATE[rotation]
 			local rotate_atom = ROTATE_ATOM[rotation]
 
+			-- if a bond is not specified, rotate the entire molecule
+			local atom_bond = reaction.selectors[BASE_NAME]
+			if not atom_bond then
+				-- no need to rotate a single atom, it's already its own result
+				if height == 1 and width == 1 then
+					reaction.products[RESULT_NAME] = molecule
+					return true
+				end
+
+				-- build the shape of the new grid
+				local center_x = (width + 1) / 2
+				local center_y = (height + 1) / 2
+				if rotation == 2 then width, height = height, width end
+				local new_shape = gen_grid(height)
+
+				-- move all the atoms into the new shape
+				for y, shape_row in pairs(shape) do
+					for x, atom in pairs(shape_row) do
+						new_x, new_y = rotate(center_x, center_y, x, y)
+						rotate_atom(atom)
+						new_shape[new_y][new_x] = atom
+					end
+				end
+				shape = new_shape
+			else
 				local y_scale, x_scale, center_y, center_x, direction = extract_atom_bond(atom_bond)
 				-- any reaction on an atom produces that same atom
 				if y_scale == 1 and x_scale == 1 then
@@ -269,6 +293,7 @@ BUILDING_DEFINITIONS = {
 					end
 					shape = new_shape
 				end
+			end
 
 			-- and now, finally, we can reassemble the molecule and produce it
 			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
