@@ -48,7 +48,7 @@ local function on_built_entity(event)
 			offset_x, offset_y = offset_y, -offset_x
 		end
 		local chest = entity.surface.create_entity({
-			name = MOLECULE_REACTION_NAME.."-chest",
+			name = MOLECULE_REACTION_CHEST_NAME,
 			position = {x = entity.position.x + offset_x, y = entity.position.y + offset_y},
 			force = entity.force,
 			create_build_effect_smoke = false,
@@ -71,7 +71,7 @@ local function on_built_entity(event)
 			loader_direction = defines.direction.west
 		end
 		local loader = entity.surface.create_entity({
-			name = MOLECULE_REACTION_NAME.."-loader",
+			name = MOLECULE_REACTION_LOADER_NAME,
 			position = {x = entity.position.x + offset_x, y = entity.position.y + offset_y},
 			force = entity.force,
 			direction = loader_direction
@@ -82,6 +82,23 @@ local function on_built_entity(event)
 	end
 	for _, reactant in ipairs(building_definition.reactants) do build_sub_entities(reactant, false) end
 	for _, product in ipairs(building_definition.products) do build_sub_entities(product, true) end
+
+	local settings = entity.surface
+		.find_entities_filtered({ghost_name = MOLECULE_REACTION_SETTINGS_NAME, position = entity.position})
+		[1]
+	if settings then
+		_, settings = settings.silent_revive()
+	else
+		settings = entity.surface.create_entity({
+			name = MOLECULE_REACTION_SETTINGS_NAME,
+			position = entity.position,
+			force = entity.force,
+			create_build_effect_smoke = false,
+		})
+	end
+	settings.destructible = false
+	building_data.settings = settings
+
 	global.molecule_reaction_building_data[entity.unit_number] = building_data
 end
 
@@ -91,6 +108,7 @@ local function on_mined_entity(event)
 
 	local building_data = global.molecule_reaction_building_data[entity.unit_number]
 	global.molecule_reaction_building_data[entity.unit_number] = nil
+	building_data.settings.mine()
 	-- 33 slots should be enough to hold the contents of 6 loaders + 6 single-slot chests + 3 reactants/products, but do 60
 	--	to be safe
 	local transfer_inventory = game.create_inventory(60)

@@ -133,10 +133,10 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 end
 
 
--- Hidden chests and loaders for molecule reaction buildings
+-- Hidden chests, loaders, and constant combinators for molecule reaction buildings
 local reaction_chest = {
 	type = "container",
-	name = MOLECULE_REACTION_NAME.."-chest",
+	name = MOLECULE_REACTION_CHEST_NAME,
 	flags = HIDDEN_ENTITY_FLAGS,
 	collision_mask = {},
 	inventory_size = 1,
@@ -145,14 +145,40 @@ local reaction_chest = {
 }
 
 local reaction_loader = table.deepcopy(data.raw["loader-1x1"]["loader-1x1"])
-reaction_loader.name = MOLECULE_REACTION_NAME.."-loader"
+reaction_loader.name = MOLECULE_REACTION_LOADER_NAME
 reaction_loader.structure.direction_in = {filename = "__core__/graphics/empty.png", size = 1}
 reaction_loader.structure.direction_out = {filename = "__core__/graphics/empty.png", size = 1}
 reaction_loader.flags = HIDDEN_ENTITY_FLAGS
 reaction_loader.selection_box = nil
 reaction_loader.collision_mask = {"transport-belt-layer"}
 
-data:extend({reaction_chest, reaction_loader})
+local reaction_settings_item = {
+	type = "item",
+	name = MOLECULE_REACTION_SETTINGS_NAME,
+	icon = GRAPHICS_ROOT.."reaction-settings.png",
+	icon_size = ITEM_ICON_SIZE,
+	icon_mipmaps = MOLECULE_ICON_MIPMAPS,
+	stack_size = 1,
+	flags = {"hidden"},
+}
+
+local reaction_settings = {
+	type = "constant-combinator",
+	name = MOLECULE_REACTION_SETTINGS_NAME,
+	placeable_by = {item = MOLECULE_REACTION_SETTINGS_NAME, count = 1},
+	flags = {"hidden", "player-creation", "hide-alt-info", "not-deconstructable"},
+	collision_box = {{-0.5, -0.5}, {0.5, 0.5}},
+	selection_box = {{-0.5, -0.5}, {0.5, 0.5}},
+	collision_mask = {},
+	item_slot_count = #MOLECULE_REACTION_REACTANT_NAMES,
+	sprites = {filename = "__core__/graphics/empty.png", size = 1},
+	activity_led_sprites = {filename = "__core__/graphics/empty.png", size = 1},
+	activity_led_light_offsets = {{0, 0}, {0, 0}, {0, 0}, {0, 0}},
+	circuit_wire_connection_points =
+		{{wire = {}, shadow = {}}, {wire = {}, shadow = {}}, {wire = {}, shadow = {}}, {wire = {}, shadow = {}}},
+}
+
+data:extend({reaction_chest, reaction_loader, reaction_settings_item, reaction_settings})
 
 
 -- Moleculifier building
@@ -201,7 +227,7 @@ local moleculifier_recipe = {
 	name = MOLECULIFIER_NAME,
 	enabled = true,
 	ingredients = {},
-	result = MOLECULIFIER_NAME
+	result = MOLECULIFIER_NAME,
 }
 
 data:extend({moleculifier_entity, moleculifier_item, moleculifier_recipe})
