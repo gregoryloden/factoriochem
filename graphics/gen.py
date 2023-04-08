@@ -181,11 +181,11 @@ def easy_mips(image, multi_color_alpha_weighting = True):
 	mip_0 = image[:, 0:base_size]
 	place_x = base_size
 	for mip in range(1, 64):
+		if place_x >= total_size:
+			return image
 		size = base_size >> mip
 		image[0:size, place_x:place_x + size] = resize(mip_0, size, size, multi_color_alpha_weighting)
 		place_x += size
-		if place_x >= total_size:
-			return image
 
 
 #Sub-image generation
@@ -577,10 +577,10 @@ def iter_gen_rotation_selectors(base_size, mips):
 	yield ("rotation-r", gen_left_right_rotation_selector_image(base_size, mips, 270, 1))
 	yield ("rotation-f", gen_flip_rotation_selector_image(base_size, mips))
 
-def iter_gen_single_target_and_atom_bond_selectors(base_size, mips, y_scale, x_scale, grid_area, highlight_i):
+def iter_gen_single_target_and_atom_bond_selectors(base_size, mips, y_scale, x_scale, highlight_i):
 	#generate the base target image
 	target_image = filled_mip_image(base_size, mips)
-	for slot_i in range(grid_area):
+	for slot_i in range(y_scale * x_scale):
 		x = slot_i % x_scale
 		y = slot_i // x_scale
 		color = TARGET_SELECTOR_HIGHLIGHT_COLOR if slot_i == highlight_i else TARGET_SELECTOR_DEFAULT_COLOR
@@ -628,10 +628,9 @@ def iter_gen_single_target_and_atom_bond_selectors(base_size, mips, y_scale, x_s
 def iter_gen_target_and_atom_bond_selectors(base_size, mips):
 	for y_scale in range(1, MAX_GRID_HEIGHT + 1):
 		for x_scale in range(1, MAX_GRID_WIDTH + 1):
-			grid_area = y_scale * x_scale
-			for highlight_i in range(grid_area):
+			for highlight_i in range(y_scale * x_scale):
 				yield from iter_gen_single_target_and_atom_bond_selectors(
-					base_size, mips, y_scale, x_scale, grid_area, highlight_i)
+					base_size, mips, y_scale, x_scale, highlight_i)
 
 def gen_all_selectors(base_size, mips):
 	selectors_folder = "selectors"
@@ -891,6 +890,14 @@ def gen_reaction_settings_icon(base_size, mips):
 	draw_top_left = (draw_top_left[0], round(((base_size - box_bottom) - 0.5) * PRECISION_MULTIPLIER))
 	draw_bottom_right = (draw_bottom_right[0], round(((base_size - box_top) - 0.5) * PRECISION_MULTIPLIER))
 	cv2.rectangle(inner_image, draw_top_left, draw_bottom_right, box_color, cv2.FILLED, cv2.LINE_AA, PRECISION_BITS)
+
+	#draw mini selectors
+	top_selector_image = resize(
+		list(iter_gen_single_target_and_atom_bond_selectors(base_size, 1, 1, 2, 1))[4][1], int(box_size), int(box_size))
+	simple_overlay_image_at(inner_image, int(box_left), int(box_top), top_selector_image)
+	bottom_selector_image = \
+		resize(gen_left_right_rotation_selector_image(base_size, 1, 270, 1), int(box_size), int(box_size))
+	simple_overlay_image_at(inner_image, int(box_left), int(base_size - box_bottom), bottom_selector_image)
 
 	#write the file
 	easy_mips(image, multi_color_alpha_weighting=False)
