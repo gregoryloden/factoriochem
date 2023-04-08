@@ -108,6 +108,12 @@ def filled_mip_image(base_size, mips, color = None):
 	shape = (base_size, sum(base_size >> i for i in range(mips)), 4)
 	return numpy.full(shape, color, numpy.uint8) if color else numpy.zeros(shape, numpy.uint8)
 
+def draw_coords(x, y):
+	return (round((x - 0.5) * PRECISION_MULTIPLIER), round((y - 0.5) * PRECISION_MULTIPLIER))
+
+def draw_radius(radius):
+	return round((radius - 0.5) * PRECISION_MULTIPLIER)
+
 def draw_alpha_on(image, draw):
 	mask = numpy.zeros(image.shape[:2], numpy.uint8)
 	draw(mask)
@@ -229,15 +235,11 @@ def get_circle_mip_datas(base_size, mips, y_scale, x_scale, y, x):
 		shrink = 1 / (1 << mip)
 		mip_center_x = center_x * shrink
 		mip_center_y = center_y * shrink
-		draw_center_x = round((mip_center_x - 0.5) * PRECISION_MULTIPLIER)
-		draw_center_y = round((mip_center_y - 0.5) * PRECISION_MULTIPLIER)
-		draw_center = (draw_center_x, draw_center_y)
+		draw_center = draw_coords(mip_center_x, mip_center_y)
 		alpha = numpy.zeros((size, size), numpy.uint8)
-		draw_radius = round((scale_data["radius"] * shrink - 0.5) * PRECISION_MULTIPLIER)
-		draw_filled_circle_alpha(alpha, draw_center, draw_radius)
+		draw_filled_circle_alpha(alpha, draw_center, draw_radius(scale_data["radius"] * shrink))
 		outline_alpha = numpy.zeros((size, size), numpy.uint8)
-		draw_outline_radius = round((scale_data["outline_radius"] * shrink - 0.5) * PRECISION_MULTIPLIER)
-		draw_filled_circle_alpha(outline_alpha, draw_center, draw_outline_radius)
+		draw_filled_circle_alpha(outline_alpha, draw_center, draw_radius(scale_data["outline_radius"] * shrink))
 		mip_datas[mip] = {
 			"alpha": alpha,
 			"outline_alpha": outline_alpha,
@@ -409,9 +411,9 @@ def gen_bond_images(base_size, mips, y_scale, x_scale, y, x):
 		bond_spacing = BOND_SPACING_FRACTION * base_size / scale
 		center_y_min = center_y - bond_spacing * (bond_count - 1) / 2
 		for bond in range(bond_count):
-			draw_y = round((center_y_min + bond * bond_spacing - 0.5) * PRECISION_MULTIPLIER)
-			draw_start = (round((center_x - half_bond_length - 0.5) * PRECISION_MULTIPLIER), draw_y)
-			draw_end = (round((center_x + half_bond_length - 0.5) * PRECISION_MULTIPLIER), draw_y)
+			bond_y = center_y_min + bond * bond_spacing
+			draw_start = draw_coords(center_x - half_bond_length, bond_y)
+			draw_end = draw_coords(center_x + half_bond_length, bond_y)
 			bond_thickness = int(BOND_THICKNESS_FRACTION * base_size / scale)
 			def draw_bond(mask):
 				cv2.line(mask, draw_start, draw_end, 255, bond_thickness, cv2.LINE_AA, PRECISION_BITS)
@@ -511,9 +513,7 @@ def get_draw_arrow_points(center_x, center_y, x_offset, y_offset):
 	draw_arrow_points = []
 	for _ in range(3):
 		(x_offset, y_offset) = -y_offset, x_offset
-		x = center_x + x_offset - 0.5
-		y = center_y + y_offset - 0.5
-		draw_arrow_points.append((round(x * PRECISION_MULTIPLIER), round(y * PRECISION_MULTIPLIER)))
+		draw_arrow_points.append(draw_coords(center_x + x_offset, center_y + y_offset))
 	return draw_arrow_points
 
 def gen_prepared_rotation_selector_image(
@@ -533,9 +533,8 @@ def gen_prepared_rotation_selector_image(
 	if is_outline:
 		thickness += int(ROTATION_SELECTOR_OUTLINE_FRACTION * base_size * 2)
 		dot_radius += ROTATION_SELECTOR_OUTLINE_FRACTION * base_size
-	draw_center = (round((center - 0.5) * PRECISION_MULTIPLIER),) * 2
-	draw_axes = (round(radius * PRECISION_MULTIPLIER),) * 2
-	draw_dot_radius = round((dot_radius - 0.5) * PRECISION_MULTIPLIER)
+	draw_center = draw_coords(center, center)
+	draw_axes = draw_coords(radius, radius)
 
 	if not color:
 		color = ROTATION_SELECTOR_COLOR
@@ -545,7 +544,7 @@ def gen_prepared_rotation_selector_image(
 			cv2.ellipse(
 				mask, draw_center, draw_axes, start_angle, 0, arc, 255, thickness, cv2.LINE_AA, PRECISION_BITS)
 		if include_dot:
-			draw_filled_circle_alpha(mask, draw_center, draw_dot_radius)
+			draw_filled_circle_alpha(mask, draw_center, draw_radius(dot_radius))
 	draw_alpha_on(image, draw_arcs_and_dot)
 	arrows_image = filled_mip_image(base_size, mips, color)
 	def draw_arrows(mask):
@@ -675,21 +674,14 @@ def gen_building_overlays(base_size):
 					(0.5, 1.5),
 					(2 / 32, 1.75 - 1 / 32),
 				]
-			draw_loader_points = [
-				(
-					round((x * base_size - 0.5) * PRECISION_MULTIPLIER),
-					round((y * base_size - 0.5) * PRECISION_MULTIPLIER)
-				)
-				for (x, y) in loader_points
-			]
+			draw_loader_points = [draw_coords(x * base_size, y * base_size) for (x, y) in loader_points]
 			def draw_loader(mask):
 				cv2.fillPoly(mask, numpy.array([draw_loader_points]), 255, cv2.LINE_AA, PRECISION_BITS)
 			draw_alpha_on(base_image, draw_loader)
 			circle_image = numpy.full((base_size, base_size, 4), color, numpy.uint8)
-			draw_circle_center = (round((base_size / 2 - 0.5) * PRECISION_MULTIPLIER),) * 2
-			draw_circle_radius = round((base_size / 2 - 0.5) * PRECISION_MULTIPLIER)
+			draw_circle_center = draw_coords(base_size / 2, base_size / 2)
 			def draw_circle(mask):
-				draw_filled_circle_alpha(mask, draw_circle_center, draw_circle_radius)
+				draw_filled_circle_alpha(mask, draw_circle_center, draw_radius(base_size / 2))
 			draw_alpha_on(circle_image, draw_circle)
 			simple_overlay_image_at(base_image, 0, base_height - base_size if is_output else 0, circle_image)
 
@@ -760,9 +752,10 @@ def iter_gen_moleculify_recipe_icons(base_size, mips):
 		#draw the arrow line
 		arrow_image = filled_mip_image(base_size, mips, MOLECULIFY_ARROW_COLOR)
 		arrow_thickness = int(MOLECULIFY_ARROW_THICKNESS_FRACTION * base_size)
-		draw_start = (round((base_size * 3 / 8 - 0.5) * PRECISION_MULTIPLIER),) * 2
+		start_xy = base_size * 3 / 8
 		end_xy = base_size * 5 / 8
-		draw_end = (round((end_xy - 0.5) * PRECISION_MULTIPLIER),) * 2
+		draw_start = draw_coords(start_xy, start_xy)
+		draw_end = draw_coords(end_xy, end_xy)
 		def draw_arrow_line(mask):
 			cv2.line(mask, draw_start, draw_end, 255, arrow_thickness, cv2.LINE_AA, PRECISION_BITS)
 		draw_alpha_on(arrow_image, draw_arrow_line)
@@ -866,8 +859,8 @@ def gen_reaction_settings_icon(base_size, mips):
 	half_size = base_size / 2
 	top_left = half_size - REACTION_SETTINGS_RECT_HALF_WIDTH_FRACTION * base_size
 	bottom_right = base_size - top_left
-	draw_top_left = (round((top_left - 0.5) * PRECISION_MULTIPLIER),) * 2
-	draw_bottom_right = (round((bottom_right - 0.5) * PRECISION_MULTIPLIER),) * 2
+	draw_top_left = draw_coords(top_left, top_left)
+	draw_bottom_right = draw_coords(bottom_right, bottom_right)
 	thickness = int(REACTION_SETTINGS_RECT_OUTER_THICKNESS_FRACTION * base_size)
 	def draw_rect(mask):
 		cv2.rectangle(mask, draw_top_left, draw_bottom_right, 255, thickness, cv2.LINE_AA, PRECISION_BITS)
@@ -884,11 +877,11 @@ def gen_reaction_settings_icon(base_size, mips):
 	box_bottom = box_top + box_size
 	box_left = top_left + REACTION_SETTINGS_BOX_LEFT_SHIFT_FRACTION * base_size
 	box_right = box_left + box_size
-	draw_top_left = (round((box_left - 0.5) * PRECISION_MULTIPLIER), round((box_top - 0.5) * PRECISION_MULTIPLIER))
-	draw_bottom_right = (round((box_right - 0.5) * PRECISION_MULTIPLIER), round((box_bottom - 0.5) * PRECISION_MULTIPLIER))
+	draw_top_left = draw_coords(box_left, box_top)
+	draw_bottom_right = draw_coords(box_right, box_bottom)
 	cv2.rectangle(inner_image, draw_top_left, draw_bottom_right, box_color, cv2.FILLED, cv2.LINE_AA, PRECISION_BITS)
-	draw_top_left = (draw_top_left[0], round(((base_size - box_bottom) - 0.5) * PRECISION_MULTIPLIER))
-	draw_bottom_right = (draw_bottom_right[0], round(((base_size - box_top) - 0.5) * PRECISION_MULTIPLIER))
+	draw_top_left = draw_coords(box_left, base_size - box_bottom)
+	draw_bottom_right = draw_coords(box_right, base_size - box_top)
 	cv2.rectangle(inner_image, draw_top_left, draw_bottom_right, box_color, cv2.FILLED, cv2.LINE_AA, PRECISION_BITS)
 
 	#draw mini selectors
