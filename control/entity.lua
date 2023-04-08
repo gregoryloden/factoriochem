@@ -88,6 +88,13 @@ local function on_built_entity(event)
 		[1]
 	if settings then
 		_, settings = settings.silent_revive()
+		local settings_behavior = settings.get_control_behavior()
+		for i, reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
+			if building_definition.selectors[reactant_name] then
+				local signal = settings_behavior.get_signal(i).signal
+				if signal then building_data.reaction.selectors[reactant_name] = signal.name end
+			end
+		end
 	else
 		settings = entity.surface.create_entity({
 			name = MOLECULE_REACTION_SETTINGS_NAME,

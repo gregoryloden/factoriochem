@@ -276,6 +276,18 @@ local function on_gui_elem_changed(event)
 	local reaction_table_selector_reactant_name = REACTION_TABLE_SELECTOR_NAME_MAP[element.name]
 	if reaction_table_selector_reactant_name then
 		building_data.reaction.selectors[reaction_table_selector_reactant_name] = element.elem_value
+		for i, reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
+			if reactant_name == reaction_table_selector_reactant_name then
+				local settings_behavior = building_data.settings.get_control_behavior()
+				if element.elem_value then
+					settings_behavior.set_signal(
+						i, {signal = {type = "item", name = element.elem_value}, count = 1})
+				else
+					settings_behavior.set_signal(i, nil)
+				end
+				break
+			end
+		end
 		entity_assign_cache(building_data, BUILDING_DEFINITIONS[building_data.entity.name])
 		return
 	end
