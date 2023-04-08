@@ -163,6 +163,12 @@ BUILDING_DEFINITIONS = {
 			local atom_bond = reaction.selectors[BASE_NAME]
 			local rotation = reaction.selectors[MODIFIER_NAME]
 			if not molecule or not atom_bond or not rotation then return false end
+
+			local shape, height, width = parse_molecule(molecule)
+			rotation = tonumber(string.sub(rotation, -1))
+			local rotate = ROTATE[rotation]
+			local rotate_atom = ROTATE_ATOM[rotation]
+
 			local y_scale, x_scale, center_y, center_x, direction = extract_atom_bond(atom_bond)
 			-- any reaction on an atom produces that same atom
 			if y_scale == 1 and x_scale == 1 then
@@ -174,7 +180,6 @@ BUILDING_DEFINITIONS = {
 
 			-- verify that we have a molecule matching the selector shape, an atom at the center, and an atom at the
 			--	target
-			local shape, height, width = parse_molecule(molecule)
 			if height ~= y_scale or width ~= x_scale then return false end
 
 			local center_row = shape[center_y]
@@ -215,9 +220,6 @@ BUILDING_DEFINITIONS = {
 			until not rotate_atom
 
 			-- then, rotate them all, and make sure that there are no collisions
-			rotation = tonumber(string.sub(rotation, -1))
-			local rotate = ROTATE[rotation]
-			local rotate_atom = ROTATE_ATOM[rotation]
 			for _, atom in ipairs(rotate_atoms) do
 				local dest_x, dest_y = rotate(center_x, center_y, atom.x, atom.y)
 				atom.x, atom.y = dest_x, dest_y
