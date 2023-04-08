@@ -103,22 +103,23 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 		hidden = true,
 	}
 
-	local item = table.deepcopy(data.raw.item[definition.building_design[2]])
-	item.name = name
-	item.place_result = name
-	item.subgroup = MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME
-	item.order = definition.item_order
-	item.icons = {
-		{icon = item.icon, icon_size = item.icon_size, icon_mipmaps = item.icon_mipmaps},
-		{
-			icon = GRAPHICS_ROOT.."icon-overlays/"..name..".png",
-			icon_size = ITEM_ICON_SIZE,
-			icon_mipmaps = ITEM_ICON_MIPMAPS,
+	local item_design = data.raw.item[definition.building_design[2]]
+	local item = {
+		type = "item",
+		name = name,
+		place_result = name,
+		subgroup = MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME,
+		order = definition.item_order,
+		icons = {
+			{icon = item_design.icon, icon_size = item_design.icon_size, icon_mipmaps = item_design.icon_mipmaps},
+			{
+				icon = GRAPHICS_ROOT.."icon-overlays/"..name..".png",
+				icon_size = ITEM_ICON_SIZE,
+				icon_mipmaps = ITEM_ICON_MIPMAPS,
+			},
 		},
+		stack_size = 50,
 	}
-	item.icon = nil
-	item.icon_size = nil
-	item.icon_mipmaps = nil
 
 	local recipe = {
 		type = "recipe",
