@@ -89,24 +89,26 @@ local function on_mined_entity(event)
 	local entity = event.entity
 	if not BUILDING_DEFINITIONS[entity.name] then return end
 
-	local data = global.molecule_reaction_building_data[entity.unit_number]
+	local building_data = global.molecule_reaction_building_data[entity.unit_number]
 	global.molecule_reaction_building_data[entity.unit_number] = nil
 	-- 33 slots should be enough to hold the contents of 6 loaders + 6 single-slot chests + 3 reactants/products, but do 60
 	--	to be safe
 	local transfer_inventory = game.create_inventory(60)
-	for _, chest in pairs(data.chests) do chest.mine({inventory = transfer_inventory}) end
-	for _, loader in pairs(data.loaders) do loader.mine({inventory = transfer_inventory}) end
+	for _, chest in pairs(building_data.chests) do chest.mine({inventory = transfer_inventory}) end
+	for _, loader in pairs(building_data.loaders) do loader.mine({inventory = transfer_inventory}) end
 	for name, count in pairs(transfer_inventory.get_contents()) do event.buffer.insert({name = name, count = count}) end
 	transfer_inventory.destroy()
 	-- the presence of products indicates an unresolved reaction, which means we have items to return to the player
-	if next(data.reaction.products) then
+	if next(building_data.reaction.products) then
 		-- the presence of reactants indicates that the reaction is not complete
 		if next(data.reaction.reactants) then
-			for _, reactant in pairs(data.reaction.reactants) do
+			for _, reactant in pairs(building_data.reaction.reactants) do
 				event.buffer.insert({name = reactant, count = 1})
 			end
 		else
-			for _, product in pairs(data.reaction.products) do event.buffer.insert({name = product, count = 1}) end
+			for _, product in pairs(building_data.reaction.products) do
+				event.buffer.insert({name = product, count = 1})
+			end
 		end
 	end
 	event.buffer.remove({name = MOLECULE_REACTION_REACTANTS_NAME, count = 2})
@@ -121,15 +123,15 @@ local function start_reaction(reaction, chest_inventories, machine_inputs)
 	machine_inputs.insert({name = MOLECULE_REACTION_REACTANTS_NAME, count = 1})
 end
 
-local function update_entity(data)
+local function update_entity(building_data)
 	-- make sure the next reaction is ready
-	local entity = data.entity
+	local entity = building_data.entity
 	local machine_inputs = entity.get_inventory(defines.inventory.assembling_machine_input)
 	local has_next_craft = next(machine_inputs.get_contents())
 	if has_next_craft or entity.crafting_progress > 0 and entity.crafting_progress < 0.9 then return end
 
-	local reaction = data.reaction
-	local chest_inventories = data.chest_inventories
+	local reaction = building_data.reaction
+	local chest_inventories = building_data.chest_inventories
 
 	-- the reaction has products which means that it needs resolving
 	if next(reaction.products) then
@@ -199,8 +201,8 @@ function entity_on_init()
 	global.molecule_reaction_building_data = {}
 end
 
-function entity_on_nth_tick(data)
-	for entity_number, data in pairs(global.molecule_reaction_building_data) do update_entity(data) end
+function entity_on_nth_tick(event_data)
+	for entity_number, building_data in pairs(global.molecule_reaction_building_data) do update_entity(building_data) end
 end
 
 script.on_event(defines.events.on_built_entity, on_built_entity)

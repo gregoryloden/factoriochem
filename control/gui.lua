@@ -296,7 +296,7 @@ function gui_on_init()
 	global.gui_demo_items = {}
 end
 
-function gui_on_nth_tick(data)
+function gui_on_nth_tick(event_data)
 	for player_index, entity_number in pairs(global.current_gui_entity) do
 		update_all_reaction_table_sprites(game.get_player(player_index).gui, entity_number)
 	end
