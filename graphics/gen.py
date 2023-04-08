@@ -108,6 +108,9 @@ def draw_alpha_on(image, draw):
 	image[:, :, 3][mask_section] = mask[mask_section]
 	return mask
 
+def draw_filled_circle_alpha(mask, draw_center, draw_radius):
+	cv2.circle(mask, draw_center, draw_radius, 255, cv2.FILLED, cv2.LINE_AA, PRECISION_BITS)
+
 def overlay_image(back_image, back_left, back_top, front_image, front_left, front_top, width, height):
 	back_right = back_left + width
 	back_bottom = back_top + height
@@ -224,10 +227,10 @@ def get_circle_mip_datas(base_size, mips, y_scale, x_scale, y, x):
 		draw_center = (draw_center_x, draw_center_y)
 		alpha = numpy.zeros((size, size), numpy.uint8)
 		draw_radius = round((scale_data["radius"] * shrink - 0.5) * PRECISION_MULTIPLIER)
-		cv2.circle(alpha, draw_center, draw_radius, 255, -1, cv2.LINE_AA, PRECISION_BITS)
+		draw_filled_circle_alpha(alpha, draw_center, draw_radius)
 		outline_alpha = numpy.zeros((size, size), numpy.uint8)
 		draw_outline_radius = round((scale_data["outline_radius"] * shrink - 0.5) * PRECISION_MULTIPLIER)
-		cv2.circle(outline_alpha, draw_center, draw_outline_radius, 255, -1, cv2.LINE_AA, PRECISION_BITS)
+		draw_filled_circle_alpha(outline_alpha, draw_center, draw_outline_radius)
 		mip_datas[mip] = {
 			"alpha": alpha,
 			"outline_alpha": outline_alpha,
@@ -535,7 +538,7 @@ def gen_prepared_rotation_selector_image(
 			cv2.ellipse(
 				mask, draw_center, draw_axes, start_angle, 0, arc, 255, thickness, cv2.LINE_AA, PRECISION_BITS)
 		if include_dot:
-			cv2.circle(mask, draw_center, draw_dot_radius, 255, -1, cv2.LINE_AA, PRECISION_BITS)
+			draw_filled_circle_alpha(mask, draw_center, draw_dot_radius)
 	draw_alpha_on(image, draw_arcs_and_dot)
 	arrows_image = filled_mip_image(base_size, mips, color)
 	def draw_arrows(mask):
@@ -680,7 +683,7 @@ def gen_building_overlays(base_size):
 			draw_circle_center = (round((base_size / 2 - 0.5) * PRECISION_MULTIPLIER),) * 2
 			draw_circle_radius = round((base_size / 2 - 0.5) * PRECISION_MULTIPLIER)
 			def draw_circle(mask):
-				cv2.circle(mask, draw_circle_center, draw_circle_radius, 255, -1, cv2.LINE_AA, PRECISION_BITS)
+				draw_filled_circle_alpha(mask, draw_circle_center, draw_circle_radius)
 			draw_alpha_on(circle_image, draw_circle)
 			simple_overlay_image_at(base_image, 0, base_height - base_size if is_output else 0, circle_image)
 
