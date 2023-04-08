@@ -114,49 +114,6 @@ BUILDING_DEFINITIONS = {
 		reactants = {BASE_NAME},
 		products = {RESULT_NAME},
 		-- control fields
-		selectors = {[BASE_NAME] = ROTATION_SELECTOR_NAME},
-		reaction = function(reaction)
-			local molecule = reaction.reactants[BASE_NAME]
-			local rotation = reaction.selectors[BASE_NAME]
-			if not molecule or not rotation then return false end
-			if string.find(molecule, ATOM_ITEM_PREFIX_MATCH) then
-				-- don't bother doing calculations to rotate an atom, it's already its own result
-				reaction.products[RESULT_NAME] = molecule
-				return true
-			end
-
-			-- capture stats about the old grid shape and build the shape of the new grid
-			local shape, height, width = parse_molecule(molecule)
-			local center_x = (width + 1) / 2
-			local center_y = (height + 1) / 2
-			rotation = tonumber(string.sub(rotation, -1))
-			if rotation == 2 then width, height = height, width end
-			local new_shape = gen_grid(height)
-
-			-- move all the atoms into the new shape
-			local rotate = ROTATE[rotation]
-			local rotate_atom = ROTATE_ATOM[rotation]
-			for y, shape_row in pairs(shape) do
-				for x, atom in pairs(shape_row) do
-					new_x, new_y = rotate(center_x, center_y, x, y)
-					rotate_atom(atom)
-					new_shape[new_y][new_x] = atom
-				end
-			end
-
-			-- turn the shape into a molecule and write it to the output
-			reaction.products[RESULT_NAME] = assemble_molecule(new_shape, height, width)
-			return true
-		end,
-	},
-	["molecule-bender"] = {
-		-- data fields
-		building_design = {"assembling-machine", "assembling-machine-1"},
-		item_order = "c",
-		-- data and control fields
-		reactants = {BASE_NAME},
-		products = {RESULT_NAME},
-		-- control fields
 		selectors = {[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME, [MODIFIER_NAME] = ROTATION_SELECTOR_NAME},
 		reaction = function(reaction)
 			local molecule = reaction.reactants[BASE_NAME]
