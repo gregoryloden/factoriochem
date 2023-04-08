@@ -87,6 +87,13 @@ MOLECULIFY_ARROW_THICKNESS_FRACTION = 6 / 64
 MOLECULIFY_ARROW_SIZE_FRACTION = 8 / 64
 ICON_OVERLAY_OUTLINE_COLOR = (64, 64, 64, 0)
 SHAPE_BACKGROUND_COLOR = (128, 128, 128, 0)
+REACTION_SETTINGS_RECT_HALF_WIDTH_FRACTION = 20 / 64
+REACTION_SETTINGS_RECT_OUTER_THICKNESS_FRACTION = 16 / 64
+REACTION_SETTINGS_OUTER_COLOR = (64, 64, 64, 0)
+REACTION_SETTINGS_RECT_INNER_THICKNESS_FRACTION = 8 / 64
+REACTION_SETTINGS_INNER_COLOR = (128, 128, 128, 0)
+REACTION_SETTINGS_BOX_SIZE_FRACTION = 12 / 64
+REACTION_SETTINGS_BOX_LEFT_SHIFT_FRACTION = 4 / 64
 
 
 #Utility functions
@@ -853,6 +860,45 @@ def gen_molecule_shape_backgrounds(base_size, mips):
 	print("Molecule shape backgrounds written")
 
 
+#Generate the reaction settings icon
+def gen_reaction_settings_icon(base_size, mips):
+	#draw the outer and inner frame rects
+	image = filled_mip_image(base_size, mips, REACTION_SETTINGS_OUTER_COLOR)
+	half_size = base_size / 2
+	top_left = half_size - REACTION_SETTINGS_RECT_HALF_WIDTH_FRACTION * base_size
+	bottom_right = base_size - top_left
+	draw_top_left = (round((top_left - 0.5) * PRECISION_MULTIPLIER),) * 2
+	draw_bottom_right = (round((bottom_right - 0.5) * PRECISION_MULTIPLIER),) * 2
+	thickness = int(REACTION_SETTINGS_RECT_OUTER_THICKNESS_FRACTION * base_size)
+	def draw_rect(mask):
+		cv2.rectangle(mask, draw_top_left, draw_bottom_right, 255, thickness, cv2.LINE_AA, PRECISION_BITS)
+		cv2.rectangle(mask, draw_top_left, draw_bottom_right, 255, cv2.FILLED, shift=PRECISION_BITS)
+	draw_alpha_on(image, draw_rect)
+	inner_image = filled_mip_image(base_size, mips, REACTION_SETTINGS_INNER_COLOR)
+	thickness = int(REACTION_SETTINGS_RECT_INNER_THICKNESS_FRACTION * base_size)
+	draw_alpha_on(inner_image, draw_rect)
+
+	#draw the selector boxes
+	box_color = REACTION_SETTINGS_OUTER_COLOR[:3] + (255,)
+	box_size = REACTION_SETTINGS_BOX_SIZE_FRACTION * base_size
+	box_top = (half_size + top_left - box_size) / 2
+	box_bottom = box_top + box_size
+	box_left = top_left + REACTION_SETTINGS_BOX_LEFT_SHIFT_FRACTION * base_size
+	box_right = box_left + box_size
+	draw_top_left = (round((box_left - 0.5) * PRECISION_MULTIPLIER), round((box_top - 0.5) * PRECISION_MULTIPLIER))
+	draw_bottom_right = (round((box_right - 0.5) * PRECISION_MULTIPLIER), round((box_bottom - 0.5) * PRECISION_MULTIPLIER))
+	cv2.rectangle(inner_image, draw_top_left, draw_bottom_right, box_color, cv2.FILLED, cv2.LINE_AA, PRECISION_BITS)
+	draw_top_left = (draw_top_left[0], round(((base_size - box_bottom) - 0.5) * PRECISION_MULTIPLIER))
+	draw_bottom_right = (draw_bottom_right[0], round(((base_size - box_top) - 0.5) * PRECISION_MULTIPLIER))
+	cv2.rectangle(inner_image, draw_top_left, draw_bottom_right, box_color, cv2.FILLED, cv2.LINE_AA, PRECISION_BITS)
+
+	#write the file
+	easy_mips(image, multi_color_alpha_weighting=False)
+	easy_mips(inner_image, multi_color_alpha_weighting=False)
+	imwrite("reaction-settings.png", simple_overlay_image(image, inner_image))
+	print("Reaction settings icon written")
+
+
 #Generate all graphics
 gen_all_atom_images(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_all_bond_images(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
@@ -863,6 +909,7 @@ gen_building_overlays(BASE_OVERLAY_SIZE)
 gen_all_recipe_icons(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_icon_overlays(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_molecule_shape_backgrounds(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
+gen_reaction_settings_icon(BASE_ICON_SIZE, BASE_ICON_MIPS)
 
 import time
 print(time.strftime("Images generated at %Y-%m-%d %H:%M:%S"))
