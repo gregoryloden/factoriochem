@@ -117,7 +117,8 @@ BUILDING_DEFINITIONS = {
 		selectors = {[BASE_NAME] = ROTATION_SELECTOR_NAME},
 		reaction = function(reaction)
 			local molecule = reaction.reactants[BASE_NAME]
-			if not molecule then return false end
+			local rotation = reaction.selectors[BASE_NAME]
+			if not molecule or not rotation then return false end
 			if string.find(molecule, ATOM_ITEM_PREFIX_MATCH) then
 				-- don't bother doing calculations to rotate an atom, it's already its own result
 				reaction.products[RESULT_NAME] = molecule
@@ -128,7 +129,7 @@ BUILDING_DEFINITIONS = {
 			local shape, height, width = parse_molecule(molecule)
 			local center_x = (width + 1) / 2
 			local center_y = (height + 1) / 2
-			local rotation = tonumber(string.sub(reaction.selectors[BASE_NAME], -1))
+			rotation = tonumber(string.sub(rotation, -1))
 			if rotation == 2 then width, height = height, width end
 			local new_shape = gen_grid(height)
 
@@ -159,8 +160,10 @@ BUILDING_DEFINITIONS = {
 		selectors = {[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME, [MODIFIER_NAME] = ROTATION_SELECTOR_NAME},
 		reaction = function(reaction)
 			local molecule = reaction.reactants[BASE_NAME]
-			if not molecule then return false end
-			local y_scale, x_scale, center_y, center_x, direction = extract_atom_bond(reaction.selectors[BASE_NAME])
+			local atom_bond = reaction.selectors[BASE_NAME]
+			local rotation = reaction.selectors[MODIFIER_NAME]
+			if not molecule or not atom_bond or not rotation then return false end
+			local y_scale, x_scale, center_y, center_x, direction = extract_atom_bond(atom_bond)
 			-- any reaction on an atom produces that same atom
 			if y_scale == 1 and x_scale == 1 then
 				-- but it has to actually be an atom
@@ -212,7 +215,7 @@ BUILDING_DEFINITIONS = {
 			until not rotate_atom
 
 			-- then, rotate them all, and make sure that there are no collisions
-			local rotation = tonumber(string.sub(reaction.selectors[MODIFIER_NAME], -1))
+			rotation = tonumber(string.sub(rotation, -1))
 			local rotate = ROTATE[rotation]
 			local rotate_atom = ROTATE_ATOM[rotation]
 			for _, atom in ipairs(rotate_atoms) do
