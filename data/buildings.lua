@@ -9,6 +9,16 @@ local DIRECTION_ANIMATION_DATA = {
 local HIDDEN_ENTITY_FLAGS = {"hidden", "not-deconstructable", "not-blueprintable", "player-creation"}
 local BUILDING_OVERLAY_ICON_SIZE = 64
 local MOLECULIFIER_NAME = "moleculifier"
+local BASE_BUILDING_PROTOTYPE = table.deepcopy(data.raw["assembling-machine"]["assembling-machine-3"])
+BASE_BUILDING_PROTOTYPE.energy_source = {type = "void"}
+BASE_BUILDING_PROTOTYPE.crafting_speed = 1
+BASE_BUILDING_PROTOTYPE.fluid_boxes = nil
+BASE_BUILDING_PROTOTYPE.module_specification = nil
+BASE_BUILDING_PROTOTYPE.fast_replaceable_group = nil
+BASE_BUILDING_PROTOTYPE.selection_box[1][2] = BASE_BUILDING_PROTOTYPE.selection_box[1][2] - 1
+BASE_BUILDING_PROTOTYPE.selection_box[2][2] = BASE_BUILDING_PROTOTYPE.selection_box[2][2] + 1
+BASE_BUILDING_PROTOTYPE.collision_box[1][2] = BASE_BUILDING_PROTOTYPE.collision_box[1][2] - 1
+BASE_BUILDING_PROTOTYPE.collision_box[2][2] = BASE_BUILDING_PROTOTYPE.collision_box[2][2] + 1
 
 
 -- Molecule reaction buildings
@@ -31,19 +41,10 @@ data:extend({
 	},
 })
 for name, definition in pairs(BUILDING_DEFINITIONS) do
-	local entity = table.deepcopy(data.raw["assembling-machine"]["assembling-machine-3"])
+	local entity = table.deepcopy(BASE_BUILDING_PROTOTYPE)
 	entity.name = name
 	entity.minable.result = name
-	entity.energy_source = {type = "void"}
-	entity.crafting_speed = 1
-	entity.fluid_boxes = nil
 	entity.fixed_recipe = name.."-reaction"
-	entity.module_specification = nil
-	entity.fast_replaceable_group = nil
-	entity.selection_box[1][2] = entity.selection_box[1][2] - 1
-	entity.selection_box[2][2] = entity.selection_box[2][2] + 1
-	entity.collision_box[1][2] = entity.collision_box[1][2] - 1
-	entity.collision_box[2][2] = entity.collision_box[2][2] + 1
 	local building_design = data.raw[definition.building_design[1]][definition.building_design[2]]
 	local building_animation = building_design.animation
 	entity.animation = {
