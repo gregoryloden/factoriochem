@@ -36,12 +36,7 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 	entity.minable.result = name
 	entity.energy_source = {type = "void"}
 	entity.crafting_speed = 1
-	entity.fluid_boxes = {{
-		-- can't rotate an assembling machine without a fluidbox, so stick one by the outputs area
-		pipe_connections = {{position = {0, -3}}},
-		production_type = "output",
-		hide_connection_info = true,
-	}}
+	entity.fluid_boxes = nil
 	entity.fixed_recipe = name.."-reaction"
 	entity.module_specification = nil
 	entity.fast_replaceable_group = nil
