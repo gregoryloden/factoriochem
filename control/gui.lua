@@ -130,13 +130,14 @@ local function on_gui_opened(event)
 		local spec = {
 			type = "sprite-button",
 			name = name_prefix..component_name,
-			style = "factoriochem-poc-big-slot-button"
+			tooltip = {"factoriochem-poc."..entity.name.."-"..component_name.."-tooltip"},
+			style = "factoriochem-poc-big-slot-button",
 		}
 		if name_prefix == REACTION_PREFIX then
-			spec.tooltip = {"factoriochem-poc.reaction-table-component-tooltip"}
+			spec.tooltip = {"factoriochem-poc.reaction-table-component-tooltip", spec.tooltip}
 		elseif name_prefix == REACTION_DEMO_PREFIX then
 			if is_reactant then
-				spec.tooltip = {"factoriochem-poc.reaction-demo-table-reactant-tooltip"}
+				spec.tooltip = {"factoriochem-poc.reaction-demo-table-reactant-tooltip", spec.tooltip}
 				if demo_state.reactants[component_name] then
 					spec.sprite = "item/"..demo_state.reactants[component_name]
 				end
