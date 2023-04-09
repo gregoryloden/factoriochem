@@ -99,6 +99,7 @@ local function on_built_entity(event)
 		settings = entity.surface.create_entity({
 			name = MOLECULE_REACTION_SETTINGS_NAME,
 			position = entity.position,
+			direction = entity.direction,
 			force = entity.force,
 			create_build_effect_smoke = false,
 		})
