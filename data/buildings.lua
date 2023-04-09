@@ -153,7 +153,7 @@ local reaction_settings_item = {
 	name = MOLECULE_REACTION_SETTINGS_NAME,
 	icon = GRAPHICS_ROOT.."reaction-settings.png",
 	icon_size = ITEM_ICON_SIZE,
-	icon_mipmaps = MOLECULE_ICON_MIPMAPS,
+	icon_mipmaps = ITEM_ICON_MIPMAPS,
 	stack_size = 1,
 	flags = {"hidden"},
 }
