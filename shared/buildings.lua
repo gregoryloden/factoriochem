@@ -106,7 +106,7 @@ end
 
 -- Building definitions
 BUILDING_DEFINITIONS = {
-	["molecule-rotater"] = {
+	["molecule-rotator"] = {
 		-- data fields
 		building_design = {"assembling-machine", "assembling-machine-1"},
 		item_order = "c",

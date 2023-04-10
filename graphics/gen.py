@@ -78,8 +78,8 @@ ATOM_BOND_SELECTOR_INNER_ARROW_SIZE_FRACTION = 18 / 64
 ATOM_BOND_SELECTOR_INNER_ARROW_OFFSET_FRACTION = 6 / 64
 BASE_OVERLAY_SIZE = 32
 MOLECULIFIER_MOLECULE = "H--C|-He|N--O"
-MOLECULE_ROTATER_NAME = "molecule-rotater"
-MOLECULE_ROTATER_ICON_COLOR = (192, 192, 224, 0)
+MOLECULE_ROTATOR_NAME = "molecule-rotator"
+MOLECULE_ROTATOR_ICON_COLOR = (192, 192, 224, 0)
 with open("base-graphics-path.txt", "r") as file:
 	BASE_GRAPHICS_PATH = file.read()
 MOLECULIFY_ARROW_COLOR = (64, 64, 224, 0)
@@ -703,7 +703,7 @@ def gen_building_overlays(base_size):
 
 
 #Generate recipe icons
-def get_molecule_rotater_rotation_image(base_size, mips, is_outline):
+def get_molecule_rotator_rotation_image(base_size, mips, is_outline):
 	(radius, center, arrow_size) = get_rotation_selector_arc_values(base_size)
 	if is_outline:
 		arrow_size += ROTATION_SELECTOR_OUTLINE_FRACTION * base_size
@@ -714,19 +714,19 @@ def get_molecule_rotater_rotation_image(base_size, mips, is_outline):
 		[(0, 90)],
 		[get_draw_arrow_points(center + radius + center_offset, center + center_offset, 0, arrow_size)],
 		is_outline,
-		ICON_OVERLAY_OUTLINE_COLOR if is_outline else MOLECULE_ROTATER_ICON_COLOR,
+		ICON_OVERLAY_OUTLINE_COLOR if is_outline else MOLECULE_ROTATOR_ICON_COLOR,
 		include_dot=False,
 		center_offset=center_offset)
 
 def iter_gen_all_building_recipe_icons(base_size, mips, include_outline):
 	images = {
-		MOLECULE_ROTATER_NAME: simple_overlay_image(
+		MOLECULE_ROTATOR_NAME: simple_overlay_image(
 			gen_specific_molecule(base_size, mips, "H1-H-|1H|", include_outline),
-			get_molecule_rotater_rotation_image(base_size, mips, False)),
+			get_molecule_rotator_rotation_image(base_size, mips, False)),
 	}
 	if include_outline:
-		images[MOLECULE_ROTATER_NAME] = simple_overlay_image(
-			get_molecule_rotater_rotation_image(base_size, mips, True), images[MOLECULE_ROTATER_NAME])
+		images[MOLECULE_ROTATOR_NAME] = simple_overlay_image(
+			get_molecule_rotator_rotation_image(base_size, mips, True), images[MOLECULE_ROTATOR_NAME])
 	return images.items()
 
 def iter_gen_moleculify_recipe_icons(base_size, mips):
