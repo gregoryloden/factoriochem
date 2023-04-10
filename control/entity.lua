@@ -20,12 +20,8 @@ function entity_assign_cache(building_data, building_definition)
 end
 
 
--- Event handling
-local function on_built_entity(event)
-	local entity = event.created_entity
-	local building_definition = BUILDING_DEFINITIONS[entity.name]
-	if not building_definition then return end
-
+-- Building setup
+local function build_molecule_reaction_building(entity, building_definition)
 	entity.destructible = false
 	entity.rotatable = false
 
@@ -108,6 +104,16 @@ local function on_built_entity(event)
 	building_data.settings = settings
 
 	global.molecule_reaction_building_data[entity.unit_number] = building_data
+end
+
+
+-- Event handling
+local function on_built_entity(event)
+	local entity = event.created_entity
+	local building_definition = BUILDING_DEFINITIONS[entity.name]
+	if building_definition then
+		build_molecule_reaction_building(entity, building_definition)
+	end
 end
 
 local function on_mined_entity(event)
