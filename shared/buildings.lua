@@ -1,7 +1,3 @@
--- Global constants
-MOLECULE_DETECTOR_NAME = "molecule-detector"
-
-
 -- Constants
 local MOLECULE_ITEM_PREFIX_MATCH = "^"..MOLECULE_ITEM_PREFIX
 local ATOM_ITEM_PREFIX_MATCH = "^"..ATOM_ITEM_PREFIX
