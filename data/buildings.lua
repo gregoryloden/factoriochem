@@ -231,24 +231,9 @@ data:extend({moleculifier_entity, moleculifier_item, moleculifier_recipe})
 
 
 -- Molecule detector combinator
-local detector = table.deepcopy(data.raw["arithmetic-combinator"]["arithmetic-combinator"])
+local detector = table.deepcopy(data.raw["constant-combinator"]["constant-combinator"])
 detector.name = MOLECULE_DETECTOR_NAME
 detector.minable.result = MOLECULE_DETECTOR_NAME
-detector.energy_source = {type = "void"}
-local operation_sprites = {
-	"and_symbol_sprites",
-	"divide_symbol_sprites",
-	"left_shift_symbol_sprites",
-	"minus_symbol_sprites",
-	"modulo_symbol_sprites",
-	"multiply_symbol_sprites",
-	"or_symbol_sprites",
-	"plus_symbol_sprites",
-	"power_symbol_sprites",
-	"right_shift_symbol_sprites",
-	"xor_symbol_sprites",
-}
-for _, operation_sprite in ipairs(operation_sprites) do detector[operation_sprite] = EMPTY_SPRITE end
 
 local detector_item = table.deepcopy(data.raw.item["arithmetic-combinator"])
 detector_item.name = MOLECULE_DETECTOR_NAME
