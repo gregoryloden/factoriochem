@@ -9,6 +9,7 @@ local DIRECTION_ANIMATION_DATA = {
 local HIDDEN_ENTITY_FLAGS = {"hidden", "not-deconstructable", "not-blueprintable", "player-creation"}
 local BUILDING_OVERLAY_ICON_SIZE = 64
 local MOLECULIFIER_NAME = "moleculifier"
+local MOLECULE_DETECTOR_NAME = "molecule-detector"
 local BASE_BUILDING_PROTOTYPE = table.deepcopy(data.raw["assembling-machine"]["assembling-machine-3"])
 BASE_BUILDING_PROTOTYPE.energy_source = {type = "void"}
 BASE_BUILDING_PROTOTYPE.crafting_speed = 1
@@ -205,7 +206,7 @@ local moleculifier_item = table.deepcopy(data.raw.item["assembling-machine-2"])
 moleculifier_item.name = MOLECULIFIER_NAME
 moleculifier_item.place_result = MOLECULIFIER_NAME
 moleculifier_item.subgroup = MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME
-moleculifier_item.order = "a"
+moleculifier_item.order = "b"
 moleculifier_item.icons = {
 	{icon = moleculifier_item.icon, icon_size = moleculifier_item.icon_size, icon_mipmaps = moleculifier_item.icon_mipmaps},
 	{
@@ -227,3 +228,37 @@ local moleculifier_recipe = {
 }
 
 data:extend({moleculifier_entity, moleculifier_item, moleculifier_recipe})
+
+
+-- Molecule detector combinator
+local detector = table.deepcopy(data.raw["arithmetic-combinator"]["arithmetic-combinator"])
+detector.name = MOLECULE_DETECTOR_NAME
+detector.minable.result = MOLECULE_DETECTOR_NAME
+detector.energy_source = {type = "void"}
+
+local detector_item = table.deepcopy(data.raw.item["arithmetic-combinator"])
+detector_item.name = MOLECULE_DETECTOR_NAME
+detector_item.place_result = MOLECULE_DETECTOR_NAME
+detector_item.subgroup = MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME
+detector_item.order = "a"
+detector_item.icons = {
+	{icon = detector_item.icon, icon_size = detector_item.icon_size, icon_mipmaps = detector_item.icon_mipmaps},
+	{
+		icon = GRAPHICS_ROOT.."icon-overlays/"..MOLECULE_DETECTOR_NAME..".png",
+		icon_size = ITEM_ICON_SIZE,
+		icon_mipmaps = ITEM_ICON_MIPMAPS,
+	},
+}
+detector_item.icon = nil
+detector_item.icon_size = nil
+detector_item.icon_mipmaps = nil
+
+local detector_recipe = {
+	type = "recipe",
+	name = MOLECULE_DETECTOR_NAME,
+	enabled = true,
+	ingredients = {},
+	result = MOLECULE_DETECTOR_NAME,
+}
+
+data:extend({detector, detector_item, detector_recipe})

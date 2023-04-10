@@ -109,7 +109,7 @@ BUILDING_DEFINITIONS = {
 	["molecule-rotater"] = {
 		-- data fields
 		building_design = {"assembling-machine", "assembling-machine-1"},
-		item_order = "b",
+		item_order = "c",
 		-- data and control fields
 		reactants = {BASE_NAME},
 		products = {RESULT_NAME},
