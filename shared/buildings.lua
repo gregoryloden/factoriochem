@@ -181,32 +181,40 @@ BUILDING_DEFINITIONS = {
 				else
 					target_y = center_y - 1
 				end
-				local rotate_atom = shape[target_y][target_x]
-				if not rotate_atom then return false end
+				local atom_to_rotate = shape[target_y][target_x]
+				if not atom_to_rotate then return false end
 
 				-- all the requirements are met, now BFS to find all atoms connected by the bond
 				-- remove atoms from the shape as we find them so that we can re-insert them at their rotated
 				--	positions
 				center_row[center_x] = nil
 				shape[target_y][target_x] = nil
-				local rotate_atoms = {rotate_atom}
-				local rotate_atoms_i = 1
-				function check_rotate_atom(check_atom)
+				local atoms_to_rotate = {atom_to_rotate}
+				local atoms_to_rotate_i = 1
+				function check_atom_to_rotate(check_atom)
 					if not check_atom then return end
-					table.insert(rotate_atoms, check_atom)
+					table.insert(atoms_to_rotate, check_atom)
 					shape[check_atom.y][check_atom.x] = nil
 				end
 				repeat
-					if rotate_atom.left then check_rotate_atom(shape[rotate_atom.y][rotate_atom.x - 1]) end
-					if rotate_atom.up then check_rotate_atom(shape[rotate_atom.y - 1][rotate_atom.x]) end
-					if rotate_atom.right then check_rotate_atom(shape[rotate_atom.y][rotate_atom.x + 1]) end
-					if rotate_atom.down then check_rotate_atom(shape[rotate_atom.y + 1][rotate_atom.x]) end
-					rotate_atoms_i = rotate_atoms_i + 1
-					rotate_atom = rotate_atoms[rotate_atoms_i]
-				until not rotate_atom
+					if atom_to_rotate.left then
+						check_atom_to_rotate(shape[atom_to_rotate.y][atom_to_rotate.x - 1])
+					end
+					if atom_to_rotate.up then
+						check_atom_to_rotate(shape[atom_to_rotate.y - 1][atom_to_rotate.x])
+					end
+					if atom_to_rotate.right then
+						check_atom_to_rotate(shape[atom_to_rotate.y][atom_to_rotate.x + 1])
+					end
+					if atom_to_rotate.down then
+						check_atom_to_rotate(shape[atom_to_rotate.y + 1][atom_to_rotate.x])
+					end
+					atoms_to_rotate_i = atoms_to_rotate_i + 1
+					atom_to_rotate = atoms_to_rotate[atoms_to_rotate_i]
+				until not atom_to_rotate
 
 				-- then, rotate them all, and make sure that there are no collisions
-				for _, atom in ipairs(rotate_atoms) do
+				for _, atom in ipairs(atoms_to_rotate) do
 					local dest_x, dest_y = rotate(center_x, center_y, atom.x, atom.y)
 					atom.x, atom.y = dest_x, dest_y
 					rotate_atom(atom)
