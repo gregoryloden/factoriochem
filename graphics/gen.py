@@ -784,7 +784,7 @@ def gen_icon_overlays(base_size, mips):
 	icon_overlays_folder = "icon-overlays"
 	if not os.path.exists(icon_overlays_folder):
 		os.mkdir(icon_overlays_folder)
-	detector_image = gen_specific_molecule(base_size, mips, "H|N1-1H|1H", True)
+	detector_image = gen_specific_molecule(base_size, mips, "H|1O|1H", True)
 	imwrite(os.path.join(icon_overlays_folder, "molecule-detector.png"), detector_image)
 	write_images(icon_overlays_folder, iter_gen_all_building_recipe_icons(base_size, mips, True))
 	moleculifier_image = gen_specific_molecule(base_size, mips, MOLECULIFIER_MOLECULE, include_outline=True)
