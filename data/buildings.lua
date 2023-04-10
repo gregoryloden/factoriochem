@@ -7,6 +7,7 @@ local DIRECTION_ANIMATION_DATA = {
 	west = function(shift_x, shift_y) return {width = 56, height = 32, x = 0, y = 56, shift = {shift_y, -shift_x}} end,
 }
 local HIDDEN_ENTITY_FLAGS = {"hidden", "not-deconstructable", "not-blueprintable", "player-creation"}
+local EMPTY_SPRITE = {filename = "__core__/graphics/empty.png", size = 1}
 local BUILDING_OVERLAY_ICON_SIZE = 64
 local MOLECULIFIER_NAME = "moleculifier"
 local BASE_BUILDING_PROTOTYPE = table.deepcopy(data.raw["assembling-machine"]["assembling-machine-3"])
@@ -136,14 +137,14 @@ local reaction_chest = {
 	flags = HIDDEN_ENTITY_FLAGS,
 	collision_mask = {},
 	inventory_size = 1,
-	picture = {filename = "__core__/graphics/empty.png", size = 1},
+	picture = EMPTY_SPRITE,
 	collision_box = {{-0.5, -0.5}, {0.5, 0.5}},
 }
 
 local reaction_loader = table.deepcopy(data.raw["loader-1x1"]["loader-1x1"])
 reaction_loader.name = MOLECULE_REACTION_LOADER_NAME
-reaction_loader.structure.direction_in = {filename = "__core__/graphics/empty.png", size = 1}
-reaction_loader.structure.direction_out = {filename = "__core__/graphics/empty.png", size = 1}
+reaction_loader.structure.direction_in = EMPTY_SPRITE
+reaction_loader.structure.direction_out = EMPTY_SPRITE
 reaction_loader.flags = HIDDEN_ENTITY_FLAGS
 reaction_loader.selection_box = nil
 reaction_loader.collision_mask = {"transport-belt-layer"}
@@ -167,8 +168,8 @@ local reaction_settings = {
 	selection_box = table.deepcopy(BASE_BUILDING_PROTOTYPE.selection_box),
 	collision_mask = {},
 	item_slot_count = #MOLECULE_REACTION_REACTANT_NAMES,
-	sprites = {filename = "__core__/graphics/empty.png", size = 1},
-	activity_led_sprites = {filename = "__core__/graphics/empty.png", size = 1},
+	sprites = EMPTY_SPRITE,
+	activity_led_sprites = EMPTY_SPRITE,
 	activity_led_light_offsets = {{0, 0}, {0, 0}, {0, 0}, {0, 0}},
 	circuit_wire_connection_points =
 		{{wire = {}, shadow = {}}, {wire = {}, shadow = {}}, {wire = {}, shadow = {}}, {wire = {}, shadow = {}}},
@@ -234,6 +235,20 @@ local detector = table.deepcopy(data.raw["arithmetic-combinator"]["arithmetic-co
 detector.name = MOLECULE_DETECTOR_NAME
 detector.minable.result = MOLECULE_DETECTOR_NAME
 detector.energy_source = {type = "void"}
+local operation_sprites = {
+	"and_symbol_sprites",
+	"divide_symbol_sprites",
+	"left_shift_symbol_sprites",
+	"minus_symbol_sprites",
+	"modulo_symbol_sprites",
+	"multiply_symbol_sprites",
+	"or_symbol_sprites",
+	"plus_symbol_sprites",
+	"power_symbol_sprites",
+	"right_shift_symbol_sprites",
+	"xor_symbol_sprites",
+}
+for _, operation_sprite in ipairs(operation_sprites) do detector[operation_sprite] = EMPTY_SPRITE end
 
 local detector_item = table.deepcopy(data.raw.item["arithmetic-combinator"])
 detector_item.name = MOLECULE_DETECTOR_NAME
