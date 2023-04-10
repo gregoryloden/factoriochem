@@ -137,7 +137,11 @@ BUILDING_DEFINITIONS = {
 				-- build the shape of the new grid
 				local center_x = (width + 1) / 2
 				local center_y = (height + 1) / 2
-				if rotation == 2 then width, height = height, width end
+				if rotation == 1 then
+					width, height, center_y = height, width, center_x
+				elseif rotation == 3 then
+					width, height, center_x = height, width, center_y
+				end
 				local new_shape = gen_grid(height)
 
 				-- move all the atoms into the new shape
