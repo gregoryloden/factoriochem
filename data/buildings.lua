@@ -9,7 +9,6 @@ local DIRECTION_ANIMATION_DATA = {
 local HIDDEN_ENTITY_FLAGS = {"hidden", "not-deconstructable", "not-blueprintable", "player-creation"}
 local BUILDING_OVERLAY_ICON_SIZE = 64
 local MOLECULIFIER_NAME = "moleculifier"
-local MOLECULE_DETECTOR_NAME = "molecule-detector"
 local BASE_BUILDING_PROTOTYPE = table.deepcopy(data.raw["assembling-machine"]["assembling-machine-3"])
 BASE_BUILDING_PROTOTYPE.energy_source = {type = "void"}
 BASE_BUILDING_PROTOTYPE.crafting_speed = 1

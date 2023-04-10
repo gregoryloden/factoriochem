@@ -46,8 +46,9 @@ local function update_reaction_table_sprite(element, chest_inventory, product)
 end
 
 local function update_all_reaction_table_sprites(gui, entity_number)
-	local reaction_table =
-		gui.relative[MOLECULE_REACTION_NAME].outer[REACTION_PREFIX..FRAME_NAME][REACTION_PREFIX..TABLE_NAME]
+	local reaction_gui = gui.relative[MOLECULE_REACTION_NAME]
+	if not reaction_gui then return false end
+	local reaction_table = reaction_gui.outer[REACTION_PREFIX..FRAME_NAME][REACTION_PREFIX..TABLE_NAME]
 	local building_data = global.molecule_reaction_building_data[entity_number]
 	local building_definition = BUILDING_DEFINITIONS[building_data.entity.name]
 	local chest_inventories = building_data.chest_inventories
@@ -219,12 +220,15 @@ end
 local function on_gui_opened(event)
 	local entity = event.entity
 	if not entity then return end
-	local gui = game.get_player(event.player_index).gui
+	local player = game.get_player(event.player_index)
+	local gui = player.gui
 	close_gui(event.player_index, gui)
 
 	local building_definition = BUILDING_DEFINITIONS[entity.name]
 	if building_definition then
 		build_molecule_reaction_gui(entity, gui, building_definition)
+	elseif entity.name == MOLECULE_DETECTOR_NAME then
+		player.opened = nil
 	else
 		return
 	end
