@@ -111,18 +111,9 @@ local function demo_reaction_with_reactant(building_data, demo_state, element, r
 end
 
 
--- Event handling
-local function on_gui_opened(event)
-	local entity = event.entity
-	if not entity then return end
-	local building_definition = BUILDING_DEFINITIONS[entity.name]
-	if not building_definition then return end
-
-	local gui = game.get_player(event.player_index).gui
-	close_gui(event.player_index, gui)
-	global.current_gui_entity[event.player_index] = entity.unit_number
+-- Molecule reaction building GUI construction
+local function build_molecule_reaction_gui(entity, gui, building_definition)
 	local demo_state = get_demo_state(entity.name)
-
 	function build_molecule_spec(name_prefix, component_name, is_reactant)
 		if not building_definition.has_component[component_name] then return {type = "empty-widget"} end
 		local spec = {
@@ -221,6 +212,23 @@ local function on_gui_opened(event)
 	}
 	gui_add_recursive(gui.relative, gui_spec)
 	update_all_reaction_table_sprites(gui, entity.unit_number)
+end
+
+
+-- Event handling
+local function on_gui_opened(event)
+	local entity = event.entity
+	if not entity then return end
+	local gui = game.get_player(event.player_index).gui
+	close_gui(event.player_index, gui)
+
+	local building_definition = BUILDING_DEFINITIONS[entity.name]
+	if building_definition then
+		build_molecule_reaction_gui(entity, gui, building_definition)
+	else
+		return
+	end
+	global.current_gui_entity[event.player_index] = entity.unit_number
 end
 
 local function on_gui_closed(event)
