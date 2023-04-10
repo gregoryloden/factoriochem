@@ -128,14 +128,14 @@ local function on_gui_opened(event)
 		local spec = {
 			type = "sprite-button",
 			name = name_prefix..component_name,
-			tooltip = {"factoriochem-poc."..entity.name.."-"..component_name.."-tooltip"},
-			style = "factoriochem-poc-big-slot-button",
+			tooltip = {"factoriochem."..entity.name.."-"..component_name.."-tooltip"},
+			style = "factoriochem-big-slot-button",
 		}
 		if name_prefix == REACTION_PREFIX then
-			spec.tooltip = {"factoriochem-poc.reaction-table-component-tooltip", spec.tooltip}
+			spec.tooltip = {"factoriochem.reaction-table-component-tooltip", spec.tooltip}
 		elseif name_prefix == REACTION_DEMO_PREFIX then
 			if is_reactant then
-				spec.tooltip = {"factoriochem-poc.reaction-demo-table-reactant-tooltip", spec.tooltip}
+				spec.tooltip = {"factoriochem.reaction-demo-table-reactant-tooltip", spec.tooltip}
 				if demo_state.reactants[component_name] then
 					spec.sprite = "item/"..demo_state.reactants[component_name]
 				end
@@ -153,7 +153,7 @@ local function on_gui_opened(event)
 			name = name_prefix..reactant_name..SELECTOR_SUFFIX,
 			elem_type = "item",
 			elem_filters = {{filter = "subgroup", subgroup = MOLECULE_REACTION_SELECTOR_PREFIX..selector}},
-			tooltip = {"factoriochem-poc."..entity.name.."-"..reactant_name..SELECTOR_SUFFIX.."-tooltip"},
+			tooltip = {"factoriochem."..entity.name.."-"..reactant_name..SELECTOR_SUFFIX.."-tooltip"},
 		}
 		if name_prefix == REACTION_PREFIX then
 			spec.item = global.molecule_reaction_building_data[entity.unit_number].reaction.selectors[reactant_name]
@@ -170,7 +170,7 @@ local function on_gui_opened(event)
 			children = {
 				-- title row
 				{type = "empty-widget"},
-				{type = "label", caption = {"factoriochem-poc."..name_prefix.."table-header"}},
+				{type = "label", caption = {"factoriochem."..name_prefix.."table-header"}},
 				{type = "empty-widget"},
 				-- base/result row
 				build_molecule_spec(name_prefix, BASE_NAME, true),
@@ -178,7 +178,7 @@ local function on_gui_opened(event)
 				build_molecule_spec(name_prefix, RESULT_NAME),
 				-- catalyst/bonus row
 				build_molecule_spec(name_prefix, CATALYST_NAME, true),
-				{type = "label", caption = {"factoriochem-poc.reaction-transition"}},
+				{type = "label", caption = {"factoriochem.reaction-transition"}},
 				build_molecule_spec(name_prefix, BONUS_NAME),
 				-- modifier/remainder row
 				build_molecule_spec(name_prefix, MODIFIER_NAME, true),
@@ -191,7 +191,7 @@ local function on_gui_opened(event)
 	local gui_spec = {
 		-- outer
 		type = "frame",
-		caption = {"factoriochem-poc.reaction"},
+		caption = {"factoriochem.reaction"},
 		name = MOLECULE_REACTION_NAME,
 		anchor = {
 			gui = defines.relative_gui_type.assembling_machine_gui,

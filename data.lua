@@ -1,7 +1,7 @@
 require("shared/constants")
 require("shared/molecules")
 require("shared/buildings")
-GRAPHICS_ROOT = "__FactorioChem-PoC__/graphics/"
+GRAPHICS_ROOT = "__FactorioChem__/graphics/"
 ITEM_ICON_SIZE = 64
 ITEM_ICON_MIPMAPS = 4
 MOLECULE_ICON_MIPMAPS = 3

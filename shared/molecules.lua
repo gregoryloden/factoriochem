@@ -44,7 +44,7 @@ for row_n, atoms_row in ipairs(ATOM_ROWS) do
 			bonds = bonds,
 			row = row_n,
 			number = atomic_number,
-			localised_name = {"factoriochem-poc-atom."..symbol},
+			localised_name = {"factoriochem-atom."..symbol},
 		}
 		ALL_ATOMS[symbol] = atom
 		ALL_ATOMS[atomic_number] = atom
