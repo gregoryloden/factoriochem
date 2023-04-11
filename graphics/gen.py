@@ -641,6 +641,20 @@ def gen_all_selectors(base_size, mips):
 
 
 #Generate building overlays
+def build_4_way_image(base_image):
+	(base_height, base_width, _) = base_image.shape
+	image = numpy.zeros((base_height + base_width, base_height + base_width, 4), numpy.uint8)
+	image[0:base_height, 0:base_width] = base_image
+	placements = [
+		(base_width, 0, cv2.ROTATE_90_CLOCKWISE),
+		(base_height, base_width, cv2.ROTATE_180),
+		(0, base_height, cv2.ROTATE_90_COUNTERCLOCKWISE),
+	]
+	for (left, top, rotation) in placements:
+		rotated = cv2.rotate(base_image, rotation)
+		image[top:top + rotated.shape[0], left:left + rotated.shape[1]] = rotated
+	return image
+
 def gen_building_overlays(base_size):
 	building_overlays_folder = "building-overlays"
 	if not os.path.exists(building_overlays_folder):
@@ -685,17 +699,7 @@ def gen_building_overlays(base_size):
 			draw_alpha_on(circle_image, draw_circle)
 			simple_overlay_image_at(base_image, 0, base_height - base_size if is_output else 0, circle_image)
 
-			#draw it in all 4 directions
-			image = numpy.zeros((base_height + base_size, base_height + base_size, 4), numpy.uint8)
-			image[0:base_height, 0:base_size] = base_image
-			placements = [
-				(base_size, 0, cv2.ROTATE_90_CLOCKWISE),
-				(base_height, base_size, cv2.ROTATE_180),
-				(0, base_height, cv2.ROTATE_90_COUNTERCLOCKWISE),
-			]
-			for (left, top, rotation) in placements:
-				rotated = cv2.rotate(base_image, rotation)
-				image[top:top + rotated.shape[0], left:left + rotated.shape[1]] = rotated
+			image = build_4_way_image(base_image)
 			imwrite(os.path.join(building_overlays_folder, component + suffix + ".png"), image)
 		moleculifier_image = gen_specific_molecule(base_size * 2, 1, MOLECULIFIER_MOLECULE)
 		imwrite(os.path.join(building_overlays_folder, f"moleculifier{suffix}.png"), moleculifier_image)
