@@ -248,10 +248,11 @@ local moleculifier_recipe = {
 data:extend({moleculifier_entity, moleculifier_item, moleculifier_recipe})
 
 
--- Molecule detector combinator
+-- Molecule detector combinator input
 local detector = table.deepcopy(data.raw["constant-combinator"]["constant-combinator"])
 detector.name = MOLECULE_DETECTOR_NAME
 detector.minable.result = MOLECULE_DETECTOR_NAME
+detector.item_slot_count = 10
 detector.selection_box = {{-0.5, 0}, {0.5, 1}}
 local arithmetic_combinator_copy_properties = {
 	sprites = false,
@@ -286,3 +287,19 @@ local detector_recipe = {
 }
 
 data:extend({detector, detector_item, detector_recipe})
+
+
+-- Molecule detector combinator output
+local detector_output = table.deepcopy(detector)
+detector_output.name = MOLECULE_DETECTOR_OUTPUT_NAME
+detector_output.minable = nil
+detector_output.item_slot_count = 30
+detector_output.selection_box = {{-0.5, -1}, {0.5, 0}}
+detector_output.flags = HIDDEN_ENTITY_FLAGS
+detector_output.collision_mask = {}
+detector_output.sprites = EMPTY_SPRITE
+detector_output.activity_led_sprites = EMPTY_SPRITE
+detector_output.activity_led_light_offsets = {{0, 0}, {0, 0}, {0, 0}, {0, 0}}
+detector_output.circuit_wire_connection_points = table.deepcopy(arithmetic_combinator.output_connection_points)
+
+data:extend({detector_output})

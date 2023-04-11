@@ -106,6 +106,23 @@ local function build_molecule_reaction_building(entity, building_definition)
 	global.molecule_reaction_building_data[entity.unit_number] = building_data
 end
 
+local function build_molecule_detector(entity)
+	entity.destructible = false
+	entity.rotatable = false
+
+	local output = entity.surface.create_entity({
+		name = MOLECULE_DETECTOR_OUTPUT_NAME,
+		position = entity.position,
+		direction = entity.direction,
+		force = entity.force,
+		create_build_effect_smoke = false,
+	})
+	output.destructible = false
+	output.rotatable = false
+
+	global.molecule_detector_building_data[entity.unit_number] = {entity = entity, output = output}
+end
+
 
 -- Building teardown
 local function delete_molecule_reaction_building(entity, event_buffer)
@@ -135,6 +152,12 @@ local function delete_molecule_reaction_building(entity, event_buffer)
 	event_buffer.remove({name = MOLECULE_REACTION_REACTANTS_NAME, count = 2})
 end
 
+local function delete_molecule_detector(entity)
+	local building_data = global.molecule_detector_building_data[entity.unit_number]
+	global.molecule_detector_building_data[entity.unit_number] = nil
+	building_data.output.mine()
+end
+
 
 -- Event handling
 local function on_built_entity(event)
@@ -142,6 +165,8 @@ local function on_built_entity(event)
 	local building_definition = BUILDING_DEFINITIONS[entity.name]
 	if building_definition then
 		build_molecule_reaction_building(entity, building_definition)
+	elseif entity.name == MOLECULE_DETECTOR_NAME then
+		build_molecule_detector(entity)
 	end
 end
 
@@ -149,6 +174,8 @@ local function on_mined_entity(event)
 	local entity = event.entity
 	if BUILDING_DEFINITIONS[entity.name] then
 		delete_molecule_reaction_building(entity, event.buffer)
+	elseif entity.name == MOLECULE_DETECTOR_NAME then
+		delete_molecule_detector(entity)
 	end
 end
 
@@ -237,6 +264,7 @@ end
 -- Global event handling
 function entity_on_init()
 	global.molecule_reaction_building_data = {}
+	global.molecule_detector_building_data = {}
 end
 
 function entity_on_nth_tick(event_data)

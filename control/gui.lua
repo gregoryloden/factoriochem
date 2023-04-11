@@ -227,10 +227,10 @@ local function on_gui_opened(event)
 	local building_definition = BUILDING_DEFINITIONS[entity.name]
 	if building_definition then
 		build_molecule_reaction_gui(entity, gui, building_definition)
-	else
-		return
+		global.current_gui_entity[event.player_index] = entity.unit_number
+	elseif entity.name == MOLECULE_DETECTOR_OUTPUT_NAME then
+		player.opened = nil
 	end
-	global.current_gui_entity[event.player_index] = entity.unit_number
 end
 
 local function on_gui_closed(event)
