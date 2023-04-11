@@ -124,6 +124,9 @@ def draw_alpha_on(image, draw):
 def draw_filled_circle_alpha(mask, draw_center, draw_radius):
 	cv2.circle(mask, draw_center, draw_radius, 255, cv2.FILLED, cv2.LINE_AA, PRECISION_BITS)
 
+def draw_poly_alpha(mask, poly_pointss):
+	cv2.fillPoly(mask, numpy.array(poly_pointss), 255, cv2.LINE_AA, PRECISION_BITS)
+
 def overlay_image(back_image, back_left, back_top, front_image, front_left, front_top, width, height):
 	back_right = back_left + width
 	back_bottom = back_top + height
@@ -547,9 +550,7 @@ def gen_prepared_rotation_selector_image(
 			draw_filled_circle_alpha(mask, draw_center, draw_radius(dot_radius))
 	draw_alpha_on(image, draw_arcs_and_dot)
 	arrows_image = filled_mip_image(base_size, mips, color)
-	def draw_arrows(mask):
-		cv2.fillPoly(mask, numpy.array(draw_arrow_pointss), 255, cv2.LINE_AA, PRECISION_BITS)
-	draw_alpha_on(arrows_image, draw_arrows)
+	draw_alpha_on(arrows_image, lambda mask: draw_poly_alpha(mask, draw_arrow_pointss))
 	return easy_mips(simple_overlay_image(image, arrows_image), multi_color_alpha_weighting=False)
 
 def gen_left_right_rotation_selector_image(base_size, mips, start_angle, arrow_center_x_radius_multiplier):
@@ -618,9 +619,7 @@ def iter_gen_single_target_and_atom_bond_selectors(base_size, mips, y_scale, x_s
 			mip_data_0["center_y"] + y_offset * arrow_offset,
 			x_offset * negative_arrow_size,
 			y_offset * negative_arrow_size)
-		def draw_arrow(mask):
-			cv2.fillPoly(mask, numpy.array([draw_arrow_points]), 255, cv2.LINE_AA, PRECISION_BITS)
-		draw_alpha_on(arrow_image, draw_arrow)
+		draw_alpha_on(arrow_image, lambda mask: draw_poly_alpha(mask, [draw_arrow_points]))
 		easy_mips(arrow_image, multi_color_alpha_weighting=False)
 		yield (f"atom-bond-{name_spec}{direction}", simple_overlay_image(atom_bond_image, arrow_image))
 
@@ -689,16 +688,13 @@ def gen_building_overlays(base_size):
 					(2 / 32, 1.75 - 1 / 32),
 				]
 			draw_loader_points = [draw_coords(x * base_size, y * base_size) for (x, y) in loader_points]
-			def draw_loader(mask):
-				cv2.fillPoly(mask, numpy.array([draw_loader_points]), 255, cv2.LINE_AA, PRECISION_BITS)
-			draw_alpha_on(base_image, draw_loader)
+			draw_alpha_on(base_image, lambda mask: draw_poly_alpha(mask, [draw_loader_points]))
 			circle_image = numpy.full((base_size, base_size, 4), color, numpy.uint8)
 			draw_circle_center = draw_coords(base_size / 2, base_size / 2)
 			def draw_circle(mask):
 				draw_filled_circle_alpha(mask, draw_circle_center, draw_radius(base_size / 2))
 			draw_alpha_on(circle_image, draw_circle)
 			simple_overlay_image_at(base_image, 0, base_height - base_size if is_output else 0, circle_image)
-
 			image = build_4_way_image(base_image)
 			imwrite(os.path.join(building_overlays_folder, component + suffix + ".png"), image)
 		moleculifier_image = gen_specific_molecule(base_size * 2, 1, MOLECULIFIER_MOLECULE)
@@ -767,9 +763,7 @@ def iter_gen_moleculify_recipe_icons(base_size, mips):
 		arrow_tip_image = numpy.full((base_size, base_size, 4), MOLECULIFY_ARROW_COLOR, numpy.uint8)
 		arrow_size_offset = MOLECULIFY_ARROW_SIZE_FRACTION * base_size / -math.sqrt(2)
 		draw_arrow_points = get_draw_arrow_points(end_xy, end_xy, arrow_size_offset, arrow_size_offset)
-		def draw_arrow_tip(mask):
-			cv2.fillPoly(mask, numpy.array([draw_arrow_points]), 255, cv2.LINE_AA, PRECISION_BITS)
-		draw_alpha_on(arrow_tip_image, draw_arrow_tip)
+		draw_alpha_on(arrow_tip_image, lambda mask: draw_poly_alpha(mask, [draw_arrow_points]))
 		#combine arrow images, add mips, and then combine it with the rest of the image
 		image = simple_overlay_image(image, easy_mips(simple_overlay_image(arrow_image, arrow_tip_image)))
 		yield (f"moleculify-{name}", image)
