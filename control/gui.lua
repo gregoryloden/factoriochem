@@ -22,7 +22,7 @@ end
 local function close_gui(player_index, gui)
 	if gui.relative[MOLECULE_REACTION_NAME] then
 		gui.relative[MOLECULE_REACTION_NAME].destroy()
-		global.current_gui_entity[player_index] = nil
+		global.current_gui_reaction_building_data[player_index] = nil
 	end
 end
 
@@ -45,11 +45,9 @@ local function update_reaction_table_sprite(element, chest_inventory, product)
 	end
 end
 
-local function update_all_reaction_table_sprites(gui, entity_number)
-	local reaction_gui = gui.relative[MOLECULE_REACTION_NAME]
-	if not reaction_gui then return false end
-	local reaction_table = reaction_gui.outer[REACTION_PREFIX..FRAME_NAME][REACTION_PREFIX..TABLE_NAME]
-	local building_data = global.molecule_reaction_building_data[entity_number]
+local function update_all_reaction_table_sprites(gui, building_data)
+	local reaction_table =
+		gui.relative[MOLECULE_REACTION_NAME].outer[REACTION_PREFIX..FRAME_NAME][REACTION_PREFIX..TABLE_NAME]
 	local building_definition = BUILDING_DEFINITIONS[building_data.entity.name]
 	local chest_inventories = building_data.chest_inventories
 	for _, reactant_name in ipairs(building_definition.reactants) do
@@ -212,7 +210,7 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 		}},
 	}
 	gui_add_recursive(gui.relative, gui_spec)
-	update_all_reaction_table_sprites(gui, entity.unit_number)
+	update_all_reaction_table_sprites(gui, global.molecule_reaction_building_data[entity.unit_number])
 end
 
 
@@ -227,7 +225,8 @@ local function on_gui_opened(event)
 	local building_definition = BUILDING_DEFINITIONS[entity.name]
 	if building_definition then
 		build_molecule_reaction_gui(entity, gui, building_definition)
-		global.current_gui_entity[event.player_index] = entity.unit_number
+		global.current_gui_reaction_building_data[event.player_index] =
+			global.molecule_reaction_building_data[entity.unit_number]
 	elseif entity.name == MOLECULE_DETECTOR_OUTPUT_NAME then
 		player.opened = nil
 	end
@@ -239,7 +238,7 @@ end
 
 local function on_gui_click(event)
 	local element = event.element
-	local building_data = global.molecule_reaction_building_data[global.current_gui_entity[event.player_index]]
+	local building_data = global.current_gui_reaction_building_data[event.player_index]
 
 	local reaction_table_component_name = REACTION_TABLE_COMPONENT_NAME_MAP[element.name]
 	if reaction_table_component_name then
@@ -281,7 +280,7 @@ end
 
 local function on_gui_elem_changed(event)
 	local element = event.element
-	local building_data = global.molecule_reaction_building_data[global.current_gui_entity[event.player_index]]
+	local building_data = global.current_gui_reaction_building_data[event.player_index]
 
 	local reaction_table_selector_reactant_name = REACTION_TABLE_SELECTOR_NAME_MAP[element.name]
 	if reaction_table_selector_reactant_name then
@@ -314,13 +313,13 @@ end
 
 -- Global event handling
 function gui_on_init()
-	global.current_gui_entity = {}
+	global.current_gui_reaction_building_data = {}
 	global.gui_demo_items = {}
 end
 
 function gui_on_nth_tick(event_data)
-	for player_index, entity_number in pairs(global.current_gui_entity) do
-		update_all_reaction_table_sprites(game.get_player(player_index).gui, entity_number)
+	for player_index, building_data in pairs(global.current_gui_reaction_building_data) do
+		update_all_reaction_table_sprites(game.get_player(player_index).gui, building_data)
 	end
 end
 
