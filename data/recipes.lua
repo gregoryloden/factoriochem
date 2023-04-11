@@ -35,3 +35,14 @@ data:extend({
 		energy_required = 1,
 	},
 })
+
+
+-- Science recipes
+data.raw.recipe["automation-science-pack"].ingredients = {
+	{MOLECULE_ITEM_PREFIX.."O1-H|1H", 1},
+	{MOLECULE_ITEM_PREFIX.."H1-O|-1H", 1},
+	{MOLECULE_ITEM_PREFIX.."-H|H1-1O", 1},
+	{MOLECULE_ITEM_PREFIX.."H|1O1-H", 1},
+	{MOLECULE_ITEM_PREFIX.."H|1O|1H", 1},
+	{MOLECULE_ITEM_PREFIX.."H1-O1-H", 1},
+}
