@@ -234,13 +234,13 @@ data:extend({moleculifier_entity, moleculifier_item, moleculifier_recipe})
 local detector = table.deepcopy(data.raw["constant-combinator"]["constant-combinator"])
 detector.name = MOLECULE_DETECTOR_NAME
 detector.minable.result = MOLECULE_DETECTOR_NAME
+detector.selection_box = {{-0.5, 0}, {0.5, 1}}
 local arithmetic_combinator_copy_properties = {
 	icon = false,
 	icon_size = false,
 	icon_mipmaps = false,
 	sprites = false,
 	collision_box = false,
-	selection_box = false,
 	activity_led_light_offsets = false,
 	activity_led_sprites = false,
 	circuit_wire_connection_points = "input_connection_points",
