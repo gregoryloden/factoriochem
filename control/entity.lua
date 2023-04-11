@@ -363,6 +363,18 @@ local function update_detector(detector_data)
 	end
 end
 
+local function paste_molecule_reaction_building(source, destination)
+	local source_building_data = global.molecule_reaction_building_data[source.unit_number]
+	local destination_building_data = global.molecule_reaction_building_data[destination.unit_number]
+	destination_building_data.settings.get_control_behavior().parameters =
+		source_building_data.settings.get_control_behavior().parameters
+	for _, reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
+		destination_building_data.reaction.selectors[reactant_name] =
+			source_building_data.reaction.selectors[reactant_name]
+	end
+	entity_assign_cache(destination_building_data, BUILDING_DEFINITIONS[destination.name])
+end
+
 
 -- Event handling
 local function on_built_entity(event)
@@ -384,6 +396,15 @@ local function on_mined_entity(event)
 	end
 end
 
+local function on_entity_settings_pasted(event)
+	local source = event.source
+	local destination = event.destination
+	if source.name ~= destination.name then return end
+	if BUILDING_DEFINITIONS[source.name] then
+		paste_molecule_reaction_building(source, destination)
+	end
+end
+
 
 -- Global event handling
 function entity_on_init()
@@ -401,3 +422,4 @@ script.on_event(defines.events.on_built_entity, on_built_entity)
 script.on_event(defines.events.on_robot_built_entity, on_built_entity)
 script.on_event(defines.events.on_player_mined_entity, on_mined_entity)
 script.on_event(defines.events.on_robot_mined_entity, on_mined_entity)
+script.on_event(defines.events.on_entity_settings_pasted, on_entity_settings_pasted)

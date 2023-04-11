@@ -297,6 +297,7 @@ detector_output.item_slot_count = 30
 detector_output.selection_box = {{-0.5, -1}, {0.5, 0}}
 detector_output.flags = table.deepcopy(HIDDEN_ENTITY_FLAGS)
 table.insert(detector_output.flags, "hide-alt-info")
+detector_output.allow_copy_paste = false
 detector_output.collision_mask = {}
 detector_output.sprites = EMPTY_SPRITE
 detector_output.activity_led_sprites = EMPTY_SPRITE
