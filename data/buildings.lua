@@ -31,6 +31,21 @@ BASE_BUILDING_PROTOTYPE.collision_box[2][2] = BASE_BUILDING_PROTOTYPE.collision_
 
 
 -- Utilities
+local function overlay_icon(prototype, icon_overlay_name, base_design)
+	if not base_design then base_design = prototype end
+	prototype.icons = {
+		{icon = base_design.icon, icon_size = base_design.icon_size, icon_mipmaps = base_design.icon_mipmaps},
+		{
+			icon = GRAPHICS_ROOT.."icon-overlays/"..icon_overlay_name..".png",
+			icon_size = ITEM_ICON_SIZE,
+			icon_mipmaps = ITEM_ICON_MIPMAPS,
+		},
+	}
+	if prototype.icon then prototype.icon = nil end
+	if prototype.icon_size then prototype.icon_size = nil end
+	if prototype.icon_mipmaps then prototype.icon_mipmaps = nil end
+end
+
 local function add_4_way_layer(sprites, overlay_name, overlay, width, height, shift_x, shift_y)
 	for direction, get_sprite_data in pairs(DIRECTION_GET_SPRITE_DATA) do
 		local layers = sprites[direction].layers
@@ -127,16 +142,9 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 		place_result = name,
 		subgroup = MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME,
 		order = definition.item_order,
-		icons = {
-			{icon = item_design.icon, icon_size = item_design.icon_size, icon_mipmaps = item_design.icon_mipmaps},
-			{
-				icon = GRAPHICS_ROOT.."icon-overlays/"..name..".png",
-				icon_size = ITEM_ICON_SIZE,
-				icon_mipmaps = ITEM_ICON_MIPMAPS,
-			},
-		},
 		stack_size = 50,
 	}
+	overlay_icon(item, name, item_design)
 
 	local recipe = {
 		type = "recipe",
@@ -227,17 +235,7 @@ moleculifier_item.name = MOLECULIFIER_NAME
 moleculifier_item.place_result = MOLECULIFIER_NAME
 moleculifier_item.subgroup = MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME
 moleculifier_item.order = "b"
-moleculifier_item.icons = {
-	{icon = moleculifier_item.icon, icon_size = moleculifier_item.icon_size, icon_mipmaps = moleculifier_item.icon_mipmaps},
-	{
-		icon = GRAPHICS_ROOT.."icon-overlays/"..MOLECULIFIER_NAME..".png",
-		icon_size = ITEM_ICON_SIZE,
-		icon_mipmaps = ITEM_ICON_MIPMAPS,
-	},
-}
-moleculifier_item.icon = nil
-moleculifier_item.icon_size = nil
-moleculifier_item.icon_mipmaps = nil
+overlay_icon(moleculifier_item, MOLECULIFIER_NAME)
 
 local moleculifier_recipe = {
 	type = "recipe",
@@ -256,9 +254,6 @@ detector.name = MOLECULE_DETECTOR_NAME
 detector.minable.result = MOLECULE_DETECTOR_NAME
 detector.selection_box = {{-0.5, 0}, {0.5, 1}}
 local arithmetic_combinator_copy_properties = {
-	icon = false,
-	icon_size = false,
-	icon_mipmaps = false,
 	sprites = false,
 	collision_box = false,
 	activity_led_light_offsets = false,
@@ -269,6 +264,7 @@ local arithmetic_combinator = data.raw["arithmetic-combinator"]["arithmetic-comb
 for dst_property, src_property in pairs(arithmetic_combinator_copy_properties) do
 	detector[dst_property] = table.deepcopy(arithmetic_combinator[src_property or dst_property])
 end
+overlay_icon(detector, MOLECULE_DETECTOR_NAME, arithmetic_combinator)
 add_4_way_layer(detector.sprites, MOLECULE_DETECTOR_NAME, false, 32, 64, 0, 0)
 
 local detector_item = table.deepcopy(data.raw.item["arithmetic-combinator"])
@@ -276,14 +272,7 @@ detector_item.name = MOLECULE_DETECTOR_NAME
 detector_item.place_result = MOLECULE_DETECTOR_NAME
 detector_item.subgroup = MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME
 detector_item.order = "a"
-detector_item.icons = {
-	{icon = detector_item.icon, icon_size = detector_item.icon_size, icon_mipmaps = detector_item.icon_mipmaps},
-	{
-		icon = GRAPHICS_ROOT.."icon-overlays/"..MOLECULE_DETECTOR_NAME..".png",
-		icon_size = ITEM_ICON_SIZE,
-		icon_mipmaps = ITEM_ICON_MIPMAPS,
-	},
-}
+detector_item.icons = detector.icons
 detector_item.icon = nil
 detector_item.icon_size = nil
 detector_item.icon_mipmaps = nil
