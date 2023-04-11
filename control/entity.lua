@@ -120,7 +120,7 @@ local function build_molecule_detector(entity)
 	output.destructible = false
 	output.rotatable = false
 
-	global.molecule_detector_building_data[entity.unit_number] = {entity = entity, output = output}
+	global.molecule_detector_data[entity.unit_number] = {entity = entity, output = output}
 end
 
 
@@ -153,8 +153,8 @@ local function delete_molecule_reaction_building(entity, event_buffer)
 end
 
 local function delete_molecule_detector(entity)
-	local building_data = global.molecule_detector_building_data[entity.unit_number]
-	global.molecule_detector_building_data[entity.unit_number] = nil
+	local building_data = global.molecule_detector_data[entity.unit_number]
+	global.molecule_detector_data[entity.unit_number] = nil
 	building_data.output.mine()
 end
 
@@ -264,7 +264,7 @@ end
 -- Global event handling
 function entity_on_init()
 	global.molecule_reaction_building_data = {}
-	global.molecule_detector_building_data = {}
+	global.molecule_detector_data = {}
 end
 
 function entity_on_nth_tick(event_data)
