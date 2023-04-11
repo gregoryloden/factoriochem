@@ -2,6 +2,9 @@
 local REACTION_CACHE = {}
 -- give each building type a base cache, buildings will add to it based on their own selectors and reactants
 for name, definition in pairs(BUILDING_DEFINITIONS) do REACTION_CACHE[name] = {} end
+local LOGISTIC_WIRE_TYPES = {defines.wire_type.red, defines.wire_type.green}
+local DETECTOR_CACHE = {}
+local DETECTOR_TARGET_CACHE = {}
 
 
 -- Setup
@@ -145,7 +148,7 @@ local function build_molecule_detector(entity)
 	output.destructible = false
 	output.rotatable = false
 
-	add_building_data(entity.unit_number, global.molecule_detector_data, {entity = entity, output = output})
+	add_building_data(entity.unit_number, global.molecule_detector_data, {entity = entity, output = output, targets = {}})
 end
 
 
@@ -281,6 +284,83 @@ local function update_reaction_building(building_data)
 end
 
 local function update_detector(detector_data)
+	-- collect all target signals
+	local input = detector_data.entity.get_control_behavior()
+	local targets = detector_data.targets
+	local target_i = 1
+	for _, parameter in ipairs(input.parameters) do
+		local signal = parameter.signal.name
+		if not signal then goto continue end
+		local cache = DETECTOR_TARGET_CACHE[signal]
+		if not cache then
+			cache = {}
+			DETECTOR_TARGET_CACHE[signal] = cache
+			local item_prototype = game.item_prototypes[signal]
+			if item_prototype and item_prototype.subgroup.name == TARGET_SELECTOR_SUBGROUP then
+				cache.height, cache.width, cache.y, cache.x = parse_target(signal)
+				cache.name = signal
+			end
+		end
+		if not cache.name then goto continue end
+		targets[target_i] = cache
+		target_i = target_i + 1
+		::continue::
+	end
+	while targets[target_i] do
+		targets[target_i] = nil
+		target_i = target_i + 1
+	end
+
+	-- go through all input signals compared against each target, and output the corresponding signals
+	local output = detector_data.output.get_control_behavior()
+	local output_signal_i = 1
+	for _, wire_type in ipairs(LOGISTIC_WIRE_TYPES) do
+		local circuit_network = input.get_circuit_network(wire_type)
+		if not circuit_network then goto continue_wire_types end
+		local signals = circuit_network.signals
+		if not signals then goto continue_wire_types end
+		for _, signal in ipairs(signals) do
+			signal = signal.signal.name
+			local cache = DETECTOR_CACHE[signal]
+			if not cache then
+				cache = {}
+				DETECTOR_CACHE[signal] = cache
+				local item_prototype = game.item_prototypes[signal]
+				if item_prototype and item_prototype.group.name == MOLECULES_GROUP_NAME then
+					cache.shape, cache.height, cache.width = parse_molecule(signal)
+				end
+			end
+			if not cache.shape then goto continue_signals end
+			for _, target in ipairs(targets) do
+				local output_cache = cache[target.name]
+				if not output_cache then
+					output_cache = {}
+					cache[target.name] = output_cache
+					if cache.height ~= target.height or cache.width ~= target.width then
+						goto continue_targets
+					end
+					local atom = cache.shape[target.y][target.x]
+					if not atom then goto continue_targets end
+					local atom_signal_id = {type = "item", name = ATOM_ITEM_PREFIX..atom.symbol}
+					local atomic_number_signal_id = {type = "virtual", name = "signal-A"}
+					local atomic_number = ALL_ATOMS[atom.symbol].number
+					table.insert(output_cache, {signal = atom_signal_id, count = 1})
+					table.insert(output_cache, {signal = atomic_number_signal_id, count = atomic_number})
+				end
+				for _, signal in ipairs(output_cache) do
+					output.set_signal(output_signal_i, signal)
+					output_signal_i = output_signal_i + 1
+				end
+				::continue_targets::
+			end
+			::continue_signals::
+		end
+		::continue_wire_types::
+	end
+	while output.get_signal(output_signal_i).signal do
+		output.set_signal(output_signal_i, nil)
+		output_signal_i = output_signal_i + 1
+	end
 end
 
 

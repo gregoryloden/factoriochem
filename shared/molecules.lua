@@ -126,3 +126,18 @@ function assemble_molecule(shape, height, width)
 	end
 	return table.concat(builder)
 end
+
+function parse_target(target)
+	return tonumber(string.sub(target, -4, -4)), -- y_scale
+		tonumber(string.sub(target, -3, -3)), -- x_scale
+		tonumber(string.sub(target, -2, -2)) + 1, -- y
+		tonumber(string.sub(target, -1, -1)) + 1 -- x
+end
+
+function parse_atom_bond(atom_bond)
+	return tonumber(string.sub(atom_bond, -5, -5)), -- y_scale
+		tonumber(string.sub(atom_bond, -4, -4)), -- x_scale
+		tonumber(string.sub(atom_bond, -3, -3)) + 1, -- y
+		tonumber(string.sub(atom_bond, -2, -2)) + 1, -- x
+		string.sub(atom_bond, -1, -1) -- direction
+end

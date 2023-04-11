@@ -24,14 +24,6 @@ local function gen_grid(height)
 	return shape
 end
 
-local function extract_atom_bond(atom_bond)
-	return tonumber(string.sub(atom_bond, -5, -5)), -- y_scale
-		tonumber(string.sub(atom_bond, -4, -4)), -- x_scale
-		tonumber(string.sub(atom_bond, -3, -3)) + 1, -- y
-		tonumber(string.sub(atom_bond, -2, -2)) + 1, -- x
-		string.sub(atom_bond, -1, -1) -- direction
-end
-
 
 -- Building definitions
 BUILDING_DEFINITIONS = {
@@ -83,7 +75,7 @@ BUILDING_DEFINITIONS = {
 				end
 				shape = new_shape
 			else
-				local y_scale, x_scale, center_y, center_x, direction = extract_atom_bond(atom_bond)
+				local y_scale, x_scale, center_y, center_x, direction = parse_atom_bond(atom_bond)
 				-- any reaction on an atom produces that same atom
 				if y_scale == 1 and x_scale == 1 then
 					-- but it has to actually be an atom
