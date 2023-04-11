@@ -1,3 +1,4 @@
+-- Global constants
 ATOM_ROWS = {
 	-- Row 1
 	{"H", "He"},
@@ -25,7 +26,6 @@ ATOM_ROWS = {
 ALL_ATOMS = {}
 ATOM_ROW_SEPARATOR = "|"
 ATOM_COL_SEPARATOR = "-"
-
 local atomic_number = 0
 for row_n, atoms_row in ipairs(ATOM_ROWS) do
 	atoms_in_row = #atoms_row
@@ -49,4 +49,80 @@ for row_n, atoms_row in ipairs(ATOM_ROWS) do
 		ALL_ATOMS[symbol] = atom
 		ALL_ATOMS[atomic_number] = atom
 	end
+end
+
+
+-- Constants
+local MOLECULE_ITEM_PREFIX_MATCH = "^"..MOLECULE_ITEM_PREFIX
+local ATOM_ITEM_PREFIX_MATCH = "^"..ATOM_ITEM_PREFIX
+local PARSE_MOLECULE_ROW_MATCH = "([^"..ATOM_ROW_SEPARATOR.."]+)"..ATOM_ROW_SEPARATOR
+local PARSE_MOLECULE_ATOM_MATCH = "([^"..ATOM_COL_SEPARATOR.."]*)"..ATOM_COL_SEPARATOR
+
+
+-- Global utilities
+function parse_molecule(molecule)
+	if string.find(molecule, MOLECULE_ITEM_PREFIX_MATCH) then
+		molecule = string.sub(molecule, #MOLECULE_ITEM_PREFIX + 1)
+		local shape = {}
+
+		-- extract the initial data from the molecule
+		local grid_height = 0
+		local grid_width = 0
+		for molecule_row in string.gmatch(molecule..ATOM_ROW_SEPARATOR, PARSE_MOLECULE_ROW_MATCH) do
+			grid_height = grid_height + 1
+			local shape_row = {}
+			local x = 0
+			for atom_data in string.gmatch(molecule_row..ATOM_COL_SEPARATOR, PARSE_MOLECULE_ATOM_MATCH) do
+				x = x + 1
+				local symbol = string.match(atom_data, "%a+")
+				if symbol then
+					local atom = {symbol = symbol}
+					local up = string.match(atom_data, "^%d")
+					if up then atom.up = tonumber(up) end
+					local right = string.match(atom_data, "%d$")
+					if right then atom.right = tonumber(right) end
+					shape_row[x] = atom
+				end
+			end
+			if x > grid_width then grid_width = x end
+			shape[grid_height] = shape_row
+		end
+
+		-- add corresponding down and left bonds and add coordinates
+		for y, shape_row in pairs(shape) do
+			for x, atom in pairs(shape_row) do
+				if atom.up then shape[y - 1][x].down = atom.up end
+				if atom.right then shape_row[x + 1].left = atom.right end
+				atom.x = x
+				atom.y = y
+			end
+		end
+		return shape, grid_height, grid_width
+	elseif string.find(molecule, ATOM_ITEM_PREFIX_MATCH) then
+		return {{{symbol = string.sub(molecule, #ATOM_ITEM_PREFIX + 1), x = 1, y = 1}}}, 1, 1
+	else
+		error("Unexpected molecule ID \""..molecule.."\"")
+	end
+end
+
+function assemble_molecule(shape, height, width)
+	local builder = {MOLECULE_ITEM_PREFIX}
+	for y = 1, height do
+		shape_row = shape[y]
+		if y > 1 then table.insert(builder, ATOM_ROW_SEPARATOR) end
+		local next_col = 1
+		for x = 1, width do
+			atom = shape_row[x]
+			if atom then
+				while next_col < x do
+					table.insert(builder, ATOM_COL_SEPARATOR)
+					next_col = next_col + 1
+				end
+				if atom.up then table.insert(builder, atom.up) end
+				table.insert(builder, atom.symbol)
+				if atom.right then table.insert(builder, atom.right) end
+			end
+		end
+	end
+	return table.concat(builder)
 end
