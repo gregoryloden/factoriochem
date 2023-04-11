@@ -78,6 +78,7 @@ ATOM_BOND_SELECTOR_INNER_ARROW_SIZE_FRACTION = 18 / 64
 ATOM_BOND_SELECTOR_INNER_ARROW_OFFSET_FRACTION = 6 / 64
 BASE_OVERLAY_SIZE = 32
 MOLECULIFIER_MOLECULE = "H--C|-He|N--O"
+DETECTOR_ARROW_COLOR = (128, 224, 255, 0)
 MOLECULE_ROTATOR_NAME = "molecule-rotator"
 MOLECULE_ROTATOR_ICON_COLOR = (192, 192, 224, 0)
 with open("base-graphics-path.txt", "r") as file:
@@ -654,6 +655,24 @@ def build_4_way_image(base_image):
 		image[top:top + rotated.shape[0], left:left + rotated.shape[1]] = rotated
 	return image
 
+def gen_detector_image(base_size):
+	base_height = base_size * 2
+	detector_image = numpy.full((base_height, base_size, 4), DETECTOR_ARROW_COLOR, numpy.uint8)
+	draw_arrow_pointss = [
+		[
+			draw_coords(base_size * 10 / 32, base_size * 8 / 32),
+			draw_coords(base_size * 16 / 32, base_size * 2 / 32),
+			draw_coords(base_size * 22 / 32, base_size * 8 / 32),
+		],
+		[
+			draw_coords(base_size * 10 / 32, base_height - base_size * 2 / 32),
+			draw_coords(base_size * 16 / 32, base_height - base_size * 8 / 32),
+			draw_coords(base_size * 22 / 32, base_height - base_size * 2 / 32),
+		],
+	]
+	draw_alpha_on(detector_image, lambda mask: draw_poly_alpha(mask, draw_arrow_pointss))
+	return build_4_way_image(detector_image)
+
 def gen_building_overlays(base_size):
 	building_overlays_folder = "building-overlays"
 	if not os.path.exists(building_overlays_folder):
@@ -699,6 +718,7 @@ def gen_building_overlays(base_size):
 			imwrite(os.path.join(building_overlays_folder, component + suffix + ".png"), image)
 		moleculifier_image = gen_specific_molecule(base_size * 2, 1, MOLECULIFIER_MOLECULE)
 		imwrite(os.path.join(building_overlays_folder, f"moleculifier{suffix}.png"), moleculifier_image)
+		imwrite(os.path.join(building_overlays_folder, f"molecule-detector{suffix}.png"), gen_detector_image(base_size))
 	print("Building overlays written")
 
 

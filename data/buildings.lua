@@ -31,7 +31,7 @@ BASE_BUILDING_PROTOTYPE.collision_box[2][2] = BASE_BUILDING_PROTOTYPE.collision_
 
 
 -- Utilities
-local function add_4_way_overlay_layer(sprites, overlay_name, width, height, shift_x, shift_y)
+local function add_4_way_layer(sprites, overlay_name, overlay, width, height, shift_x, shift_y)
 	for direction, get_sprite_data in pairs(DIRECTION_GET_SPRITE_DATA) do
 		local layers = sprites[direction].layers
 		local sprite_data = get_sprite_data(width, height, shift_x, shift_y)
@@ -57,7 +57,11 @@ local function add_4_way_overlay_layer(sprites, overlay_name, width, height, shi
 			layer.repeat_count = layers[1].frame_count
 			layer.hr_version.repeat_count = layers[1].hr_version.frame_count
 		end
-		table.insert(layers, layer)
+		if overlay then
+			table.insert(layers, layer)
+		else
+			table.insert(layers, 1, layer)
+		end
 	end
 end
 
@@ -97,7 +101,7 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 	for _, component in ipairs(MOLECULE_REACTION_COMPONENT_NAMES) do
 		if not definition.has_component[component] then goto continue end
 		local shift = MOLECULE_REACTION_COMPONENT_OFFSETS[component]
-		add_4_way_overlay_layer(entity.animation, component, 32, 56, shift.x, shift.y * 1.375)
+		add_4_way_layer(entity.animation, component, true, 32, 56, shift.x, shift.y * 1.375)
 		::continue::
 	end
 	entity.working_sound = building_design.working_sound
@@ -265,6 +269,7 @@ local arithmetic_combinator = data.raw["arithmetic-combinator"]["arithmetic-comb
 for dst_property, src_property in pairs(arithmetic_combinator_copy_properties) do
 	detector[dst_property] = table.deepcopy(arithmetic_combinator[src_property or dst_property])
 end
+add_4_way_layer(detector.sprites, MOLECULE_DETECTOR_NAME, false, 32, 64, 0, 0)
 
 local detector_item = table.deepcopy(data.raw.item["arithmetic-combinator"])
 detector_item.name = MOLECULE_DETECTOR_NAME
