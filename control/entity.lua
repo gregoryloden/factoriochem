@@ -139,7 +139,7 @@ local function delete_molecule_reaction_building(entity, event_buffer)
 	-- the presence of products indicates an unresolved reaction, which means we have items to return to the player
 	if next(building_data.reaction.products) then
 		-- the presence of reactants indicates that the reaction is not complete
-		if next(data.reaction.reactants) then
+		if next(building_data.reaction.reactants) then
 			for _, reactant in pairs(building_data.reaction.reactants) do
 				event_buffer.insert({name = reactant, count = 1})
 			end
