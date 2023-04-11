@@ -32,7 +32,6 @@ local function build_molecule_reaction_building(entity, building_definition)
 		loaders = {},
 		reaction = {reactants = {}, products = {}, selectors = {}},
 	}
-	entity_assign_cache(building_data, building_definition)
 	function build_sub_entities(component, is_output)
 		local default_offset = MOLECULE_REACTION_COMPONENT_OFFSETS[component]
 		local offset_x, offset_y = default_offset.x, default_offset.y
@@ -102,6 +101,7 @@ local function build_molecule_reaction_building(entity, building_definition)
 	end
 	settings.destructible = false
 	building_data.settings = settings
+	entity_assign_cache(building_data, building_definition)
 
 	global.molecule_reaction_building_data[entity.unit_number] = building_data
 end
