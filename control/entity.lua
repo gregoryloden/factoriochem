@@ -107,6 +107,35 @@ local function build_molecule_reaction_building(entity, building_definition)
 end
 
 
+-- Building teardown
+local function delete_molecule_reaction_building(entity, event_buffer)
+	local building_data = global.molecule_reaction_building_data[entity.unit_number]
+	global.molecule_reaction_building_data[entity.unit_number] = nil
+	building_data.settings.mine()
+	-- 33 slots should be enough to hold the contents of 6 loaders + 6 single-slot chests + 3 reactants/products, but do 60
+	--	to be safe
+	local transfer_inventory = game.create_inventory(60)
+	for _, chest in pairs(building_data.chests) do chest.mine({inventory = transfer_inventory}) end
+	for _, loader in pairs(building_data.loaders) do loader.mine({inventory = transfer_inventory}) end
+	for name, count in pairs(transfer_inventory.get_contents()) do event_buffer.insert({name = name, count = count}) end
+	transfer_inventory.destroy()
+	-- the presence of products indicates an unresolved reaction, which means we have items to return to the player
+	if next(building_data.reaction.products) then
+		-- the presence of reactants indicates that the reaction is not complete
+		if next(data.reaction.reactants) then
+			for _, reactant in pairs(building_data.reaction.reactants) do
+				event_buffer.insert({name = reactant, count = 1})
+			end
+		else
+			for _, product in pairs(building_data.reaction.products) do
+				event_buffer.insert({name = product, count = 1})
+			end
+		end
+	end
+	event_buffer.remove({name = MOLECULE_REACTION_REACTANTS_NAME, count = 2})
+end
+
+
 -- Event handling
 local function on_built_entity(event)
 	local entity = event.created_entity
@@ -118,32 +147,9 @@ end
 
 local function on_mined_entity(event)
 	local entity = event.entity
-	if not BUILDING_DEFINITIONS[entity.name] then return end
-
-	local building_data = global.molecule_reaction_building_data[entity.unit_number]
-	global.molecule_reaction_building_data[entity.unit_number] = nil
-	building_data.settings.mine()
-	-- 33 slots should be enough to hold the contents of 6 loaders + 6 single-slot chests + 3 reactants/products, but do 60
-	--	to be safe
-	local transfer_inventory = game.create_inventory(60)
-	for _, chest in pairs(building_data.chests) do chest.mine({inventory = transfer_inventory}) end
-	for _, loader in pairs(building_data.loaders) do loader.mine({inventory = transfer_inventory}) end
-	for name, count in pairs(transfer_inventory.get_contents()) do event.buffer.insert({name = name, count = count}) end
-	transfer_inventory.destroy()
-	-- the presence of products indicates an unresolved reaction, which means we have items to return to the player
-	if next(building_data.reaction.products) then
-		-- the presence of reactants indicates that the reaction is not complete
-		if next(data.reaction.reactants) then
-			for _, reactant in pairs(building_data.reaction.reactants) do
-				event.buffer.insert({name = reactant, count = 1})
-			end
-		else
-			for _, product in pairs(building_data.reaction.products) do
-				event.buffer.insert({name = product, count = 1})
-			end
-		end
+	if BUILDING_DEFINITIONS[entity.name] then
+		delete_molecule_reaction_building(entity, event.buffer)
 	end
-	event.buffer.remove({name = MOLECULE_REACTION_REACTANTS_NAME, count = 2})
 end
 
 
