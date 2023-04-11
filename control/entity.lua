@@ -4,6 +4,14 @@ local REACTION_CACHE = {}
 for name, definition in pairs(BUILDING_DEFINITIONS) do REACTION_CACHE[name] = {} end
 
 
+-- Setup
+local function build_update_group_building_data(ticks_per_update)
+	local update_groups = {}
+	for update_group = 0, ticks_per_update - 1 do update_groups[update_group] = {n = 0} end
+	return {update_groups = update_groups, ticks_per_update = ticks_per_update}
+end
+
+
 -- Shared global entity utilities
 function entity_assign_cache(building_data, building_definition)
 	local cache = REACTION_CACHE[building_data.entity.name]
@@ -21,6 +29,23 @@ end
 
 
 -- Building setup
+local function add_building_data(entity_number, building_datas, building_data)
+	building_datas[entity_number] = building_data
+	local update_group = 0
+	local update_entities_n = building_datas.update_groups[0].n
+	for i = 1, building_datas.ticks_per_update - 1 do
+		local new_update_entities_n = building_datas.update_groups[i].n
+		if new_update_entities_n < update_entities_n then
+			update_group = i
+			update_entities_n = new_update_entities_n
+		end
+	end
+	local update_entities = building_datas.update_groups[update_group]
+	update_entities[entity_number] = building_data
+	update_entities.n = update_entities_n + 1
+	building_data.update_group = update_group
+end
+
 local function build_molecule_reaction_building(entity, building_definition)
 	entity.destructible = false
 	entity.rotatable = false
@@ -101,9 +126,9 @@ local function build_molecule_reaction_building(entity, building_definition)
 	end
 	settings.destructible = false
 	building_data.settings = settings
-	entity_assign_cache(building_data, building_definition)
 
-	global.molecule_reaction_building_data[entity.unit_number] = building_data
+	entity_assign_cache(building_data, building_definition)
+	add_building_data(entity.unit_number, global.molecule_reaction_building_data, building_data)
 end
 
 local function build_molecule_detector(entity)
@@ -120,14 +145,22 @@ local function build_molecule_detector(entity)
 	output.destructible = false
 	output.rotatable = false
 
-	global.molecule_detector_data[entity.unit_number] = {entity = entity, output = output}
+	add_building_data(entity.unit_number, global.molecule_detector_data, {entity = entity, output = output})
 end
 
 
 -- Building teardown
+local function remove_building_data(entity_number, building_datas)
+	local building_data = building_datas[entity_number]
+	building_datas[entity_number] = nil
+	local update_entities = building_datas.update_groups[building_data.update_group]
+	update_entities[entity_number] = nil
+	update_entities.n = update_entities.n - 1
+	return building_data
+end
+
 local function delete_molecule_reaction_building(entity, event_buffer)
-	local building_data = global.molecule_reaction_building_data[entity.unit_number]
-	global.molecule_reaction_building_data[entity.unit_number] = nil
+	local building_data = remove_building_data(entity.unit_number, global.molecule_reaction_building_data)
 	building_data.settings.mine()
 	-- 33 slots should be enough to hold the contents of 6 loaders + 6 single-slot chests + 3 reactants/products, but do 60
 	--	to be safe
@@ -153,34 +186,21 @@ local function delete_molecule_reaction_building(entity, event_buffer)
 end
 
 local function delete_molecule_detector(entity)
-	local building_data = global.molecule_detector_data[entity.unit_number]
-	global.molecule_detector_data[entity.unit_number] = nil
+	local building_data = remove_building_data(entity.unit_number, global.molecule_detector_data)
 	building_data.output.mine()
 end
 
 
--- Event handling
-local function on_built_entity(event)
-	local entity = event.created_entity
-	local building_definition = BUILDING_DEFINITIONS[entity.name]
-	if building_definition then
-		build_molecule_reaction_building(entity, building_definition)
-	elseif entity.name == MOLECULE_DETECTOR_NAME then
-		build_molecule_detector(entity)
-	end
-end
-
-local function on_mined_entity(event)
-	local entity = event.entity
-	if BUILDING_DEFINITIONS[entity.name] then
-		delete_molecule_reaction_building(entity, event.buffer)
-	elseif entity.name == MOLECULE_DETECTOR_NAME then
-		delete_molecule_detector(entity)
-	end
-end
-
-
 -- Updates
+local function update_buildings(building_datas, tick, update_building)
+	local update_entities = building_datas.update_groups[math.fmod(tick, building_datas.ticks_per_update)]
+	-- temporarily remove the count so that we don't iterate it
+	local update_entities_n = update_entities.n
+	update_entities.n = nil
+	for _, building_data in pairs(update_entities) do update_building(building_data) end
+	update_entities.n = update_entities_n
+end
+
 local function start_reaction(reaction, chest_inventories, machine_inputs)
 	for reactant_name, reactant in pairs(reaction.reactants) do
 		chest_inventories[reactant_name].remove({name = reactant, count = 1})
@@ -188,7 +208,7 @@ local function start_reaction(reaction, chest_inventories, machine_inputs)
 	machine_inputs.insert({name = MOLECULE_REACTION_REACTANTS_NAME, count = 1})
 end
 
-local function update_entity(building_data)
+local function update_reaction_building(building_data)
 	-- make sure the next reaction is ready
 	local entity = building_data.entity
 	local machine_inputs = entity.get_inventory(defines.inventory.assembling_machine_input)
@@ -260,15 +280,41 @@ local function update_entity(building_data)
 	end
 end
 
+local function update_detector(detector_data)
+end
+
+
+-- Event handling
+local function on_built_entity(event)
+	local entity = event.created_entity
+	local building_definition = BUILDING_DEFINITIONS[entity.name]
+	if building_definition then
+		build_molecule_reaction_building(entity, building_definition)
+	elseif entity.name == MOLECULE_DETECTOR_NAME then
+		build_molecule_detector(entity)
+	end
+end
+
+local function on_mined_entity(event)
+	local entity = event.entity
+	if BUILDING_DEFINITIONS[entity.name] then
+		delete_molecule_reaction_building(entity, event.buffer)
+	elseif entity.name == MOLECULE_DETECTOR_NAME then
+		delete_molecule_detector(entity)
+	end
+end
+
 
 -- Global event handling
 function entity_on_init()
-	global.molecule_reaction_building_data = {}
-	global.molecule_detector_data = {}
+	global.molecule_reaction_building_data = build_update_group_building_data(10)
+	global.molecule_detector_data = build_update_group_building_data(10)
 end
 
-function entity_on_nth_tick(event_data)
-	for entity_number, building_data in pairs(global.molecule_reaction_building_data) do update_entity(building_data) end
+function entity_on_tick(event_data)
+	local tick = event_data.tick
+	update_buildings(global.molecule_reaction_building_data, tick, update_reaction_building)
+	update_buildings(global.molecule_detector_data, tick, update_detector)
 end
 
 script.on_event(defines.events.on_built_entity, on_built_entity)
