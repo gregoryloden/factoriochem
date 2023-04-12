@@ -51,6 +51,8 @@ local SHAPE_ICON_ROOT = GRAPHICS_ROOT.."shapes/"
 local MOLECULE_DESCRIPTION_CACHE = {}
 local ITEM_GROUP_ICON_SIZE = 128
 local ITEM_GROUP_ICON_MIPMAPS = 2
+local COMPLEX_MOLECULES_SUBGROUP_NAME = "complex-molecules"
+local COMPLEX_MOLECULE_ITEM_PREFIX = "complex-molecule-"
 
 
 -- Item groups and subgroups
@@ -66,6 +68,12 @@ data:extend({
 	{
 		type = "item-subgroup",
 		name = MOLECULES_SUBGROUP_NAME,
+		group = MOLECULES_GROUP_NAME,
+		order = "c",
+	},
+	{
+		type = "item-subgroup",
+		name = COMPLEX_MOLECULES_SUBGROUP_NAME,
 		group = MOLECULES_GROUP_NAME,
 		order = "b",
 	},
@@ -523,14 +531,28 @@ for shape_n = 0, bit32.lshift(1, GRID_AREA) - 1 do
 	-- this is a valid shape, set the first bond depth and start searching for molecules
 	GRID[first_grid_i].bond_depth = 1
 	current_shape_n = shape_n
+	curtent_shape_s = string.format("%03X", current_shape_n)
 	current_shape_icon = {
-		icon = SHAPE_ICON_ROOT..string.format("%03X", current_shape_n)..".png",
+		icon = SHAPE_ICON_ROOT..curtent_shape_s..".png",
 		icon_size = ITEM_ICON_SIZE,
 		icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 	}
 	local max_scale = math.max(current_shape_width, current_shape_height)
 	local min_scale = math.min(current_shape_width, current_shape_height)
 	gen_molecule_bonds(1, array_with_contents({first_grid_i}))
+
+	-- we also need to generate a complex molecule for this shape
+	data:extend({{
+		type = "armor",
+		name = COMPLEX_MOLECULE_ITEM_PREFIX..curtent_shape_s,
+		subgroup = COMPLEX_MOLECULES_SUBGROUP_NAME,
+		localised_name = {"item-name.complex-molecule"},
+		icon = SHAPE_ICON_ROOT..curtent_shape_s..".png",
+		icon_size = ITEM_ICON_SIZE,
+		icon_mipmaps = MOLECULE_ICON_MIPMAPS,
+		infinite = true,
+		stack_size = 1,
+	}})
 	::continue_shapes::
 end
 
