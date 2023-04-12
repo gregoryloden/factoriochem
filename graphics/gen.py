@@ -533,6 +533,10 @@ def gen_composite_image(layers):
 				height = layer.get("height", None) or layer["size"]
 				width = layer.get("width", None) or layer["size"]
 				layer_image = numpy.full((height, width, 4), layer["color"], numpy.uint8)
+		elif type == "overlay_at":
+			layer_image = simple_overlay_image_at(base_layer_image, *layer, layer_image)
+			layer_needs_mips = base_layer_needs_mips
+			base_layer_image = None
 		elif type == "circle":
 			draw_center = draw_coords(*layer["center"])
 			draw_radius_val = draw_radius(layer["radius"])
@@ -555,12 +559,11 @@ def gen_composite_image(layers):
 		elif type == "poly":
 			layer = [draw_coords(*point) for point in layer]
 			draw_alpha_on(layer_image, lambda mask: draw_poly_alpha(mask, [layer]))
-	if layer_needs_mips:
-		easy_mips(layer_image, multi_color_alpha_weighting=False)
 	if base_layer_image is not None:
-		if base_layer_needs_mips:
-			easy_mips(base_layer_image)
 		layer_image = simple_overlay_image(base_layer_image, layer_image)
+		layer_needs_mips = base_layer_needs_mips
+	if layer_needs_mips:
+		easy_mips(layer_image)
 	return layer_image
 
 
@@ -740,49 +743,45 @@ def gen_detector_image(base_size):
 	]
 	return build_4_way_image(gen_composite_image(layers))
 
+def iter_gen_component_overlays(base_size, suffix):
+	loader_input_poly_points = [
+		(base_size * 2 / 32, base_size * 16 / 32),
+		(base_size * 2 / 32, base_size * 55 / 32),
+		(base_size * 16 / 32, base_size * 48 / 32),
+		(base_size * 30 / 32, base_size * 55 / 32),
+		(base_size * 30 / 32, base_size * 16 / 32),
+	]
+	loader_output_poly_points = [
+		(base_size * 2 / 32, base_size * 40 / 32),
+		(base_size * 2 / 32, base_size * 8 / 32),
+		(base_size * 16 / 32, base_size * 1 / 32),
+		(base_size * 30 / 32, base_size * 8 / 32),
+		(base_size * 30 / 32, base_size * 40 / 32),
+	]
+	overlays = [
+		("base", (160, 160, 224, 0), loader_input_poly_points),
+		("catalyst", (160, 224, 160, 0), loader_input_poly_points),
+		("modifier", (224, 160, 160, 0), loader_input_poly_points),
+		("result", (224, 224, 160, 0), loader_output_poly_points),
+		("bonus", (224, 160, 224, 0), loader_output_poly_points),
+		("remainder", (160, 224, 224, 0), loader_output_poly_points),
+	]
+	for (component, color, loader_poly_points) in overlays:
+		image = gen_composite_image([
+			("layer", {"height": int(base_size * 1.75), "width": base_size, "color": color}),
+			("poly", loader_poly_points),
+			("layer", {"size": base_size, "color": color}),
+			("circle", {"center": (base_size / 2, base_size / 2), "radius": base_size / 2}),
+			("overlay_at", (0, int(loader_poly_points[0][1] - base_size / 2))),
+		])
+		yield (component + suffix, build_4_way_image(image))
+
 def gen_building_overlays(base_size):
 	building_overlays_folder = "building-overlays"
 	if not os.path.exists(building_overlays_folder):
 		os.mkdir(building_overlays_folder)
-	overlays = [
-		("base", (160, 160, 224, 0), False),
-		("catalyst", (160, 224, 160, 0), False),
-		("modifier", (224, 160, 160, 0), False),
-		("result", (224, 224, 160, 0), True),
-		("bonus", (224, 160, 224, 0), True),
-		("remainder", (160, 224, 224, 0), True),
-	]
 	for (base_size, suffix) in [(base_size, ""), (base_size * 2, "-hr")]:
-		for (component, color, is_output) in overlays:
-			#generate the base loader shape
-			base_height = int(base_size * 1.75)
-			base_image = numpy.full((base_height, base_size, 4), color, numpy.uint8)
-			if is_output:
-				loader_points = [
-					(2 / 32, 1.25),
-					(30 / 32, 1.25),
-					(30 / 32, 0.25),
-					(0.5, 0 + 1 / 32),
-					(2 / 32, 0.25),
-				]
-			else:
-				loader_points = [
-					(2 / 32, 0.5),
-					(30 / 32, 0.5),
-					(30 / 32, 1.75 - 1 / 32),
-					(0.5, 1.5),
-					(2 / 32, 1.75 - 1 / 32),
-				]
-			draw_loader_points = [draw_coords(x * base_size, y * base_size) for (x, y) in loader_points]
-			draw_alpha_on(base_image, lambda mask: draw_poly_alpha(mask, [draw_loader_points]))
-			circle_image = filled_mip_image(base_size, 1, color)
-			draw_circle_center = draw_coords(base_size / 2, base_size / 2)
-			def draw_circle(mask):
-				draw_filled_circle_alpha(mask, draw_circle_center, draw_radius(base_size / 2))
-			draw_alpha_on(circle_image, draw_circle)
-			simple_overlay_image_at(base_image, 0, base_height - base_size if is_output else 0, circle_image)
-			image = build_4_way_image(base_image)
-			imwrite(os.path.join(building_overlays_folder, component + suffix + ".png"), image)
+		write_images(building_overlays_folder, iter_gen_component_overlays(base_size, suffix))
 		moleculifier_image = gen_specific_molecule(base_size * 2, 1, MOLECULIFIER_MOLECULE)
 		imwrite(os.path.join(building_overlays_folder, f"moleculifier{suffix}.png"), moleculifier_image)
 		imwrite(os.path.join(building_overlays_folder, f"molecule-detector{suffix}.png"), gen_detector_image(base_size))
