@@ -582,6 +582,16 @@ def gen_composite_image(layers, base_image = None, include_outline = False):
 		elif type == "poly":
 			layer = [draw_coords(*point) for point in layer]
 			draw_alpha_on(layer_image, lambda mask: draw_poly_alpha(mask, [layer]))
+		elif type == "line":
+			draw_start = draw_coords(*layer["start"])
+			draw_end = draw_coords(*layer["end"])
+			thickness = layer["thickness"]
+			def draw_line(mask):
+				cv2.line(mask, draw_start, draw_end, 255, thickness, cv2.LINE_AA, PRECISION_BITS)
+			draw_alpha_on(layer_image, draw_line)
+			if include_outline:
+				thickness += int(ICON_OVERLAY_OUTLINE_FRACTION * layer_image.shape[0] * 2)
+				draw_alpha_on(layer_outline_image, draw_line)
 	if base_layer_image is not None:
 		layer_image = simple_overlay_image(base_layer_image, layer_image)
 		if include_outline:
@@ -799,35 +809,17 @@ def gen_molecule_rotator_image(base_size, mips, include_outline):
 
 def gen_molecule_sorter_image(base_size, mips, include_outline):
 	image = gen_specific_molecule(base_size, mips, "O--||H", include_outline)
-	arrow_image = filled_mip_image(base_size, mips, MOLECULE_SORTER_ARROW_COLOR)
-	arrow_tip_image = filled_mip_image(base_size, 1, MOLECULE_SORTER_ARROW_COLOR)
-	if include_outline:
-		arrow_outline_image = filled_mip_image(base_size, mips, ICON_OVERLAY_OUTLINE_COLOR)
-		arrow_tip_outline_image = filled_mip_image(base_size, 1, ICON_OVERLAY_OUTLINE_COLOR)
+	left_x = MOLECULE_SORTER_ARROW_LEFT_FRACTION * base_size
+	right_x = MOLECULE_SORTER_ARROW_RIGHT_FRACTION * base_size
+	thickness = int(MOLECULE_SORTER_ARROW_THICKNESS_FRACTION * base_size)
+	arrow_size = MOLECULE_SORTER_ARROW_SIZE_FRACTION * base_size
+	line_layers = [("layer", {"size": base_size, "mips": mips, "color": MOLECULE_SORTER_ARROW_COLOR})]
+	arrow_layers = [("layer", {"size": base_size, "color": MOLECULE_SORTER_ARROW_COLOR})]
 	for y in [0, 2]:
 		center_y = get_circle_mip_datas(base_size, mips, 3, 3, y, 1)[0]["center_y"]
-		right_x = MOLECULE_SORTER_ARROW_RIGHT_FRACTION * base_size
-		draw_start = draw_coords(MOLECULE_SORTER_ARROW_LEFT_FRACTION * base_size, center_y)
-		draw_end = draw_coords(right_x, center_y)
-		arrow_thickness = int(MOLECULE_SORTER_ARROW_THICKNESS_FRACTION * base_size)
-		def draw_arrow_line(mask):
-			cv2.line(mask, draw_start, draw_end, 255, arrow_thickness, cv2.LINE_AA, PRECISION_BITS)
-		draw_alpha_on(arrow_image, draw_arrow_line)
-		arrow_size = MOLECULE_SORTER_ARROW_SIZE_FRACTION * base_size
-		def draw_arrow_tip(mask):
-			draw_poly_alpha(mask, [get_draw_arrow_points(right_x, center_y, -arrow_size, 0)])
-		draw_alpha_on(arrow_tip_image, draw_arrow_tip)
-		simple_overlay_image(arrow_image, arrow_tip_image)
-		if include_outline:
-			arrow_thickness += int(MOLECULE_SORTER_ARROW_OUTLINE_FRACTION * base_size * 2)
-			arrow_size += MOLECULE_SORTER_ARROW_OUTLINE_FRACTION * base_size * (1 + math.sqrt(2)) / 2
-			draw_alpha_on(arrow_outline_image, draw_arrow_line)
-			draw_alpha_on(arrow_tip_outline_image, draw_arrow_tip)
-			simple_overlay_image(arrow_outline_image, arrow_tip_outline_image)
-	simple_overlay_image(image, easy_mips(arrow_image))
-	if include_outline:
-		return simple_overlay_image(easy_mips(arrow_outline_image), image)
-	return image
+		line_layers.append(("line", {"start": (left_x, center_y), "end": (right_x, center_y), "thickness": thickness}))
+		arrow_layers.append(("arrow", (right_x, center_y, -arrow_size, 0)))
+	return gen_composite_image(line_layers + arrow_layers, image, include_outline)
 
 def iter_gen_all_building_recipe_icons(base_size, mips, include_outline):
 	yield (MOLECULE_ROTATOR_NAME, gen_molecule_rotator_image(base_size, mips, include_outline))
