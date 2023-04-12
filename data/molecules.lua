@@ -491,9 +491,9 @@ end
 
 
 -- Finally, go through all possible molecule shapes and generate molecules for each shape
-local function try_gen_molecule_bonds(shape_n)
+for shape_n = 0, bit32.lshift(1, GRID_AREA) - 1 do
 	-- only accept shapes anchored to the top left
-	if not is_top_left(shape_n) then return end
+	if not is_top_left(shape_n) then goto continue_shapes end
 
 	-- build the grid of slots
 	array_clear(GRID)
@@ -515,10 +515,10 @@ local function try_gen_molecule_bonds(shape_n)
 			array_push(GRID, nil)
 		end
 	end
-	if current_atom_count > MAX_ATOMS then return end
+	if current_atom_count > MAX_ATOMS then goto continue_shapes end
 
 	-- make sure all atoms are connected orthogonally
-	if not check_grid_connected(first_grid_i) then return end
+	if not check_grid_connected(first_grid_i) then goto continue_shapes end
 
 	-- this is a valid shape, set the first bond depth and start searching for molecules
 	GRID[first_grid_i].bond_depth = 1
@@ -531,9 +531,8 @@ local function try_gen_molecule_bonds(shape_n)
 	local max_scale = math.max(current_shape_width, current_shape_height)
 	local min_scale = math.min(current_shape_width, current_shape_height)
 	gen_molecule_bonds(1, array_with_contents({first_grid_i}))
+	::continue_shapes::
 end
-
-for shape_n = 0, bit32.lshift(1, GRID_AREA) - 1 do try_gen_molecule_bonds(shape_n) end
 
 -- debug
 local debug = false
