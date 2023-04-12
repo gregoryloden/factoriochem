@@ -88,6 +88,10 @@ MOLECULE_SORTER_ARROW_LEFT_FRACTION = 32 / 64
 MOLECULE_SORTER_ARROW_RIGHT_FRACTION = 48 / 64
 MOLECULE_SORTER_ARROW_SIZE_FRACTION = 6 / 64
 MOLECULE_SORTER_ARROW_OUTLINE_FRACTION = 4 / 64
+MOLECULE_VOIDER_NAME = "molecule-voider"
+MOLECULE_VOIDER_X_COLOR = (64, 64, 224, 0)
+MOLECULE_VOIDER_X_XY_FRACTION = 8 / 64
+MOLECULE_VOIDER_X_THICKNESS_FRACTION = 6 / 64
 with open("base-graphics-path.txt", "r") as file:
 	BASE_GRAPHICS_PATH = file.read()
 MOLECULIFY_ARROW_COLOR = (64, 64, 224, 0)
@@ -823,9 +827,23 @@ def gen_molecule_sorter_image(base_size, mips, include_outline):
 		arrow_layers.append(("arrow", (right_x, center_y, -arrow_size, 0)))
 	return gen_composite_image(line_layers + arrow_layers, image, include_outline)
 
+def gen_molecule_voider_image(base_size, mips, include_outline):
+	image = gen_specific_molecule(base_size, mips, "N2-N", include_outline)
+	top_left = MOLECULE_VOIDER_X_XY_FRACTION * base_size
+	bottom_right = base_size - top_left
+	thickness = int(MOLECULE_VOIDER_X_THICKNESS_FRACTION * base_size)
+	layers = [
+		("layer", {"size": base_size, "mips": mips, "color": MOLECULE_VOIDER_X_COLOR}),
+		("line", {"start": (top_left, top_left), "end": (bottom_right, bottom_right), "thickness": thickness}),
+		("layer", {"size": base_size, "color": MOLECULE_VOIDER_X_COLOR}),
+		("line", {"start": (top_left, bottom_right), "end": (bottom_right, top_left), "thickness": thickness}),
+	]
+	return gen_composite_image(layers, image, include_outline)
+
 def iter_gen_all_building_recipe_icons(base_size, mips, include_outline):
 	yield (MOLECULE_ROTATOR_NAME, gen_molecule_rotator_image(base_size, mips, include_outline))
 	yield (MOLECULE_SORTER_NAME, gen_molecule_sorter_image(base_size, mips, include_outline))
+	yield (MOLECULE_VOIDER_NAME, gen_molecule_voider_image(base_size, mips, include_outline))
 
 def iter_gen_moleculify_recipe_icons(base_size, mips):
 	base_icons_folder = os.path.join(BASE_GRAPHICS_PATH, "icons")
