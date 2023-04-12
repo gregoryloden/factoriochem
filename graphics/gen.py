@@ -81,6 +81,13 @@ MOLECULIFIER_MOLECULE = "H--C|-He|N--O"
 DETECTOR_ARROW_COLOR = (128, 224, 255, 0)
 MOLECULE_ROTATOR_NAME = "molecule-rotator"
 MOLECULE_ROTATOR_ICON_COLOR = (192, 192, 224, 0)
+MOLECULE_SORTER_NAME = "molecule-sorter"
+MOLECULE_SORTER_ARROW_COLOR = (64, 64, 224, 0)
+MOLECULE_SORTER_ARROW_THICKNESS_FRACTION = 4 / 64
+MOLECULE_SORTER_ARROW_LEFT_FRACTION = 32 / 64
+MOLECULE_SORTER_ARROW_RIGHT_FRACTION = 48 / 64
+MOLECULE_SORTER_ARROW_SIZE_FRACTION = 6 / 64
+MOLECULE_SORTER_ARROW_OUTLINE_FRACTION = 4 / 64
 with open("base-graphics-path.txt", "r") as file:
 	BASE_GRAPHICS_PATH = file.read()
 MOLECULIFY_ARROW_COLOR = (64, 64, 224, 0)
@@ -550,7 +557,7 @@ def gen_prepared_rotation_selector_image(
 		if include_dot:
 			draw_filled_circle_alpha(mask, draw_center, draw_radius(dot_radius))
 	draw_alpha_on(image, draw_arcs_and_dot)
-	arrows_image = filled_mip_image(base_size, mips, color)
+	arrows_image = numpy.full((base_size, base_size, 4), color, numpy.uint8)
 	draw_alpha_on(arrows_image, lambda mask: draw_poly_alpha(mask, draw_arrow_pointss))
 	return easy_mips(simple_overlay_image(image, arrows_image), multi_color_alpha_weighting=False)
 
@@ -726,7 +733,7 @@ def gen_building_overlays(base_size):
 def get_molecule_rotator_rotation_image(base_size, mips, is_outline):
 	(radius, center, arrow_size) = get_rotation_selector_arc_values(base_size)
 	if is_outline:
-		arrow_size += ROTATION_SELECTOR_OUTLINE_FRACTION * base_size
+		arrow_size += ROTATION_SELECTOR_OUTLINE_FRACTION * base_size * (1 + math.sqrt(2)) / 2
 	center_offset = base_size / -8
 	return gen_prepared_rotation_selector_image(
 		base_size,
@@ -738,16 +745,48 @@ def get_molecule_rotator_rotation_image(base_size, mips, is_outline):
 		include_dot=False,
 		center_offset=center_offset)
 
-def iter_gen_all_building_recipe_icons(base_size, mips, include_outline):
-	images = {
-		MOLECULE_ROTATOR_NAME: simple_overlay_image(
-			gen_specific_molecule(base_size, mips, "H1-H-|1H|", include_outline),
-			get_molecule_rotator_rotation_image(base_size, mips, False)),
-	}
+def gen_molecule_rotator_image(base_size, mips, include_outline):
+	image = gen_specific_molecule(base_size, mips, "H1-H-|1H|", include_outline)
+	simple_overlay_image(image, get_molecule_rotator_rotation_image(base_size, mips, False))
 	if include_outline:
-		images[MOLECULE_ROTATOR_NAME] = simple_overlay_image(
-			get_molecule_rotator_rotation_image(base_size, mips, True), images[MOLECULE_ROTATOR_NAME])
-	return images.items()
+		return simple_overlay_image(get_molecule_rotator_rotation_image(base_size, mips, True), image)
+	return image
+
+def gen_molecule_sorter_image(base_size, mips, include_outline):
+	image = gen_specific_molecule(base_size, mips, "O--||H", include_outline)
+	arrow_image = filled_mip_image(base_size, mips, MOLECULE_SORTER_ARROW_COLOR)
+	arrow_tip_image = numpy.full((base_size, base_size, 4), MOLECULE_SORTER_ARROW_COLOR)
+	if include_outline:
+		arrow_outline_image = filled_mip_image(base_size, mips, ICON_OVERLAY_OUTLINE_COLOR)
+		arrow_tip_outline_image = numpy.full((base_size, base_size, 4), ICON_OVERLAY_OUTLINE_COLOR)
+	for y in [0, 2]:
+		center_y = get_circle_mip_datas(base_size, mips, 3, 3, y, 1)[0]["center_y"]
+		right_x = MOLECULE_SORTER_ARROW_RIGHT_FRACTION * base_size
+		draw_start = draw_coords(MOLECULE_SORTER_ARROW_LEFT_FRACTION * base_size, center_y)
+		draw_end = draw_coords(right_x, center_y)
+		arrow_thickness = int(MOLECULE_SORTER_ARROW_THICKNESS_FRACTION * base_size)
+		def draw_arrow_line(mask):
+			cv2.line(mask, draw_start, draw_end, 255, arrow_thickness, cv2.LINE_AA, PRECISION_BITS)
+		draw_alpha_on(arrow_image, draw_arrow_line)
+		arrow_size = MOLECULE_SORTER_ARROW_SIZE_FRACTION * base_size
+		def draw_arrow_tip(mask):
+			draw_poly_alpha(mask, [get_draw_arrow_points(right_x, center_y, -arrow_size, 0)])
+		draw_alpha_on(arrow_tip_image, draw_arrow_tip)
+		simple_overlay_image(arrow_image, arrow_tip_image)
+		if include_outline:
+			arrow_thickness += int(MOLECULE_SORTER_ARROW_OUTLINE_FRACTION * base_size * 2)
+			arrow_size += MOLECULE_SORTER_ARROW_OUTLINE_FRACTION * base_size * (1 + math.sqrt(2)) / 2
+			draw_alpha_on(arrow_outline_image, draw_arrow_line)
+			draw_alpha_on(arrow_tip_outline_image, draw_arrow_tip)
+			simple_overlay_image(arrow_outline_image, arrow_tip_outline_image)
+	simple_overlay_image(image, easy_mips(arrow_image))
+	if include_outline:
+		return simple_overlay_image(easy_mips(arrow_outline_image), image)
+	return image
+
+def iter_gen_all_building_recipe_icons(base_size, mips, include_outline):
+	yield (MOLECULE_ROTATOR_NAME, gen_molecule_rotator_image(base_size, mips, include_outline))
+	yield (MOLECULE_SORTER_NAME, gen_molecule_sorter_image(base_size, mips, include_outline))
 
 def iter_gen_moleculify_recipe_icons(base_size, mips):
 	base_icons_folder = os.path.join(BASE_GRAPHICS_PATH, "icons")
