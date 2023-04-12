@@ -271,8 +271,8 @@ add_4_way_layer(detector.sprites, MOLECULE_DETECTOR_NAME, false, 32, 64, 0, 0)
 local detector_item = table.deepcopy(data.raw.item["arithmetic-combinator"])
 detector_item.name = MOLECULE_DETECTOR_NAME
 detector_item.place_result = MOLECULE_DETECTOR_NAME
-detector_item.subgroup = MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME
-detector_item.order = "a"
+detector_item.subgroup = "circuit-network"
+detector_item.order = "c[combinators]-d"
 detector_item.icons = detector.icons
 detector_item.icon = nil
 detector_item.icon_size = nil
