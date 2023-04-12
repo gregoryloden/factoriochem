@@ -190,6 +190,35 @@ BUILDING_DEFINITIONS = {
 			return true
 		end,
 	},
+	["molecule-sorter"] = {
+		-- data fields
+		building_design = {"assembling-machine", "assembling-machine-1"},
+		item_order = "c",
+		-- data and control fields
+		reactants = {BASE_NAME},
+		products = {RESULT_NAME, REMAINDER_NAME},
+		-- control fields
+		selectors = {[BASE_NAME] = TARGET_SELECTOR_NAME, [MODIFIER_NAME] = ATOM_SELECTOR_NAME},
+		reaction = function(reaction)
+			local molecule = reaction.reactants[BASE_NAME]
+			local target = reaction.selectors[BASE_NAME]
+			local target_atom = reaction.selectors[MODIFIER_NAME]
+			if not molecule or not target or not target_atom then return false end
+
+			local y_scale, x_scale, y, x = parse_target(target)
+			local shape, height, width = parse_molecule(molecule)
+			if height == y_scale and width == x_scale then
+				local atom = shape[y][x]
+				if atom and atom.symbol == string.sub(target_atom, #ATOM_ITEM_PREFIX + 1) then
+					reaction.products[RESULT_NAME] = molecule
+					return true
+				end
+			end
+
+			reaction.products[REMAINDER_NAME] = molecule
+			return true
+		end,
+	},
 }
 for _, building_definition in pairs(BUILDING_DEFINITIONS) do
 	building_definition.has_component = {}

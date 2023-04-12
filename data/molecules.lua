@@ -29,7 +29,6 @@ end
 
 
 -- Constants
-local ATOMS_SUBGROUP_PREFIX = "atoms-"
 local GRID_AREA = MAX_GRID_WIDTH * MAX_GRID_HEIGHT
 local MAX_TOTAL_BONDS = 0
 local MOLECULE_ATOMS_ACCEPT_BONDS = {}

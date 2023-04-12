@@ -16,6 +16,7 @@ for _, reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
 	REACTION_TABLE_SELECTOR_NAME_MAP[REACTION_PREFIX..reactant_name..SELECTOR_SUFFIX] = reactant_name
 	REACTION_DEMO_TABLE_SELECTOR_NAME_MAP[REACTION_DEMO_PREFIX..reactant_name..SELECTOR_SUFFIX] = reactant_name
 end
+local ATOM_SUBGROUP_PREFIX_MATCH = "^"..ATOMS_SUBGROUP_PREFIX
 
 
 -- Utilities
@@ -142,9 +143,18 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 			type = "choose-elem-button",
 			name = name_prefix..reactant_name..SELECTOR_SUFFIX,
 			elem_type = "item",
-			elem_filters = {{filter = "subgroup", subgroup = MOLECULE_REACTION_SELECTOR_PREFIX..selector}},
 			tooltip = {"factoriochem."..entity.name.."-"..reactant_name..SELECTOR_SUFFIX.."-tooltip"},
 		}
+		if selector == ATOM_SELECTOR_NAME then
+			spec.elem_filters = {}
+			for _, subgroup in ipairs(game.item_group_prototypes[MOLECULES_GROUP_NAME].subgroups) do
+				if string.find(subgroup.name, ATOM_SUBGROUP_PREFIX_MATCH) then
+					table.insert(spec.elem_filters, {filter = "subgroup", subgroup = subgroup.name})
+				end
+			end
+		else
+			spec.elem_filters = {{filter = "subgroup", subgroup = MOLECULE_REACTION_SELECTOR_PREFIX..selector}}
+		end
 		if name_prefix == REACTION_PREFIX then
 			spec.item = global.molecule_reaction_building_data[entity.unit_number].reaction.selectors[reactant_name]
 		elseif name_prefix == REACTION_DEMO_PREFIX then
