@@ -992,6 +992,8 @@ def gen_reaction_settings_icon(base_size, mips):
 
 
 #Generate all graphics
+import time
+start = time.time()
 gen_all_atom_images(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_all_bond_images(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_item_group_icon(ITEM_GROUP_SIZE, ITEM_GROUP_MIPS)
@@ -1002,6 +1004,4 @@ gen_all_recipe_icons(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_icon_overlays(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_molecule_shape_backgrounds(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_reaction_settings_icon(BASE_ICON_SIZE, BASE_ICON_MIPS)
-
-import time
-print(time.strftime("Images generated at %Y-%m-%d %H:%M:%S"))
+print(time.strftime(f"Images generated at %Y-%m-%d %H:%M:%S after {(time.time() - start):.3f}s"))
