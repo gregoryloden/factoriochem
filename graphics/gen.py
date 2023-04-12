@@ -557,7 +557,7 @@ def gen_prepared_rotation_selector_image(
 		if include_dot:
 			draw_filled_circle_alpha(mask, draw_center, draw_radius(dot_radius))
 	draw_alpha_on(image, draw_arcs_and_dot)
-	arrows_image = numpy.full((base_size, base_size, 4), color, numpy.uint8)
+	arrows_image = filled_mip_image(base_size, 1, color)
 	draw_alpha_on(arrows_image, lambda mask: draw_poly_alpha(mask, draw_arrow_pointss))
 	return easy_mips(simple_overlay_image(image, arrows_image), multi_color_alpha_weighting=False)
 
@@ -715,7 +715,7 @@ def gen_building_overlays(base_size):
 				]
 			draw_loader_points = [draw_coords(x * base_size, y * base_size) for (x, y) in loader_points]
 			draw_alpha_on(base_image, lambda mask: draw_poly_alpha(mask, [draw_loader_points]))
-			circle_image = numpy.full((base_size, base_size, 4), color, numpy.uint8)
+			circle_image = filled_mip_image(base_size, 1, color)
 			draw_circle_center = draw_coords(base_size / 2, base_size / 2)
 			def draw_circle(mask):
 				draw_filled_circle_alpha(mask, draw_circle_center, draw_radius(base_size / 2))
@@ -755,10 +755,10 @@ def gen_molecule_rotator_image(base_size, mips, include_outline):
 def gen_molecule_sorter_image(base_size, mips, include_outline):
 	image = gen_specific_molecule(base_size, mips, "O--||H", include_outline)
 	arrow_image = filled_mip_image(base_size, mips, MOLECULE_SORTER_ARROW_COLOR)
-	arrow_tip_image = numpy.full((base_size, base_size, 4), MOLECULE_SORTER_ARROW_COLOR)
+	arrow_tip_image = filled_mip_image(base_size, 1, MOLECULE_SORTER_ARROW_COLOR)
 	if include_outline:
 		arrow_outline_image = filled_mip_image(base_size, mips, ICON_OVERLAY_OUTLINE_COLOR)
-		arrow_tip_outline_image = numpy.full((base_size, base_size, 4), ICON_OVERLAY_OUTLINE_COLOR)
+		arrow_tip_outline_image = filled_mip_image(base_size, 1, ICON_OVERLAY_OUTLINE_COLOR)
 	for y in [0, 2]:
 		center_y = get_circle_mip_datas(base_size, mips, 3, 3, y, 1)[0]["center_y"]
 		right_x = MOLECULE_SORTER_ARROW_RIGHT_FRACTION * base_size
@@ -819,7 +819,7 @@ def iter_gen_moleculify_recipe_icons(base_size, mips):
 			cv2.line(mask, draw_start, draw_end, 255, arrow_thickness, cv2.LINE_AA, PRECISION_BITS)
 		draw_alpha_on(arrow_image, draw_arrow_line)
 		#draw the arrow tip
-		arrow_tip_image = numpy.full((base_size, base_size, 4), MOLECULIFY_ARROW_COLOR, numpy.uint8)
+		arrow_tip_image = filled_mip_image(base_size, 1, MOLECULIFY_ARROW_COLOR)
 		arrow_size_offset = MOLECULIFY_ARROW_SIZE_FRACTION * base_size / -math.sqrt(2)
 		draw_arrow_points = get_draw_arrow_points(end_xy, end_xy, arrow_size_offset, arrow_size_offset)
 		draw_alpha_on(arrow_tip_image, lambda mask: draw_poly_alpha(mask, [draw_arrow_points]))
