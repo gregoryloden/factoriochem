@@ -83,7 +83,7 @@ DETECTOR_ARROW_COLOR = (128, 224, 255, 0)
 MOLECULE_ROTATOR_NAME = "molecule-rotator"
 MOLECULE_ROTATOR_ICON_COLOR = (192, 192, 224, 0)
 MOLECULE_SORTER_NAME = "molecule-sorter"
-MOLECULE_SORTER_ARROW_COLOR = (64, 64, 224, 0)
+MOLECULE_SORTER_ARROW_COLORS = [(224, 224, 192, 0), None, (192, 224, 224, 0)]
 MOLECULE_SORTER_ARROW_THICKNESS_FRACTION = 4 / 64
 MOLECULE_SORTER_ARROW_LEFT_FRACTION = 32 / 64
 MOLECULE_SORTER_ARROW_RIGHT_FRACTION = 48 / 64
@@ -94,7 +94,7 @@ MOLECULE_VOIDER_X_XY_FRACTION = 8 / 64
 MOLECULE_VOIDER_X_THICKNESS_FRACTION = 6 / 64
 with open("base-graphics-path.txt", "r") as file:
 	BASE_GRAPHICS_PATH = file.read()
-MOLECULIFY_ARROW_COLOR = (64, 64, 224, 0)
+MOLECULIFY_ARROW_COLOR = (128, 64, 224, 0)
 MOLECULIFY_ARROW_THICKNESS_FRACTION = 6 / 64
 MOLECULIFY_ARROW_SIZE_FRACTION = 8 / 64
 ICON_OVERLAY_OUTLINE_COLOR = (64, 64, 64, 0)
@@ -539,7 +539,9 @@ def gen_composite_image(layers, base_image = None, include_outline = False):
 	for (type, layer) in layers:
 		if type == "layer":
 			if base_layer_image is not None:
-				raise ValueError("Not implemented yet")
+				simple_overlay_image(base_layer_image, layer_image)
+				if include_outline:
+					simple_overlay_image(base_layer_outline_image, layer_outline_image)
 			else:
 				base_layer_image = layer_image
 				base_layer_outline_image = layer_outline_image
@@ -819,13 +821,17 @@ def gen_molecule_sorter_image(base_size, mips, include_outline):
 	right_x = MOLECULE_SORTER_ARROW_RIGHT_FRACTION * base_size
 	thickness = int(MOLECULE_SORTER_ARROW_THICKNESS_FRACTION * base_size)
 	arrow_size = MOLECULE_SORTER_ARROW_SIZE_FRACTION * base_size
-	line_layers = [("layer", {"size": base_size, "mips": mips, "color": MOLECULE_SORTER_ARROW_COLOR})]
-	arrow_layers = [("layer", {"size": base_size, "color": MOLECULE_SORTER_ARROW_COLOR})]
+	layers = []
 	for y in [0, 2]:
+		color = MOLECULE_SORTER_ARROW_COLORS[y]
 		center_y = get_circle_mip_datas(base_size, mips, 3, 3, y, 1)[0]["center_y"]
-		line_layers.append(("line", {"start": (left_x, center_y), "end": (right_x, center_y), "thickness": thickness}))
-		arrow_layers.append(("arrow", (right_x, center_y, -arrow_size, 0)))
-	return gen_composite_image(line_layers + arrow_layers, image, include_outline)
+		layers.extend([
+			("layer", {"size": base_size, "mips": mips, "color": color}),
+			("line", {"start": (left_x, center_y), "end": (right_x, center_y), "thickness": thickness}),
+			("layer", {"size": base_size, "color": color}),
+			("arrow", (right_x, center_y, -arrow_size, 0)),
+		])
+	return gen_composite_image(layers, image, include_outline)
 
 def gen_molecule_voider_image(base_size, mips, include_outline):
 	image = gen_specific_molecule(base_size, mips, "N2-N", include_outline)
