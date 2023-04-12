@@ -845,24 +845,18 @@ def iter_gen_moleculify_recipe_icons(base_size, mips):
 				resize(moleculify_source_image[0:size, place_x:place_x + size], half_size, half_size)
 			image[half_size:size, place_x + half_size:place_x + size] = \
 				resize(moleculify_result_image[0:size, place_x:place_x + size], half_size, half_size)
-		#draw the arrow line
-		arrow_image = filled_mip_image(base_size, mips, MOLECULIFY_ARROW_COLOR)
-		arrow_thickness = int(MOLECULIFY_ARROW_THICKNESS_FRACTION * base_size)
+		#add an arrow image over the sub images
+		thickness = int(MOLECULIFY_ARROW_THICKNESS_FRACTION * base_size)
+		arrow_size_offset = MOLECULIFY_ARROW_SIZE_FRACTION * base_size / -math.sqrt(2)
 		start_xy = base_size * 3 / 8
 		end_xy = base_size * 5 / 8
-		draw_start = draw_coords(start_xy, start_xy)
-		draw_end = draw_coords(end_xy, end_xy)
-		def draw_arrow_line(mask):
-			cv2.line(mask, draw_start, draw_end, 255, arrow_thickness, cv2.LINE_AA, PRECISION_BITS)
-		draw_alpha_on(arrow_image, draw_arrow_line)
-		#draw the arrow tip
-		arrow_tip_image = filled_mip_image(base_size, 1, MOLECULIFY_ARROW_COLOR)
-		arrow_size_offset = MOLECULIFY_ARROW_SIZE_FRACTION * base_size / -math.sqrt(2)
-		draw_arrow_points = get_draw_arrow_points(end_xy, end_xy, arrow_size_offset, arrow_size_offset)
-		draw_alpha_on(arrow_tip_image, lambda mask: draw_poly_alpha(mask, [draw_arrow_points]))
-		#combine arrow images, add mips, and then combine it with the rest of the image
-		image = simple_overlay_image(image, easy_mips(simple_overlay_image(arrow_image, arrow_tip_image)))
-		yield (f"moleculify-{name}", image)
+		layers = [
+			("layer", {"size": base_size, "mips": mips, "color": MOLECULIFY_ARROW_COLOR}),
+			("line", {"start": (start_xy, start_xy), "end": (end_xy, end_xy), "thickness": thickness}),
+			("layer", {"size": base_size, "color": MOLECULIFY_ARROW_COLOR}),
+			("arrow", (end_xy, end_xy, arrow_size_offset, arrow_size_offset)),
+		]
+		yield (f"moleculify-{name}", gen_composite_image(layers, image))
 
 def gen_all_recipe_icons(base_size, mips):
 	recipes_folder = "recipes"
