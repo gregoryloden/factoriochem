@@ -106,7 +106,7 @@ REACTION_SETTINGS_BOX_SIZE_FRACTION = 12 / 64
 REACTION_SETTINGS_BOX_LEFT_SHIFT_FRACTION = 4 / 64
 
 
-#Utility functions
+#Image utilities
 def imwrite(file_path, image):
 	cv2.imwrite(file_path, image, [cv2.IMWRITE_PNG_COMPRESSION, 9])
 
@@ -117,25 +117,6 @@ def write_images(folder, images):
 def filled_mip_image(base_size, mips, color = None):
 	shape = (base_size, sum(base_size >> i for i in range(mips)), 4)
 	return numpy.full(shape, color, numpy.uint8) if color else numpy.zeros(shape, numpy.uint8)
-
-def draw_coords_from(x, y):
-	return (round((x - 0.5) * PRECISION_MULTIPLIER), round((y - 0.5) * PRECISION_MULTIPLIER))
-
-def draw_radius_from(radius):
-	return round((radius - 0.5) * PRECISION_MULTIPLIER)
-
-def draw_alpha_on(image, draw):
-	mask = numpy.zeros(image.shape[:2], numpy.uint8)
-	draw(mask)
-	mask_section = mask > 0
-	image[:, :, 3][mask_section] = mask[mask_section]
-	return mask
-
-def draw_filled_circle_alpha(mask, draw_center, draw_radius):
-	cv2.circle(mask, draw_center, draw_radius, 255, cv2.FILLED, cv2.LINE_AA, PRECISION_BITS)
-
-def draw_poly_alpha(mask, poly_pointss):
-	cv2.fillPoly(mask, numpy.array(poly_pointss), 255, cv2.LINE_AA, PRECISION_BITS)
 
 def overlay_image(back_image, back_left, back_top, front_image, front_left, front_top, width, height):
 	back_right = back_left + width
@@ -162,13 +143,6 @@ def simple_overlay_image(back_image, front_image):
 def simple_overlay_image_at(back_image, back_left, back_top, front_image):
 	shape = front_image.shape
 	return overlay_image(back_image, back_left, back_top, front_image, 0, 0, shape[1], shape[0])
-
-def iter_mips(base_size, mips):
-	place_x = 0
-	for mip in range(mips):
-		size = base_size >> mip
-		yield (mip, place_x, size)
-		place_x += size
 
 def resize(image, width, height, multi_color_alpha_weighting = True):
 	if multi_color_alpha_weighting:
@@ -205,6 +179,41 @@ def easy_mips(image, multi_color_alpha_weighting = True):
 		size = base_size >> mip
 		image[0:size, place_x:place_x + size] = resize(mip_0, size, size, multi_color_alpha_weighting)
 		place_x += size
+
+def iter_mips(base_size, mips):
+	place_x = 0
+	for mip in range(mips):
+		size = base_size >> mip
+		yield (mip, place_x, size)
+		place_x += size
+
+
+#Drawing utilities
+def draw_coords_from(x, y):
+	return (round((x - 0.5) * PRECISION_MULTIPLIER), round((y - 0.5) * PRECISION_MULTIPLIER))
+
+def draw_radius_from(radius):
+	return round((radius - 0.5) * PRECISION_MULTIPLIER)
+
+def draw_alpha_on(image, draw):
+	mask = numpy.zeros(image.shape[:2], numpy.uint8)
+	draw(mask)
+	mask_section = mask > 0
+	image[:, :, 3][mask_section] = mask[mask_section]
+	return mask
+
+def draw_filled_circle_alpha(mask, draw_center, draw_radius):
+	cv2.circle(mask, draw_center, draw_radius, 255, cv2.FILLED, cv2.LINE_AA, PRECISION_BITS)
+
+def draw_poly_alpha(mask, poly_pointss):
+	cv2.fillPoly(mask, numpy.array(poly_pointss), 255, cv2.LINE_AA, PRECISION_BITS)
+
+def get_draw_arrow_points(center_x, center_y, x_offset, y_offset):
+	draw_arrow_points = []
+	for _ in range(3):
+		(x_offset, y_offset) = -y_offset, x_offset
+		draw_arrow_points.append(draw_coords_from(center_x + x_offset, center_y + y_offset))
+	return draw_arrow_points
 
 
 #Sub-image generation
@@ -612,13 +621,6 @@ def get_rotation_selector_arc_values(base_size):
 	center = base_size / 2
 	arrow_size = ROTATION_SELECTOR_ARROW_SIZE_FRACTION * base_size
 	return (radius, center, arrow_size)
-
-def get_draw_arrow_points(center_x, center_y, x_offset, y_offset):
-	draw_arrow_points = []
-	for _ in range(3):
-		(x_offset, y_offset) = -y_offset, x_offset
-		draw_arrow_points.append(draw_coords_from(center_x + x_offset, center_y + y_offset))
-	return draw_arrow_points
 
 def gen_prepared_rotation_selector_image(base_size, mips, arcs, arrow_pointss):
 	(radius, center, _) = get_rotation_selector_arc_values(base_size)
