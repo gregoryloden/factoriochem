@@ -219,6 +219,19 @@ BUILDING_DEFINITIONS = {
 			return true
 		end,
 	},
+	["molecule-voider"] = {
+		-- data fields
+		building_design = {"assembling-machine", "assembling-machine-3"},
+		item_order = "d",
+		-- data and control fields
+		reactants = {BASE_NAME},
+		products = {},
+		-- control fields
+		selectors = {},
+		reaction = function(reaction)
+			return reaction.reactants[BASE_NAME] ~= nil
+		end,
+	},
 }
 for _, building_definition in pairs(BUILDING_DEFINITIONS) do
 	building_definition.has_component = {}
