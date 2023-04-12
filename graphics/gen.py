@@ -553,6 +553,7 @@ def gen_composite_image(layers):
 		elif type == "arrow":
 			draw_alpha_on(layer_image, lambda mask: draw_poly_alpha(mask, [get_draw_arrow_points(*layer)]))
 		elif type == "poly":
+			layer = [draw_coords(*point) for point in layer]
 			draw_alpha_on(layer_image, lambda mask: draw_poly_alpha(mask, [layer]))
 	if layer_needs_mips:
 		easy_mips(layer_image, multi_color_alpha_weighting=False)
@@ -727,14 +728,14 @@ def gen_detector_image(base_size):
 	layers = [
 		("layer", {"height": base_size * 2, "width": base_size, "color": DETECTOR_ARROW_COLOR}),
 		("poly", [
-			draw_coords(base_size * 10 / 32, base_size * 8 / 32),
-			draw_coords(base_size * 16 / 32, base_size * 2 / 32),
-			draw_coords(base_size * 22 / 32, base_size * 8 / 32),
+			(base_size * 10 / 32, base_size * 8 / 32),
+			(base_size * 16 / 32, base_size * 2 / 32),
+			(base_size * 22 / 32, base_size * 8 / 32),
 		]),
 		("poly", [
-			draw_coords(base_size * 10 / 32, base_size * 62 / 32),
-			draw_coords(base_size * 16 / 32, base_size * 56 / 32),
-			draw_coords(base_size * 22 / 32, base_size * 62 / 32),
+			(base_size * 10 / 32, base_size * 62 / 32),
+			(base_size * 16 / 32, base_size * 56 / 32),
+			(base_size * 22 / 32, base_size * 62 / 32),
 		]),
 	]
 	return build_4_way_image(gen_composite_image(layers))
