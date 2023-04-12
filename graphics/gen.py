@@ -513,6 +513,54 @@ def gen_molecule_reaction_reactants_icon(base_size, mips):
 	print("Molecule reaction reactants written")
 
 
+#Composite image utility
+def gen_composite_image(layers):
+	layer_image = None
+	layer_needs_mips = False
+	base_layer_image = None
+	base_layer_needs_mips = False
+	for (type, layer) in layers:
+		if type == "layer":
+			if base_layer_image is not None:
+				raise ValueError("Not implemented yet")
+			else:
+				base_layer_image = layer_image
+				base_layer_needs_mips = layer_needs_mips
+			layer_needs_mips = "mips" in layer
+			if layer_needs_mips:
+				layer_image = filled_mip_image(layer["size"], layer["mips"], layer["color"])
+			else:
+				height = layer.get("height", None) or layer["size"]
+				width = layer.get("width", None) or layer["size"]
+				layer_image = numpy.full((height, width, 4), layer["color"], numpy.uint8)
+		elif type == "circle":
+			draw_center = draw_coords(*layer["center"])
+			draw_radius_val = draw_radius(layer["radius"])
+			draw_alpha_on(layer_image, lambda mask: draw_filled_circle_alpha(mask, draw_center, draw_radius_val))
+		elif type == "arc":
+			draw_center = draw_coords(*layer["center"])
+			draw_axes = (draw_radius(layer["radius"]),) * 2
+			def draw_arc(mask):
+				(start_angle, arc) = layer["arc"]
+				cv2.ellipse(
+					#image, center, size
+					mask, draw_center, draw_axes,
+					#angles
+					start_angle, 0, arc,
+					#color, thickness, line type, precision
+					255, layer["thickness"], cv2.LINE_AA, PRECISION_BITS)
+			draw_alpha_on(layer_image, draw_arc)
+		elif type == "arrow":
+			draw_alpha_on(layer_image, lambda mask: draw_poly_alpha(mask, [get_draw_arrow_points(*layer)]))
+	if layer_needs_mips:
+		easy_mips(layer_image, multi_color_alpha_weighting=False)
+	if base_layer_image is not None:
+		if base_layer_needs_mips:
+			easy_mips(base_layer_image)
+		layer_image = simple_overlay_image(base_layer_image, layer_image)
+	return layer_image
+
+
 #Generate selector icons
 def get_rotation_selector_arc_values(base_size):
 	radius = ROTATION_SELECTOR_RADIUS_FRACTION * base_size
@@ -527,7 +575,21 @@ def get_draw_arrow_points(center_x, center_y, x_offset, y_offset):
 		draw_arrow_points.append(draw_coords(center_x + x_offset, center_y + y_offset))
 	return draw_arrow_points
 
-def gen_prepared_rotation_selector_image(
+def gen_prepared_rotation_selector_image(base_size, mips, arcs, arrow_pointss):
+	(radius, center, _) = get_rotation_selector_arc_values(base_size)
+	thickness = int(ROTATION_SELECTOR_THICKNESS_FRACTION * base_size)
+	dot_radius = ROTATION_SELECTOR_DOT_RADIUS_FRACTION * base_size
+	center = (center, center)
+	layers = [
+		("layer", {"size": base_size, "mips": mips, "color": ROTATION_SELECTOR_COLOR}),
+		("circle", {"center": center, "radius": dot_radius}),
+	]
+	layers.extend(("arc", {"center": center, "radius": radius, "arc": arc, "thickness": thickness}) for arc in arcs)
+	layers.append(("layer", {"size": base_size, "color": ROTATION_SELECTOR_COLOR}))
+	layers.extend(("arrow", arrow_points) for arrow_points in arrow_pointss)
+	return gen_composite_image(layers)
+
+def gen_prepared_rotation_selector_image2(
 		base_size,
 		mips,
 		arcs,
@@ -563,22 +625,19 @@ def gen_prepared_rotation_selector_image(
 
 def gen_left_right_rotation_selector_image(base_size, mips, start_angle, arrow_center_x_radius_multiplier):
 	(radius, center, arrow_size) = get_rotation_selector_arc_values(base_size)
-	draw_arrow_points = get_draw_arrow_points(center + radius * arrow_center_x_radius_multiplier, center, 0, -arrow_size)
-	return gen_prepared_rotation_selector_image(base_size, mips, [(start_angle, 90)], [draw_arrow_points])
+	arrow_points = (center + radius * arrow_center_x_radius_multiplier, center, 0, -arrow_size)
+	return gen_prepared_rotation_selector_image(base_size, mips, [(start_angle, 90)], [arrow_points])
 
-def gen_flip_rotation_selector_image(base_size, mips, is_outline = False, color = None):
+def gen_flip_rotation_selector_image(base_size, mips):
 	(radius, center, arrow_size) = get_rotation_selector_arc_values(base_size)
-	if is_outline:
-		arrow_size += ROTATION_SELECTOR_OUTLINE_FRACTION * base_size
-	draw_arrow_pointss = []
+	arrow_pointss = []
 	for mult in [-1, 1]:
 		center_x = center + radius / 2 * mult
 		center_y = center - radius / 2 * math.sqrt(3) * mult
 		x_offset = arrow_size / 2 * math.sqrt(3) * mult
 		y_offset = arrow_size / 2 * mult
-		draw_arrow_pointss.append(get_draw_arrow_points(center_x, center_y, x_offset, y_offset))
-	return gen_prepared_rotation_selector_image(
-		base_size, mips, [(120, 120), (300, 120)], draw_arrow_pointss, is_outline, color)
+		arrow_pointss.append((center_x, center_y, x_offset, y_offset))
+	return gen_prepared_rotation_selector_image(base_size, mips, [(120, 120), (300, 120)], arrow_pointss)
 
 def iter_gen_rotation_selectors(base_size, mips):
 	yield ("rotation-l", gen_left_right_rotation_selector_image(base_size, mips, 180, -1))
@@ -735,7 +794,7 @@ def get_molecule_rotator_rotation_image(base_size, mips, is_outline):
 	if is_outline:
 		arrow_size += ROTATION_SELECTOR_OUTLINE_FRACTION * base_size * (1 + math.sqrt(2)) / 2
 	center_offset = base_size / -8
-	return gen_prepared_rotation_selector_image(
+	return gen_prepared_rotation_selector_image2(
 		base_size,
 		mips,
 		[(0, 90)],
