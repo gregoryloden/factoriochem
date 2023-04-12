@@ -44,7 +44,6 @@ ATOM_ROWS = [
 	],
 ]
 ATOM_RADIUS_FRACTION = 30 / 64
-ATOM_OUTLINE_RADIUS_FRACTION = 42 / 64
 PRECISION_BITS = 8
 PRECISION_MULTIPLIER = 1 << PRECISION_BITS
 CIRCLE_DATA = {}
@@ -236,7 +235,7 @@ def get_circle_mip_datas(base_size, mips, y_scale, x_scale, y, x):
 		scale_data = {
 			"scale": scale,
 			"radius": ATOM_RADIUS_FRACTION * base_size / scale,
-			"outline_radius": ATOM_OUTLINE_RADIUS_FRACTION * base_size / scale,
+			"outline_radius": (ATOM_RADIUS_FRACTION / scale + ICON_OVERLAY_OUTLINE_FRACTION) * base_size,
 			"center_y_min": 0.5 * (1 + scale - y_scale),
 			"center_x_min": 0.5 * (1 + scale - x_scale),
 		}
