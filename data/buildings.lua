@@ -234,7 +234,7 @@ local moleculifier_item = table.deepcopy(data.raw.item["assembling-machine-2"])
 moleculifier_item.name = MOLECULIFIER_NAME
 moleculifier_item.place_result = MOLECULIFIER_NAME
 moleculifier_item.subgroup = MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME
-moleculifier_item.order = "b"
+moleculifier_item.order = "a"
 overlay_icon(moleculifier_item, MOLECULIFIER_NAME)
 
 local moleculifier_recipe = {
