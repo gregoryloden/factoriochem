@@ -18,6 +18,8 @@ COLOR_FOR_BONDS = [
 	(176, 176, 240, 0),
 	(240, 176, 176, 0),
 	(176, 176, 176, 0),
+	#no atom has 5 bonds - this is for shape images
+	(128, 128, 128, 0),
 ]
 ATOM_ROWS = [
 	#Row 1
@@ -48,8 +50,7 @@ PRECISION_BITS = 8
 PRECISION_MULTIPLIER = 1 << PRECISION_BITS
 CIRCLE_DATA = {}
 HCNO = ["H", "C", "N", "O"]
-MAX_ATOMS = 8
-MAX_ATOMS_HCNO = MAX_ATOMS
+MAX_ATOMS_HCNO = 8
 MAX_ATOMS_Ne = 4
 MAX_ATOMS_Ar = 3
 MAX_ATOMS_OTHER = 2
@@ -57,8 +58,10 @@ MAX_SINGLE_BONDS = 2
 FONT = cv2.FONT_HERSHEY_SIMPLEX
 FONT_SCALE_FRACTIONS = [0, 1.25 / 64, 1 / 64]
 FONT_THICKNESS_FRACTION = 2 / 64
-TEXT_COLOR = (0, 0, 0, 0)
 TEXT_DATAS = {}
+TEXT_COLOR = (0, 0, 0, 0)
+SHAPE_TEXT_COLOR = (255, 255, 255, 0)
+SHAPE_ATOM_CHARACTER = "+"
 BOND_COLOR = (0, 0, 0, 0)
 BOND_LENGTH_FRACTIONS = [0, 12 / 64, 12 / 64]
 BOND_THICKNESS_FRACTION = 6 / 64
@@ -97,7 +100,6 @@ MOLECULIFY_ARROW_SIZE_FRACTION = 8 / 64
 ICON_OVERLAY_OUTLINE_COLOR = (64, 64, 64, 0)
 ICON_OVERLAY_OUTLINE_FRACTION = 4 / 64
 ICON_OVERLAY_ARROW_OUTLINE_FRACTION = ICON_OVERLAY_OUTLINE_FRACTION * (1 + math.sqrt(2)) / 2
-SHAPE_BACKGROUND_COLOR = (128, 128, 128, 0)
 REACTION_SETTINGS_RECT_HALF_WIDTH_FRACTION = 20 / 64
 REACTION_SETTINGS_RECT_OUTER_THICKNESS_FRACTION = 16 / 64
 REACTION_SETTINGS_OUTER_COLOR = (64, 64, 64, 0)
@@ -295,7 +297,8 @@ def get_text_data(base_size, mips, symbol):
 	text_full_width = text_width + text_buffer_border * 2
 	text_full_height = text_height + font_thickness * 3 + text_buffer_border * 2
 	text_bottom_left = (text_buffer_border, text_buffer_border + text_height + font_thickness)
-	text = numpy.full((text_full_height, text_full_width, 4), TEXT_COLOR, numpy.uint8)
+	color = SHAPE_TEXT_COLOR if symbol == SHAPE_ATOM_CHARACTER else TEXT_COLOR
+	text = numpy.full((text_full_height, text_full_width, 4), color, numpy.uint8)
 	def draw_text(mask):
 		cv2.putText(mask, symbol, text_bottom_left, FONT, font_scale, 255, font_thickness, cv2.LINE_AA)
 	text_mask = draw_alpha_on(text, draw_text)
@@ -902,7 +905,7 @@ def gen_molecule_shape_backgrounds(base_size, mips):
 	shapes_folder = "shapes"
 	if not os.path.exists(shapes_folder):
 		os.mkdir(shapes_folder)
-	for shape_n in range(2, 1 << MAX_GRID_AREA):
+	for shape_n in range(1, 1 << MAX_GRID_AREA):
 		if not any((shape_n & 1 << i) != 0 for i in range(MAX_GRID_WIDTH)) \
 				or not any((shape_n & 1 << i) != 0 for i in range(0, MAX_GRID_AREA, MAX_GRID_WIDTH)):
 			continue
@@ -910,10 +913,6 @@ def gen_molecule_shape_backgrounds(base_size, mips):
 		for i in range(MAX_GRID_AREA):
 			grid.append(1 if shape_n & 1 << i != 0 else 0)
 		atom_count = sum(grid)
-
-		#stop if we have too many atoms
-		if atom_count > MAX_ATOMS:
-			continue
 
 		#BFS to check if all atoms are reachable
 		first_slot_i = next(i for (i, slot) in enumerate(grid) if slot == 1)
@@ -946,15 +945,16 @@ def gen_molecule_shape_backgrounds(base_size, mips):
 			check_slot_i_i += 1
 		if len(check_slot_is) < atom_count:
 			continue
-		image = filled_mip_image(base_size, mips)
 		for (i, slot) in enumerate(grid):
 			if slot == 0:
 				continue
 			x = i % MAX_GRID_WIDTH
 			y = i // MAX_GRID_WIDTH
-			simple_overlay_image(
-				image,
-				gen_single_atom_shape_image(base_size, mips, y_scale, x_scale, y, x, SHAPE_BACKGROUND_COLOR))
+			atom_image = gen_single_atom_image(base_size, mips, SHAPE_ATOM_CHARACTER, 5, y_scale, x_scale, y, x)
+			if i == first_slot_i:
+				image = atom_image
+			else:
+				simple_overlay_image(image, atom_image)
 		imwrite(os.path.join(shapes_folder, f"{shape_n:03X}.png"), image)
 	print("Molecule shape backgrounds written")
 
