@@ -552,6 +552,8 @@ def gen_composite_image(layers):
 			draw_alpha_on(layer_image, draw_arc)
 		elif type == "arrow":
 			draw_alpha_on(layer_image, lambda mask: draw_poly_alpha(mask, [get_draw_arrow_points(*layer)]))
+		elif type == "poly":
+			draw_alpha_on(layer_image, lambda mask: draw_poly_alpha(mask, [layer]))
 	if layer_needs_mips:
 		easy_mips(layer_image, multi_color_alpha_weighting=False)
 	if base_layer_image is not None:
@@ -722,22 +724,20 @@ def build_4_way_image(base_image):
 	return image
 
 def gen_detector_image(base_size):
-	base_height = base_size * 2
-	detector_image = numpy.full((base_height, base_size, 4), DETECTOR_ARROW_COLOR, numpy.uint8)
-	draw_arrow_pointss = [
-		[
+	layers = [
+		("layer", {"height": base_size * 2, "width": base_size, "color": DETECTOR_ARROW_COLOR}),
+		("poly", [
 			draw_coords(base_size * 10 / 32, base_size * 8 / 32),
 			draw_coords(base_size * 16 / 32, base_size * 2 / 32),
 			draw_coords(base_size * 22 / 32, base_size * 8 / 32),
-		],
-		[
-			draw_coords(base_size * 10 / 32, base_height - base_size * 2 / 32),
-			draw_coords(base_size * 16 / 32, base_height - base_size * 8 / 32),
-			draw_coords(base_size * 22 / 32, base_height - base_size * 2 / 32),
-		],
+		]),
+		("poly", [
+			draw_coords(base_size * 10 / 32, base_size * 62 / 32),
+			draw_coords(base_size * 16 / 32, base_size * 56 / 32),
+			draw_coords(base_size * 22 / 32, base_size * 62 / 32),
+		]),
 	]
-	draw_alpha_on(detector_image, lambda mask: draw_poly_alpha(mask, draw_arrow_pointss))
-	return build_4_way_image(detector_image)
+	return build_4_way_image(gen_composite_image(layers))
 
 def gen_building_overlays(base_size):
 	building_overlays_folder = "building-overlays"
