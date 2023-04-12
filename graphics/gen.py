@@ -94,6 +94,8 @@ MOLECULIFY_ARROW_COLOR = (64, 64, 224, 0)
 MOLECULIFY_ARROW_THICKNESS_FRACTION = 6 / 64
 MOLECULIFY_ARROW_SIZE_FRACTION = 8 / 64
 ICON_OVERLAY_OUTLINE_COLOR = (64, 64, 64, 0)
+ICON_OVERLAY_OUTLINE_FRACTION = 4 / 64
+ICON_OVERLAY_ARROW_OUTLINE_FRACTION = ICON_OVERLAY_OUTLINE_FRACTION * (1 + math.sqrt(2)) / 2
 SHAPE_BACKGROUND_COLOR = (128, 128, 128, 0)
 REACTION_SETTINGS_RECT_HALF_WIDTH_FRACTION = 20 / 64
 REACTION_SETTINGS_RECT_OUTER_THICKNESS_FRACTION = 16 / 64
@@ -514,10 +516,12 @@ def gen_molecule_reaction_reactants_icon(base_size, mips):
 
 
 #Composite image utility
-def gen_composite_image(layers):
+def gen_composite_image(layers, base_image = None, include_outline = False):
 	layer_image = None
+	layer_outline_image = None
 	layer_needs_mips = False
 	base_layer_image = None
+	base_layer_outline_image = None
 	base_layer_needs_mips = False
 	for (type, layer) in layers:
 		if type == "layer":
@@ -525,14 +529,21 @@ def gen_composite_image(layers):
 				raise ValueError("Not implemented yet")
 			else:
 				base_layer_image = layer_image
+				base_layer_outline_image = layer_outline_image
 				base_layer_needs_mips = layer_needs_mips
 			layer_needs_mips = "mips" in layer
 			if layer_needs_mips:
 				layer_image = filled_mip_image(layer["size"], layer["mips"], layer["color"])
+				if include_outline:
+					layer_outline_image = \
+						filled_mip_image(layer["size"], layer["mips"], ICON_OVERLAY_OUTLINE_COLOR)
 			else:
 				height = layer.get("height", None) or layer["size"]
 				width = layer.get("width", None) or layer["size"]
 				layer_image = numpy.full((height, width, 4), layer["color"], numpy.uint8)
+				if include_outline:
+					layer_outline_image = \
+						numpy.full((height, width, 4), ICON_OVERLAY_OUTLINE_COLOR, numpy.uint8)
 		elif type == "overlay_at":
 			layer_image = simple_overlay_image_at(base_layer_image, *layer, layer_image)
 			layer_needs_mips = base_layer_needs_mips
@@ -544,6 +555,7 @@ def gen_composite_image(layers):
 		elif type == "arc":
 			draw_center = draw_coords(*layer["center"])
 			draw_axes = (draw_radius(layer["radius"]),) * 2
+			thickness = layer["thickness"]
 			def draw_arc(mask):
 				(start_angle, arc) = layer["arc"]
 				cv2.ellipse(
@@ -552,19 +564,36 @@ def gen_composite_image(layers):
 					#angles
 					start_angle, 0, arc,
 					#color, thickness, line type, precision
-					255, layer["thickness"], cv2.LINE_AA, PRECISION_BITS)
+					255, thickness, cv2.LINE_AA, PRECISION_BITS)
 			draw_alpha_on(layer_image, draw_arc)
+			if include_outline:
+				thickness += int(ICON_OVERLAY_OUTLINE_FRACTION * layer_image.shape[0] * 2)
+				draw_alpha_on(layer_outline_image, draw_arc)
 		elif type == "arrow":
-			draw_alpha_on(layer_image, lambda mask: draw_poly_alpha(mask, [get_draw_arrow_points(*layer)]))
+			def draw_arrow(mask):
+				draw_poly_alpha(mask, [get_draw_arrow_points(*layer)])
+			draw_alpha_on(layer_image, draw_arrow)
+			if include_outline:
+				outline_add = ICON_OVERLAY_ARROW_OUTLINE_FRACTION * layer_image.shape[0]
+				old_arrow_magnitude = math.sqrt(layer[2] ** 2 + layer[3] ** 2)
+				arrow_size_multiplier = (old_arrow_magnitude + outline_add) / old_arrow_magnitude
+				layer = layer[:2] + tuple(xy * arrow_size_multiplier for xy in layer[2:])
+				draw_alpha_on(layer_outline_image, draw_arrow)
 		elif type == "poly":
 			layer = [draw_coords(*point) for point in layer]
 			draw_alpha_on(layer_image, lambda mask: draw_poly_alpha(mask, [layer]))
 	if base_layer_image is not None:
 		layer_image = simple_overlay_image(base_layer_image, layer_image)
+		if include_outline:
+			layer_outline_image = simple_overlay_image(base_layer_outline_image, layer_outline_image)
 		layer_needs_mips = base_layer_needs_mips
 	if layer_needs_mips:
 		easy_mips(layer_image)
-	return layer_image
+		if include_outline:
+			easy_mips(layer_outline_image, multi_color_alpha_weighting=False)
+	if base_image is not None:
+		layer_image = simple_overlay_image(base_image, layer_image)
+	return simple_overlay_image(layer_outline_image, layer_image) if include_outline else layer_image
 
 
 #Generate selector icons
@@ -594,40 +623,6 @@ def gen_prepared_rotation_selector_image(base_size, mips, arcs, arrow_pointss):
 	layers.append(("layer", {"size": base_size, "color": ROTATION_SELECTOR_COLOR}))
 	layers.extend(("arrow", arrow_points) for arrow_points in arrow_pointss)
 	return gen_composite_image(layers)
-
-def gen_prepared_rotation_selector_image2(
-		base_size,
-		mips,
-		arcs,
-		draw_arrow_pointss,
-		is_outline = False,
-		color = None,
-		include_dot = True,
-		center_offset = None):
-	(radius, center, _) = get_rotation_selector_arc_values(base_size)
-	if center_offset is not None:
-		center += center_offset
-	thickness = int(ROTATION_SELECTOR_THICKNESS_FRACTION * base_size)
-	dot_radius = ROTATION_SELECTOR_DOT_RADIUS_FRACTION * base_size
-	if is_outline:
-		thickness += int(ROTATION_SELECTOR_OUTLINE_FRACTION * base_size * 2)
-		dot_radius += ROTATION_SELECTOR_OUTLINE_FRACTION * base_size
-	draw_center = draw_coords(center, center)
-	draw_axes = draw_coords(radius, radius)
-
-	if not color:
-		color = ROTATION_SELECTOR_COLOR
-	image = filled_mip_image(base_size, mips, color)
-	def draw_arcs_and_dot(mask):
-		for (start_angle, arc) in arcs:
-			cv2.ellipse(
-				mask, draw_center, draw_axes, start_angle, 0, arc, 255, thickness, cv2.LINE_AA, PRECISION_BITS)
-		if include_dot:
-			draw_filled_circle_alpha(mask, draw_center, draw_radius(dot_radius))
-	draw_alpha_on(image, draw_arcs_and_dot)
-	arrows_image = filled_mip_image(base_size, 1, color)
-	draw_alpha_on(arrows_image, lambda mask: draw_poly_alpha(mask, draw_arrow_pointss))
-	return easy_mips(simple_overlay_image(image, arrows_image), multi_color_alpha_weighting=False)
 
 def gen_left_right_rotation_selector_image(base_size, mips, start_angle, arrow_center_x_radius_multiplier):
 	(radius, center, arrow_size) = get_rotation_selector_arc_values(base_size)
@@ -789,27 +784,18 @@ def gen_building_overlays(base_size):
 
 
 #Generate recipe icons
-def get_molecule_rotator_rotation_image(base_size, mips, is_outline):
-	(radius, center, arrow_size) = get_rotation_selector_arc_values(base_size)
-	if is_outline:
-		arrow_size += ROTATION_SELECTOR_OUTLINE_FRACTION * base_size * (1 + math.sqrt(2)) / 2
-	center_offset = base_size / -8
-	return gen_prepared_rotation_selector_image2(
-		base_size,
-		mips,
-		[(0, 90)],
-		[get_draw_arrow_points(center + radius + center_offset, center + center_offset, 0, arrow_size)],
-		is_outline,
-		ICON_OVERLAY_OUTLINE_COLOR if is_outline else MOLECULE_ROTATOR_ICON_COLOR,
-		include_dot=False,
-		center_offset=center_offset)
-
 def gen_molecule_rotator_image(base_size, mips, include_outline):
+	(radius, center_xy, arrow_size) = get_rotation_selector_arc_values(base_size)
+	center_xy += base_size / -8
+	thickness = int(ROTATION_SELECTOR_THICKNESS_FRACTION * base_size)
+	layers = [
+		("layer", {"size": base_size, "mips": mips, "color": MOLECULE_ROTATOR_ICON_COLOR}),
+		("arc", {"center": (center_xy, center_xy), "radius": radius, "arc": (0, 90), "thickness": thickness}),
+		("layer", {"size": base_size, "color": MOLECULE_ROTATOR_ICON_COLOR}),
+		("arrow", (center_xy + radius, center_xy, 0, arrow_size)),
+	]
 	image = gen_specific_molecule(base_size, mips, "H1-H-|1H|", include_outline)
-	simple_overlay_image(image, get_molecule_rotator_rotation_image(base_size, mips, False))
-	if include_outline:
-		return simple_overlay_image(get_molecule_rotator_rotation_image(base_size, mips, True), image)
-	return image
+	return gen_composite_image(layers, image, include_outline)
 
 def gen_molecule_sorter_image(base_size, mips, include_outline):
 	image = gen_specific_molecule(base_size, mips, "O--||H", include_outline)
