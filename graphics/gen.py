@@ -93,6 +93,10 @@ MOLECULE_DEBONDER_COLOR = (64, 64, 224, 0)
 MOLECULE_DEBONDER_LEFT_FRACTION = 16 / 64
 MOLECULE_DEBONDER_RIGHT_FRACTION = 32 / 64
 MOLECULE_DEBONDER_THICKNESS_FRACTION = 4 / 64
+MOLECULE_BONDER_NAME = "molecule-bonder"
+MOLECULE_BONDER_COLOR = (64, 160, 64, 0)
+MOLECULE_BONDER_TOP_FRACTION = 24 / 64
+MOLECULE_BONDER_BOTTOM_FRACTION = 40 / 64
 MOLECULE_VOIDER_NAME = "molecule-voider"
 MOLECULE_VOIDER_COLOR = (64, 64, 224, 0)
 MOLECULE_VOIDER_XY_FRACTION = 8 / 64
@@ -880,6 +884,22 @@ def gen_molecule_debonder_image(base_size, mips, include_outline):
 	]
 	return gen_composite_image(layers, image, include_outline)
 
+def gen_molecule_bonder_image(base_size, mips, include_outline):
+	image = gen_specific_molecule(base_size, mips, "-H|-H", include_outline)
+	left = MOLECULE_DEBONDER_LEFT_FRACTION * base_size
+	right = MOLECULE_DEBONDER_RIGHT_FRACTION * base_size
+	center_x = (left + right) * 0.5
+	top = MOLECULE_BONDER_TOP_FRACTION * base_size
+	bottom = MOLECULE_BONDER_BOTTOM_FRACTION * base_size
+	thickness = int(MOLECULE_DEBONDER_THICKNESS_FRACTION * base_size)
+	layers = [
+		("layer", {"size": base_size, "mips": mips, "color": MOLECULE_BONDER_COLOR}),
+		("line", {"start": (left, base_size / 2), "end": (right, base_size / 2), "thickness": thickness}),
+		("layer", {"size": base_size, "color": MOLECULE_BONDER_COLOR}),
+		("line", {"start": (center_x, top), "end": (center_x, bottom), "thickness": thickness}),
+	]
+	return gen_composite_image(layers, image, include_outline)
+
 def gen_molecule_voider_image(base_size, mips, include_outline):
 	image = gen_specific_molecule(base_size, mips, "N3-N", include_outline)
 	top_left = MOLECULE_VOIDER_XY_FRACTION * base_size
@@ -897,6 +917,7 @@ def iter_gen_all_building_recipe_icons(base_size, mips, include_outline):
 	yield (MOLECULE_ROTATOR_NAME, gen_molecule_rotator_image(base_size, mips, include_outline))
 	yield (MOLECULE_SORTER_NAME, gen_molecule_sorter_image(base_size, mips, include_outline))
 	yield (MOLECULE_DEBONDER_NAME, gen_molecule_debonder_image(base_size, mips, include_outline))
+	yield (MOLECULE_BONDER_NAME, gen_molecule_bonder_image(base_size, mips, include_outline))
 	yield (MOLECULE_VOIDER_NAME, gen_molecule_voider_image(base_size, mips, include_outline))
 
 def iter_gen_moleculify_recipe_icons(base_size, mips):
