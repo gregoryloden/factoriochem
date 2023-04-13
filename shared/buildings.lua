@@ -79,7 +79,11 @@ local function normalize_shape(shape)
 	for y = 1, height do
 		local new_shape_row = {}
 		local shape_row = shape[min_y + y - 1]
-		for x = 1, width do new_shape_row[x] = shape_row[min_x + x - 1] end
+		for x = 1, width do
+			local atom = shape_row[min_x + x - 1]
+			if atom then atom.x, atom.y = x, y end
+			new_shape_row[x] = atom
+		end
 		new_shape[y] = new_shape_row
 	end
 	return shape
