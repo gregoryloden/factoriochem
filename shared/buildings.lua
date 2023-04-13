@@ -74,7 +74,7 @@ local function normalize_shape(shape)
 	local width = max_x - min_x + 1
 	local height = max_y - min_y + 1
 	if width > MAX_GRID_WIDTH or height > MAX_GRID_HEIGHT then return nil end
-	if min_x == 1 and min_y == 1 then return shape end
+	if min_x == 1 and min_y == 1 then return shape, height, width end
 	local new_shape = {}
 	for y = 1, height do
 		local new_shape_row = {}
@@ -86,7 +86,7 @@ local function normalize_shape(shape)
 		end
 		new_shape[y] = new_shape_row
 	end
-	return shape, height, width
+	return new_shape, height, width
 end
 
 
