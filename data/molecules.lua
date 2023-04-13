@@ -127,7 +127,6 @@ end
 -- Molecule generation
 local current_atom_count = 0
 local current_max_single_bonds = 0
-local current_shape_n = 0
 local current_shape_icon = nil
 local current_shape_height = 0
 local current_shape_width = 0
@@ -547,15 +546,29 @@ for shape_n = 0, bit32.lshift(1, GRID_AREA) - 1 do
 			array_push(GRID, nil)
 		end
 	end
-	if current_atom_count > MAX_ATOMS then goto continue_shapes end
 
 	-- make sure all atoms are connected orthogonally
 	if not check_grid_connected(first_grid_i) then goto continue_shapes end
 
+	-- generate a complex molecule for this shape
+	local curtent_shape_s = string.format("%03X", shape_n)
+	data:extend({{
+		type = "armor",
+		name = COMPLEX_MOLECULE_ITEM_PREFIX..curtent_shape_s,
+		subgroup = COMPLEX_MOLECULES_SUBGROUP_NAME,
+		localised_name = {"item-name.complex-molecule"},
+		icon = SHAPE_ICON_ROOT..curtent_shape_s..".png",
+		icon_size = ITEM_ICON_SIZE,
+		icon_mipmaps = MOLECULE_ICON_MIPMAPS,
+		infinite = true,
+		stack_size = 1,
+	}})
+
+	-- don't generate a simple molecule if there are too many atoms
+	if current_atom_count > MAX_ATOMS then goto continue_shapes end
+
 	-- this is a valid shape, set the first bond depth and start searching for molecules
 	GRID[first_grid_i].bond_depth = 1
-	current_shape_n = shape_n
-	curtent_shape_s = string.format("%03X", current_shape_n)
 	current_shape_icon = {
 		icon = SHAPE_ICON_ROOT..curtent_shape_s..".png",
 		icon_size = ITEM_ICON_SIZE,
@@ -569,19 +582,6 @@ for shape_n = 0, bit32.lshift(1, GRID_AREA) - 1 do
 	local max_scale = math.max(current_shape_width, current_shape_height)
 	local min_scale = math.min(current_shape_width, current_shape_height)
 	gen_molecule_bonds(1, array_with_contents({first_grid_i}))
-
-	-- we also need to generate a complex molecule for this shape
-	data:extend({{
-		type = "armor",
-		name = COMPLEX_MOLECULE_ITEM_PREFIX..curtent_shape_s,
-		subgroup = COMPLEX_MOLECULES_SUBGROUP_NAME,
-		localised_name = {"item-name.complex-molecule"},
-		icon = SHAPE_ICON_ROOT..curtent_shape_s..".png",
-		icon_size = ITEM_ICON_SIZE,
-		icon_mipmaps = MOLECULE_ICON_MIPMAPS,
-		infinite = true,
-		stack_size = 1,
-	}})
 	::continue_shapes::
 end
 
