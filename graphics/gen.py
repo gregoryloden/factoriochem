@@ -886,13 +886,11 @@ def iter_gen_moleculify_recipe_icons(base_size, mips):
 	base_icons_folder = os.path.join(BASE_GRAPHICS_PATH, "icons")
 	base_fluid_icons_folder = os.path.join(base_icons_folder, "fluid")
 	image_pairs = [
-		(
-			"water",
-			gen_specific_molecule(base_size, mips, "-H|H1-1O"),
-			os.path.join(base_fluid_icons_folder, "water.png"),
-		),
+		("water", "-H|H1-1O", os.path.join(base_fluid_icons_folder, "water.png")),
+		("air", "N-O|3N-2O", os.path.join(base_fluid_icons_folder, "steam.png")),
 	]
-	for (name, moleculify_result_image, moleculify_source_image_path) in image_pairs:
+	for (name, moleculify_result_molecule, moleculify_source_image_path) in image_pairs:
+		moleculify_result_image = gen_specific_molecule(base_size, mips, moleculify_result_molecule)
 		moleculify_source_image = cv2.imread(moleculify_source_image_path, cv2.IMREAD_UNCHANGED)
 		image = filled_mip_image(base_size, mips)
 		#overlay the sub images at half-size at each mip level
