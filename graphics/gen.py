@@ -54,7 +54,7 @@ MAX_ATOMS_HCNO = 8
 MAX_ATOMS_Ne = 4
 MAX_ATOMS_Ar = 3
 MAX_ATOMS_OTHER = 2
-MAX_SINGLE_BONDS = 2
+MAX_SINGLE_BONDS = 3
 FONT = cv2.FONT_HERSHEY_SIMPLEX
 FONT_SCALE_FRACTIONS = [0, 1.25 / 64, 1 / 64]
 FONT_THICKNESS_FRACTION = 2 / 64
@@ -63,7 +63,7 @@ TEXT_COLOR = (0, 0, 0, 0)
 SHAPE_TEXT_COLOR = (255, 255, 255, 0)
 SHAPE_ATOM_CHARACTER = "+"
 BOND_COLOR = (0, 0, 0, 0)
-BOND_LENGTH_FRACTIONS = [0, 12 / 64, 12 / 64]
+BOND_LENGTH_FRACTIONS = [0, 12 / 64, 12 / 64, 16 / 64]
 BOND_THICKNESS_FRACTION = 6 / 64
 BOND_SPACING_FRACTION = 18 / 64
 ITEM_GROUP_SIZE = 128
@@ -422,39 +422,53 @@ def gen_all_atom_images(base_size, mips):
 
 #Generate bond images
 def gen_bond_images(base_size, mips, y_scale, x_scale, y, x):
-	#generate both L and U images at once
-	#L bond images will use the original values, U bond images will use the inverse
 	scale = max(x_scale, y_scale)
-	scale_center_y_min = 0.5 * (1 + scale - y_scale)
-	scale_center_x_min = 0.5 * (1 + scale - x_scale)
-	center_y = base_size * (y + scale_center_y_min) / scale
-	center_x = base_size * (x + scale_center_x_min - 0.5) / scale
-	images = {"L": {}, "U": {}}
-	for bond_count in range(1, 3):
-		half_bond_length = BOND_LENGTH_FRACTIONS[bond_count] * base_size / scale * 0.5
-		l = filled_mip_image(base_size, mips, BOND_COLOR)
-		u = filled_mip_image(base_size, mips, BOND_COLOR)
-		bond_spacing = BOND_SPACING_FRACTION * base_size / scale
-		center_y_min = center_y - bond_spacing * (bond_count - 1) / 2
-		for bond in range(bond_count):
-			bond_y = center_y_min + bond * bond_spacing
-			draw_start = draw_coords_from(center_x - half_bond_length, bond_y)
-			draw_end = draw_coords_from(center_x + half_bond_length, bond_y)
-			bond_thickness = int(BOND_THICKNESS_FRACTION * base_size / scale)
-			def draw_bond(mask):
-				cv2.line(mask, draw_start, draw_end, 255, bond_thickness, cv2.LINE_AA, PRECISION_BITS)
-			draw_alpha_on(l, draw_bond)
-			draw_start = draw_start[::-1]
-			draw_end = draw_end[::-1]
-			draw_alpha_on(u, draw_bond)
-		images["L"][bond_count] = easy_mips(l, multi_color_alpha_weighting=False)
-		images["U"][bond_count] = easy_mips(u, multi_color_alpha_weighting=False)
+	center_x = base_size * (x + 0.5 * (1 + scale - x_scale)) / scale
+	center_y = base_size * (y + 0.5 * (1 + scale - y_scale)) / scale
+	bond_thickness = int(BOND_THICKNESS_FRACTION * base_size / scale)
+	bond_spacing = BOND_SPACING_FRACTION * base_size / scale
+	direction_data = [
+		("L", {"center": (center_x - base_size * 0.5 / scale, center_y), "orientation": "H", "bonds": [1, 2]}),
+		("R", {"center": (center_x + base_size * 0.5 / scale, center_y), "orientation": "H", "bonds": [3]}),
+		("U", {"center": (center_x, center_y - base_size * 0.5 / scale), "orientation": "V", "bonds": [1, 2]}),
+		("D", {"center": (center_x, center_y + base_size * 0.5 / scale), "orientation": "V", "bonds": [3]}),
+	]
+	images = {}
+	for (direction, data) in direction_data:
+		if (direction == "L" and x == 0 or direction == "R" and x == x_scale - 1) \
+				or (direction == "U" and y == 0 or direction == "D" and y == y_scale - 1):
+			continue
+		images[direction] = {}
+		for bonds in data["bonds"]:
+			half_bond_length = BOND_LENGTH_FRACTIONS[bonds] * base_size / scale * 0.5
+			image = filled_mip_image(base_size, mips, BOND_COLOR)
+			(center_x, center_y) = data["center"]
+			bond_xy_min_offset = bond_spacing * (1 - bonds) * 0.5
+			for bond in range(bonds):
+				#triple bonds render 1 bond in front of the atoms and 2 behind
+				if bonds == 3 and bond == 1:
+					continue
+				bond_xy_offset = bond_xy_min_offset + bond * bond_spacing
+				if data["orientation"] == "H":
+					bond_y = center_y + bond_xy_offset
+					draw_start = draw_coords_from(center_x - half_bond_length, bond_y)
+					draw_end = draw_coords_from(center_x + half_bond_length, bond_y)
+				else:
+					bond_x = center_x + bond_xy_offset
+					draw_start = draw_coords_from(bond_x, center_y - half_bond_length)
+					draw_end = draw_coords_from(bond_x, center_y + half_bond_length)
+				def draw_bond(mask):
+					cv2.line(mask, draw_start, draw_end, 255, bond_thickness, cv2.LINE_AA, PRECISION_BITS)
+				draw_alpha_on(image, draw_bond)
+			images[direction][bonds] = easy_mips(image, multi_color_alpha_weighting=False)
 	return images
 
-def iter_bond_images(bond_images, name_specs):
+def iter_bond_images(bond_images, name_spec, min_atoms):
 	for (direction, direction_bond_images) in bond_images.items():
 		for (bonds, image) in direction_bond_images.items():
-			yield (f"{direction}{name_specs[direction]}{bonds}", image)
+			if bonds > 2 and min_atoms > MAX_ATOMS_Ne:
+				continue
+			yield (f"{direction}{name_spec}{bonds}", image)
 
 def gen_all_bond_images(base_size, mips):
 	bonds_folder = "bonds"
@@ -462,16 +476,12 @@ def gen_all_bond_images(base_size, mips):
 		os.mkdir(bonds_folder)
 	for y_scale in range(1, MAX_GRID_HEIGHT + 1):
 		for x_scale in range(1, MAX_GRID_WIDTH + 1):
+			min_atoms = y_scale + x_scale - 1
 			for y in range(y_scale):
 				for x in range(x_scale):
-					#L and U images are identical only with X and Y swapped, so do them at the same time
-					#generate "left" bonds: generate a bond only if x >= 1
-					if x == 0:
-						continue
-					#file names represent left and up bonds for an atom with the same number set
-					name_specs = {"L": f"{y_scale}{x_scale}{y}{x}", "U":f"{x_scale}{y_scale}{x}{y}"}
+					name_spec = f"{y_scale}{x_scale}{y}{x}"
 					bond_images = gen_bond_images(base_size, mips, y_scale, x_scale, y, x)
-					write_images(bonds_folder, iter_bond_images(bond_images, name_specs))
+					write_images(bonds_folder, iter_bond_images(bond_images, name_spec, min_atoms))
 	print("Bond images written")
 
 
@@ -485,7 +495,8 @@ def gen_single_atom_outline_image(base_size, mips, y_scale, x_scale, y, x):
 	return image
 
 def gen_specific_molecule(base_size, mips, molecule, include_outline = False):
-	image = filled_mip_image(base_size, mips)
+	image_back = filled_mip_image(base_size, mips)
+	image_front = filled_mip_image(base_size, mips)
 	shape = [row.split("-") for row in molecule.split("|")]
 	bonds = {"H": 1, "C": 4, "N": 3, "O": 2, "He": 0}
 	y_scale = len(shape)
@@ -506,18 +517,26 @@ def gen_specific_molecule(base_size, mips, molecule, include_outline = False):
 				right_bonds = int(symbol[-1])
 				symbol = symbol[:-1]
 			if include_outline:
-				image = simple_overlay_image(
-					gen_single_atom_outline_image(base_size, mips, y_scale, x_scale, y, x), image)
-			simple_overlay_image(
-				image, gen_single_atom_image(base_size, mips, symbol, bonds[symbol], y_scale, x_scale, y, x))
+				simple_overlay_image(
+					image_back, gen_single_atom_outline_image(base_size, mips, y_scale, x_scale, y, x))
+			atom_image = gen_single_atom_image(base_size, mips, symbol, bonds[symbol], y_scale, x_scale, y, x)
+			simple_overlay_image(image_front, atom_image)
 			if left_bonds > 0:
+				if left_bonds == 3:
+					right_bond_images = gen_bond_images(base_size, mips, y_scale, x_scale, y, x - 1)["R"]
+					simple_overlay_image(image_back, right_bond_images[3])
+					left_bonds -= 2
 				simple_overlay_image(
-					image, gen_bond_images(base_size, mips, y_scale, x_scale, y, x)["L"][left_bonds])
+					image_front, gen_bond_images(base_size, mips, y_scale, x_scale, y, x)["L"][left_bonds])
 			if up_bonds > 0:
+				if up_bonds == 3:
+					down_bond_images = gen_bond_images(base_size, mips, y_scale, x_scale, y - 1, x)["D"]
+					simple_overlay_image(image_back, down_bond_images[3])
+					up_bonds -= 2
 				simple_overlay_image(
-					image, gen_bond_images(base_size, mips, x_scale, y_scale, x, y)["U"][up_bonds])
+					image_front, gen_bond_images(base_size, mips, y_scale, x_scale, y, x)["U"][up_bonds])
 			left_bonds = right_bonds
-	return image
+	return simple_overlay_image(image_back, image_front)
 
 def gen_item_group_icon(base_size, mips):
 	imwrite("item-group.png", gen_specific_molecule(base_size, mips, "O1-C2-N|1N1-1O-1H|1H"))
@@ -834,7 +853,7 @@ def gen_molecule_sorter_image(base_size, mips, include_outline):
 	return gen_composite_image(layers, image, include_outline)
 
 def gen_molecule_voider_image(base_size, mips, include_outline):
-	image = gen_specific_molecule(base_size, mips, "N2-N", include_outline)
+	image = gen_specific_molecule(base_size, mips, "N3-N", include_outline)
 	top_left = MOLECULE_VOIDER_X_XY_FRACTION * base_size
 	bottom_right = base_size - top_left
 	thickness = int(MOLECULE_VOIDER_X_THICKNESS_FRACTION * base_size)
