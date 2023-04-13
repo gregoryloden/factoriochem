@@ -153,10 +153,10 @@ BUILDING_DEFINITIONS = {
 		reactants = {BASE_NAME},
 		products = {RESULT_NAME},
 		-- control fields
-		selectors = {[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME, [MODIFIER_NAME] = ROTATION_SELECTOR_NAME},
+		selectors = {[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME, [CATALYST_NAME] = ROTATION_SELECTOR_NAME},
 		reaction = function(reaction)
 			local molecule = reaction.reactants[BASE_NAME]
-			local rotation = reaction.selectors[MODIFIER_NAME]
+			local rotation = reaction.selectors[CATALYST_NAME]
 			if not molecule or not rotation then return false end
 
 			local shape, height, width = parse_molecule(molecule)
