@@ -170,9 +170,10 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 		return {
 			type = "table",
 			name = name_prefix.."table",
-			column_count = 5,
+			column_count = 6,
 			children = {
 				-- title row
+				{type = "empty-widget"},
 				{type = "empty-widget"},
 				{type = "empty-widget"},
 				{type = "label", caption = {"factoriochem."..name_prefix.."table-header"}},
@@ -182,11 +183,13 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 				build_indicator_spec(BASE_NAME),
 				build_molecule_spec(name_prefix, BASE_NAME),
 				build_selector_spec(name_prefix, BASE_NAME),
+				{type = "empty-widget"},
 				build_molecule_spec(name_prefix, RESULT_NAME),
 				build_indicator_spec(RESULT_NAME),
 				-- catalyst/byproduct row
 				build_indicator_spec(CATALYST_NAME),
 				build_molecule_spec(name_prefix, CATALYST_NAME),
+				build_selector_spec(name_prefix, CATALYST_NAME),
 				{type = "label", caption = {"factoriochem.reaction-transition"}},
 				build_molecule_spec(name_prefix, BYPRODUCT_NAME),
 				build_indicator_spec(BYPRODUCT_NAME),
@@ -194,6 +197,7 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 				build_indicator_spec(MODIFIER_NAME),
 				build_molecule_spec(name_prefix, MODIFIER_NAME),
 				build_selector_spec(name_prefix, MODIFIER_NAME),
+				{type = "empty-widget"},
 				build_molecule_spec(name_prefix, REMAINDER_NAME),
 				build_indicator_spec(REMAINDER_NAME),
 			},
