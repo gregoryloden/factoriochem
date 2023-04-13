@@ -26,13 +26,13 @@ end
 
 local function get_target(center_x, center_y, direction)
 	if direction == "E" then
-		return (center_x + 1, center_y)
+		return center_x + 1, center_y
 	elseif direction == "S" then
-		return (center_x, center_y + 1)
+		return center_x, center_y + 1
 	elseif direction == "W" then
-		return (center_x - 1, center_y)
+		return center_x - 1, center_y
 	else
-		return (center_x, center_y - 1)
+		return center_x, center_y - 1
 	end
 end
 
