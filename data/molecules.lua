@@ -41,7 +41,8 @@ local MAX_ATOMS_OTHER = 2
 local GRID = empty_array()
 local MAX_GRID_WIDTH_M1 = MAX_GRID_WIDTH - 1
 local MAX_GRID_HEIGHT_M1 = MAX_GRID_HEIGHT - 1
-local MAX_SINGLE_BONDS = 2
+local MAX_SINGLE_BONDS_HCNO = 2
+local MAX_SINGLE_BONDS_Ne = 3
 local MOLECULE_BUILDER = empty_array()
 local MOLECULE_DISPLAY_COUNTER = {}
 local MOLECULE_DISPLAY_BUILDER = empty_array()
@@ -125,6 +126,7 @@ end
 
 -- Molecule generation
 local current_atom_count = 0
+local current_max_single_bonds = 0
 local current_shape_n = 0
 local current_shape_icon = nil
 local current_shape_height = 0
@@ -146,6 +148,7 @@ local function gen_molecules(grid_i_i, grid_is)
 			slot.atom = atom
 			gen_molecules(grid_i_i + 1, grid_is)
 		end
+		return
 	elseif current_atom_count == 1 then
 		local slot = GRID[1]
 		local atom_number_hex = string.format("%02X", slot.atom.number)
@@ -161,7 +164,6 @@ local function gen_molecules(grid_i_i, grid_is)
 			icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 			stack_size = 1,
 		}})
-		total_molecules = total_molecules + 1
 	else
 		array_clear(MOLECULE_BUILDER)
 		local icons = {current_shape_icon}
@@ -185,6 +187,24 @@ local function gen_molecules(grid_i_i, grid_is)
 				local atom = slot.atom
 				local symbol = atom.symbol
 				local name_spec = current_shape_height..current_shape_width..row..col
+				if slot.right_bonds == 3 then
+					table.insert(
+						icons,
+						{
+							icon = BOND_ICON_ROOT.."R"..name_spec.."3.png",
+							icon_size = ITEM_ICON_SIZE,
+							icon_mipmaps = MOLECULE_ICON_MIPMAPS,
+						})
+				end
+				if slot.down_bonds == 3 then
+					table.insert(
+						icons,
+						{
+							icon = BOND_ICON_ROOT.."D"..name_spec.."3.png",
+							icon_size = ITEM_ICON_SIZE,
+							icon_mipmaps = MOLECULE_ICON_MIPMAPS,
+						})
+				end
 				table.insert(
 					icons,
 					{
@@ -192,23 +212,27 @@ local function gen_molecules(grid_i_i, grid_is)
 						icon_size = ITEM_ICON_SIZE,
 						icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 					})
+				local up_bonds = slot.up_bonds
 				if slot.up_bonds > 0 then
-					array_push(MOLECULE_BUILDER, slot.up_bonds)
+					if up_bonds == 3 then up_bonds = 1 end
+					array_push(MOLECULE_BUILDER, up_bonds)
 					table.insert(
 						icons,
 						{
-							icon = BOND_ICON_ROOT.."U"..name_spec..slot.up_bonds..".png",
+							icon = BOND_ICON_ROOT.."U"..name_spec..up_bonds..".png",
 							icon_size = ITEM_ICON_SIZE,
 							icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 						})
 				end
 				array_push(MOLECULE_BUILDER, symbol)
 				if slot.right_bonds > 0 then array_push(MOLECULE_BUILDER, slot.right_bonds) end
-				if slot.left_bonds > 0 then
+				local left_bonds = slot.left_bonds
+				if left_bonds > 0 then
+					if left_bonds == 3 then left_bonds = 1 end
 					table.insert(
 						icons,
 						{
-							icon = BOND_ICON_ROOT.."L"..name_spec..slot.left_bonds..".png",
+							icon = BOND_ICON_ROOT.."L"..name_spec..left_bonds..".png",
 							icon_size = ITEM_ICON_SIZE,
 							icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 						})
@@ -268,8 +292,8 @@ local function gen_molecules(grid_i_i, grid_is)
 			stack_size = 1,
 			flags = {"hidden"},
 		}})
-		total_molecules = total_molecules + 1
 	end
+	total_molecules = total_molecules + 1
 end
 
 local function gen_molecule_bonds(grid_i_i, grid_is)
@@ -292,7 +316,7 @@ local function gen_molecule_bonds(grid_i_i, grid_is)
 	end
 
 	-- calculate the max bonds per direction
-	local single_bonds_max = math.min(MAX_SINGLE_BONDS, new_bonds_max)
+	local single_bonds_max = math.min(current_max_single_bonds, new_bonds_max)
 	local bond_depth_p1 = slot.bond_depth + 1
 	local grid_0_i = grid_i - 1
 	local left_bonds_max = 0
@@ -537,6 +561,11 @@ for shape_n = 0, bit32.lshift(1, GRID_AREA) - 1 do
 		icon_size = ITEM_ICON_SIZE,
 		icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 	}
+	if current_atom_count <= MAX_ATOMS_Ne then
+		current_max_single_bonds = MAX_SINGLE_BONDS_Ne
+	else
+		current_max_single_bonds = MAX_SINGLE_BONDS_HCNO
+	end
 	local max_scale = math.max(current_shape_width, current_shape_height)
 	local min_scale = math.min(current_shape_width, current_shape_height)
 	gen_molecule_bonds(1, array_with_contents({first_grid_i}))
