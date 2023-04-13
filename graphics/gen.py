@@ -812,7 +812,7 @@ def iter_gen_component_overlays(base_size, suffix):
 		("catalyst", (160, 224, 160, 0), loader_input_poly_points),
 		("modifier", (224, 160, 160, 0), loader_input_poly_points),
 		("result", (224, 224, 160, 0), loader_output_poly_points),
-		("bonus", (224, 160, 224, 0), loader_output_poly_points),
+		("byproduct", (224, 160, 224, 0), loader_output_poly_points),
 		("remainder", (160, 224, 224, 0), loader_output_poly_points),
 	]
 	for (component, color, loader_poly_points) in overlays:
