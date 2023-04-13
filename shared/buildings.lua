@@ -258,14 +258,10 @@ BUILDING_DEFINITIONS = {
 		building_design = {"assembling-machine", "assembling-machine-2"},
 		item_order = "d",
 		-- data and control fields
-		reactants = {BASE_NAME, CATALYST_NAME, MODIFIER_NAME},
+		reactants = {BASE_NAME},
 		products = {RESULT_NAME, BYPRODUCT_NAME, REMAINDER_NAME},
 		-- control fields
-		selectors = {
-			[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME,
-			[CATALYST_NAME] = ATOM_SELECTOR_NAME,
-			[MODIFIER_NAME] = ATOM_SELECTOR_NAME,
-		},
+		selectors = {[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME, [CATALYST_NAME] = ATOM_SELECTOR_NAME},
 		reaction = function(reaction)
 			-- check that the base reaction is valid
 			local molecule = reaction.reactants[BASE_NAME]
@@ -282,19 +278,9 @@ BUILDING_DEFINITIONS = {
 			local bonds = get_bonds(source, direction)
 			if not bonds then return false end
 
-			-- check that fusion/fission options don't conflict
-			local source_fusion_catalyst = reaction.reactants[CATALYST_NAME]
-			local source_fission_byproduct = reaction.selectors[CATALYST_NAME]
-			local target_fusion_catalyst = reaction.reactants[MODIFIER_NAME]
-			local target_fission_byproduct = reaction.selectors[MODIFIER_NAME]
-			if source_fusion_catalyst and source_fission_byproduct
-					or source_fission_byproduct and target_fission_byproduct
-					or target_fusion_catalyst and target_fission_byproduct then
-				return false
-			end
-
 			-- at this point, the reaction is valid to start looking at, but might end up not being valid depending
 			--	on bonds or atomic numbers
+			local byproduct = reaction.selectors[CATALYST_NAME]
 			local target_x, target_y = get_target(center_x, center_y, direction)
 			local target = shape[target_y][target_x]
 
@@ -326,41 +312,18 @@ BUILDING_DEFINITIONS = {
 				set_bonds(source, target, direction, bonds - 1)
 			end
 
-			-- modify source/target with fusion/fission options
-			if source_fusion_catalyst then
-				local atom_shape, atom_height, atom_width = parse_molecule(source_fusion_catalyst)
-				if atom_height ~= 1 or atom_width ~= 1 then return false end
-				fusion_atom = atom_shape[1][1]
-				new_atom = ALL_ATOMS[ALL_ATOMS[source.symbol].number + ALL_ATOMS[fusion_atom.symbol].number]
-				source.symbol = new_atom.symbol
-			end
-			if target_fusion_catalyst then
-				local atom_shape, atom_height, atom_width = parse_molecule(target_fusion_catalyst)
-				if atom_height ~= 1 or atom_width ~= 1 then return false end
-				fusion_atom = atom_shape[1][1]
-				new_atom = ALL_ATOMS[ALL_ATOMS[target.symbol].number + ALL_ATOMS[fusion_atom.symbol].number]
-				target.symbol = new_atom.symbol
-			end
-			if source_fission_byproduct then
-				local atom_shape, atom_height, atom_width = parse_molecule(source_fission_byproduct)
+			-- modify source with fission if specified
+			if byproduct then
+				local atom_shape, _, _ = parse_molecule(byproduct)
 				fission_atom = atom_shape[1][1]
 				new_atom = ALL_ATOMS[ALL_ATOMS[source.symbol].number - ALL_ATOMS[fission_atom.symbol].number]
 				if not new_atom then return false end
 				source.symbol = new_atom.symbol
 			end
-			if target_fission_byproduct then
-				local atom_shape, atom_height, atom_width = parse_molecule(target_fission_byproduct)
-				fission_atom = atom_shape[1][1]
-				new_atom = ALL_ATOMS[ALL_ATOMS[target.symbol].number - ALL_ATOMS[fission_atom.symbol].number]
-				if not new_atom then return false end
-				target.symbol = new_atom.symbol
-			end
 
-			-- check that each atom's bonds exactly match its bonds count
+			-- check that the source's bonds exactly match its bonds count
 			local source_bonds = (source.left or 0) + (source.up or 0) + (source.right or 0) + (source.down or 0)
 			if source_bonds > 0 and source_bonds ~= ALL_ATOMS[source.symbol].bonds then return false end
-			local target_bonds = (target.left or 0) + (target.up or 0) + (target.right or 0) + (target.down or 0)
-			if target_bonds > 0 and target_bonds ~= ALL_ATOMS[target.symbol].bonds then return false end
 
 			-- we've finally done everything, reassemble the molecule(s) and deliver any fission results
 			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
@@ -368,7 +331,7 @@ BUILDING_DEFINITIONS = {
 				reaction.products[REMAINDER_NAME] =
 					assemble_molecule(remainder_shape, remainder_height, remainder_width)
 			end
-			reaction.products[BYPRODUCT_NAME] = source_fission_byproduct or target_fission_byproduct
+			reaction.products[BYPRODUCT_NAME] = byproduct
 			return true
 		end,
 	},
