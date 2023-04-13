@@ -106,6 +106,7 @@ function parse_molecule(molecule)
 end
 
 function assemble_molecule(shape, height, width)
+	if height == 1 and width == 1 then return ATOM_ITEM_PREFIX..shape[1][1].symbol end
 	local builder = {MOLECULE_ITEM_PREFIX}
 	for y = 1, height do
 		shape_row = shape[y]

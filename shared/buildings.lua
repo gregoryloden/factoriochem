@@ -36,6 +36,30 @@ local function get_target(center_x, center_y, direction)
 	end
 end
 
+local function get_bonds(atom, direction)
+	if direction == "E" then
+		return atom.right
+	elseif direction == "S" then
+		return atom.down
+	elseif direction == "W" then
+		return atom.left
+	else
+		return atom.up
+	end
+end
+
+local function set_bonds(source, target, direction, bonds)
+	if direction == "E" then
+		source.right, target.left = bonds, bonds
+	elseif direction == "S" then
+		source.down, target.up = bonds, bonds
+	elseif direction == "W" then
+		source.left, target.right = bonds, bonds
+	else
+		source.up, target.down = bonds, bonds
+	end
+end
+
 local function extract_connected_atoms(shape, start_x, start_y)
 	-- make sure we actually have an atom at the starting position
 	local atom = shape[start_y][start_x]
@@ -243,7 +267,109 @@ BUILDING_DEFINITIONS = {
 			[MODIFIER_NAME] = ATOM_SELECTOR_NAME,
 		},
 		reaction = function(reaction)
-			return false
+			-- check that the base reaction is valid
+			local molecule = reaction.reactants[BASE_NAME]
+			local atom_bond = reaction.selectors[BASE_NAME]
+			if not molecule or not atom_bond then return false end
+
+			local shape, height, width = parse_molecule(molecule)
+			local y_scale, x_scale, center_y, center_x, direction = parse_atom_bond(atom_bond)
+			if y_scale ~= height or x_scale ~= width then return false end
+
+			local source = shape[center_y][center_x]
+			if not source then return false end
+
+			local bonds = get_bonds(source, direction)
+			if not bonds then return false end
+
+			-- check that fusion/fission options don't conflict
+			local source_fusion_catalyst = reaction.reactants[CATALYST_NAME]
+			local source_fission_byproduct = reaction.selectors[CATALYST_NAME]
+			local target_fusion_catalyst = reaction.reactants[MODIFIER_NAME]
+			local target_fission_byproduct = reaction.selectors[MODIFIER_NAME]
+			if source_fusion_catalyst and source_fission_byproduct
+					or source_fission_byproduct and target_fission_byproduct
+					or target_fusion_catalyst and target_fission_byproduct then
+				return false
+			end
+
+			-- at this point, the reaction is valid to start looking at, but might end up not being valid depending
+			--	on bonds or atomic numbers
+			local target_x, target_y = get_target(center_x, center_y, direction)
+			local target = shape[target_y][target_x]
+
+			-- if we removed the last bond, check to see if it was disconnected
+			local remainder_shape, remainder_width, remainder_height
+			if bonds == 1 then
+				set_bonds(source, target, direction, nil)
+				extracted_atoms = extract_connected_atoms(shape, target_x, target_y)
+				local split_molecule = false
+				for _, shape_row in pairs(shape) do
+					for _, _ in pairs(shape_row) do
+						split_molecule = true
+						goto break_split_molecule
+					end
+				end
+				::break_split_molecule::
+				if split_molecule then
+					-- generate a new molecule with the extracted atoms, then normalize both shapes
+					remainder_shape = gen_grid(height)
+					for _, atom in ipairs(extracted_atoms) do remainder_shape[atom.y][atom.x] = atom end
+					shape, height, width = normalize_shape(shape)
+					remainder_shape, remainder_width, remainder_height = normalize_shape(remainder_shape)
+				else
+					-- no split, restore all the atoms to the original shape
+					for _, atom in ipairs(extracted_atoms) do shape[atom.y][atom.x] = atom end
+				end
+			-- we didn't remove the last bond, the molecule is still connected
+			else
+				set_bonds(source, target, direction, bonds - 1)
+			end
+
+			-- modify source/target with fusion/fission options
+			if source_fusion_catalyst then
+				local atom_shape, atom_height, atom_width = parse_molecule(source_fusion_catalyst)
+				if atom_height ~= 1 or atom_width ~= 1 then return false end
+				fusion_atom = atom_shape[1][1]
+				new_atom = ALL_ATOMS[ALL_ATOMS[source.symbol].number + ALL_ATOMS[fusion_atom.symbol].number]
+				source.symbol = new_atom.symbol
+			end
+			if target_fusion_catalyst then
+				local atom_shape, atom_height, atom_width = parse_molecule(target_fusion_catalyst)
+				if atom_height ~= 1 or atom_width ~= 1 then return false end
+				fusion_atom = atom_shape[1][1]
+				new_atom = ALL_ATOMS[ALL_ATOMS[target.symbol].number + ALL_ATOMS[fusion_atom.symbol].number]
+				target.symbol = new_atom.symbol
+			end
+			if source_fission_byproduct then
+				local atom_shape, atom_height, atom_width = parse_molecule(source_fission_byproduct)
+				fission_atom = atom_shape[1][1]
+				new_atom = ALL_ATOMS[ALL_ATOMS[source.symbol].number - ALL_ATOMS[fission_atom.symbol].number]
+				if not new_atom then return false end
+				source.symbol = new_atom.symbol
+			end
+			if target_fission_byproduct then
+				local atom_shape, atom_height, atom_width = parse_molecule(target_fission_byproduct)
+				fission_atom = atom_shape[1][1]
+				new_atom = ALL_ATOMS[ALL_ATOMS[target.symbol].number - ALL_ATOMS[fission_atom.symbol].number]
+				if not new_atom then return false end
+				target.symbol = new_atom.symbol
+			end
+
+			-- check that each atom's bonds exactly match its bonds count
+			local source_bonds = (source.left or 0) + (source.up or 0) + (source.right or 0) + (source.down or 0)
+			if source_bonds > 0 and source_bonds ~= ALL_ATOMS[source.symbol].bonds then return false end
+			local target_bonds = (target.left or 0) + (target.up or 0) + (target.right or 0) + (target.down or 0)
+			if target_bonds > 0 and target_bonds ~= ALL_ATOMS[target.symbol].bonds then return false end
+
+			-- we've finally done everything, reassemble the molecule(s) and deliver any fission results
+			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
+			if remainder_shape then
+				reaction.products[REMAINDER_NAME] =
+					assemble_molecule(remainder_shape, remainder_height, remainder_width)
+			end
+			reaction.products[BYPRODUCT_NAME] = source_fission_byproduct or target_fission_byproduct
+			return true
 		end,
 	},
 	["molecule-voider"] = {
