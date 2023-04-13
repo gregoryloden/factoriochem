@@ -214,8 +214,8 @@ local function gen_molecules(grid_i_i, grid_is)
 					})
 				local up_bonds = slot.up_bonds
 				if slot.up_bonds > 0 then
-					if up_bonds == 3 then up_bonds = 1 end
 					array_push(MOLECULE_BUILDER, up_bonds)
+					if up_bonds == 3 then up_bonds = 1 end
 					table.insert(
 						icons,
 						{
