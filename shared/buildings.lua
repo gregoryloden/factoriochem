@@ -86,7 +86,7 @@ local function normalize_shape(shape)
 		end
 		new_shape[y] = new_shape_row
 	end
-	return shape
+	return shape, height, width
 end
 
 
@@ -220,7 +220,7 @@ BUILDING_DEFINITIONS = {
 				if center_down_atom then center_atom.down = center_down_atom.up end
 
 				-- normalize the positions of all the atoms, if needed
-				shape = normalize_shape(shape)
+				shape, height, width = normalize_shape(shape)
 				if not shape then return false end
 			end
 
