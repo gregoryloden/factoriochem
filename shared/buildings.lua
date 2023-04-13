@@ -61,6 +61,30 @@ local function extract_connected_atoms(shape, start_x, start_y)
 	return atoms
 end
 
+local function normalize_shape(shape)
+	local min_x, max_x, min_y, max_y
+	for y, shape_row in pairs(shape) do
+		for x, atom in pairs(shape_row) do
+			if not min_x or x < min_x then min_x = x end
+			if not max_x or x > max_x then max_x = x end
+			if not min_y or y < min_y then min_y = y end
+			if not max_y or y > max_y then max_y = y end
+		end
+	end
+	local width = max_x - min_x + 1
+	local height = max_y - min_y + 1
+	if width > MAX_GRID_WIDTH or height > MAX_GRID_HEIGHT then return nil end
+	if min_x == 1 and min_y == 1 then return shape end
+	local new_shape = {}
+	for y = 1, height do
+		local new_shape_row = {}
+		local shape_row = shape[min_y + y - 1]
+		for x = 1, width do new_shape_row[x] = shape_row[min_x + x - 1] end
+		new_shape[y] = new_shape_row
+	end
+	return shape
+end
+
 
 -- Building definitions
 BUILDING_DEFINITIONS = {
@@ -192,28 +216,8 @@ BUILDING_DEFINITIONS = {
 				if center_down_atom then center_atom.down = center_down_atom.up end
 
 				-- normalize the positions of all the atoms, if needed
-				local min_x, max_x, min_y, max_y = center_x, center_x, center_y, center_y
-				for y, shape_row in pairs(shape) do
-					for x, atom in pairs(shape_row) do
-						if x < min_x then min_x = x end
-						if x > max_x then max_x = x end
-						if y < min_y then min_y = y end
-						if y > max_y then max_y = y end
-					end
-				end
-				width = max_x - min_x + 1
-				height = max_y - min_y + 1
-				if width > MAX_GRID_WIDTH or height > MAX_GRID_HEIGHT then return false end
-				if min_x ~= 1 or min_y ~= 1 then
-					local new_shape = {}
-					for y = 1, height do
-						local new_shape_row = {}
-						local shape_row = shape[min_y + y - 1]
-						for x = 1, width do new_shape_row[x] = shape_row[min_x + x - 1] end
-						new_shape[y] = new_shape_row
-					end
-					shape = new_shape
-				end
+				shape = normalize_shape(shape)
+				if not shape then return false end
 			end
 
 			-- and now, finally, we can reassemble the molecule and produce it
