@@ -305,3 +305,28 @@ detector_output.activity_led_light_offsets = {{0, 0}, {0, 0}, {0, 0}, {0, 0}}
 detector_output.circuit_wire_connection_points = table.deepcopy(arithmetic_combinator.output_connection_points)
 
 data:extend({detector_output})
+
+
+-- Incidator sprites for molecule reaction buildings
+for _, component in ipairs(MOLECULE_REACTION_COMPONENT_NAMES) do
+	x = 32
+	if not MOLECULE_REACTION_IS_REACTANT[component] then x = 72 end
+	data:extend({{
+		type = "sprite",
+		name = MOLECULE_INDICATOR_PREFIX..component,
+		filename = GRAPHICS_ROOT.."building-overlays/"..component..".png",
+		width = 16,
+		height = 32,
+		x = x,
+		y = 0,
+		priority = "high",
+		hr_version = {
+			filename = GRAPHICS_ROOT.."building-overlays/"..component.."-hr.png",
+			width = 32,
+			height = 64,
+			x = x * 2,
+			y = 0,
+			priority = "high",
+		},
+	}})
+end

@@ -114,7 +114,7 @@ end
 -- Molecule reaction building GUI construction
 local function build_molecule_reaction_gui(entity, gui, building_definition)
 	local demo_state = get_demo_state(entity.name)
-	function build_molecule_spec(name_prefix, component_name, is_reactant)
+	function build_molecule_spec(name_prefix, component_name)
 		if not building_definition.has_component[component_name] then return {type = "empty-widget"} end
 		local spec = {
 			type = "sprite-button",
@@ -125,7 +125,7 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 		if name_prefix == REACTION_PREFIX then
 			spec.tooltip = {"factoriochem.reaction-table-component-tooltip", spec.tooltip}
 		elseif name_prefix == REACTION_DEMO_PREFIX then
-			if is_reactant then
+			if MOLECULE_REACTION_IS_REACTANT[component_name] then
 				spec.tooltip = {"factoriochem.reaction-demo-table-reactant-tooltip", spec.tooltip}
 				if demo_state.reactants[component_name] then
 					spec.sprite = "item/"..demo_state.reactants[component_name]
@@ -162,28 +162,40 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 		end
 		return spec
 	end
+	function build_indicator_spec(component_name)
+		if not building_definition.has_component[component_name] then return {type = "empty-widget"} end
+		return {type = "sprite", sprite = MOLECULE_INDICATOR_PREFIX..component_name}
+	end
 	function build_reaction_table_spec(name_prefix)
 		return {
 			type = "table",
 			name = name_prefix.."table",
-			column_count = 3,
+			column_count = 5,
 			children = {
 				-- title row
 				{type = "empty-widget"},
+				{type = "empty-widget"},
 				{type = "label", caption = {"factoriochem."..name_prefix.."table-header"}},
 				{type = "empty-widget"},
+				{type = "empty-widget"},
 				-- base/result row
-				build_molecule_spec(name_prefix, BASE_NAME, true),
+				build_indicator_spec(BASE_NAME),
+				build_molecule_spec(name_prefix, BASE_NAME),
 				build_selector_spec(name_prefix, BASE_NAME),
 				build_molecule_spec(name_prefix, RESULT_NAME),
+				build_indicator_spec(RESULT_NAME),
 				-- catalyst/bonus row
-				build_molecule_spec(name_prefix, CATALYST_NAME, true),
+				build_indicator_spec(CATALYST_NAME),
+				build_molecule_spec(name_prefix, CATALYST_NAME),
 				{type = "label", caption = {"factoriochem.reaction-transition"}},
 				build_molecule_spec(name_prefix, BONUS_NAME),
+				build_indicator_spec(BONUS_NAME),
 				-- modifier/remainder row
-				build_molecule_spec(name_prefix, MODIFIER_NAME, true),
+				build_indicator_spec(MODIFIER_NAME),
+				build_molecule_spec(name_prefix, MODIFIER_NAME),
 				build_selector_spec(name_prefix, MODIFIER_NAME),
 				build_molecule_spec(name_prefix, REMAINDER_NAME),
+				build_indicator_spec(REMAINDER_NAME),
 			},
 		}
 
