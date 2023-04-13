@@ -184,12 +184,12 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 				build_selector_spec(name_prefix, BASE_NAME),
 				build_molecule_spec(name_prefix, RESULT_NAME),
 				build_indicator_spec(RESULT_NAME),
-				-- catalyst/bonus row
+				-- catalyst/byproduct row
 				build_indicator_spec(CATALYST_NAME),
 				build_molecule_spec(name_prefix, CATALYST_NAME),
 				{type = "label", caption = {"factoriochem.reaction-transition"}},
-				build_molecule_spec(name_prefix, BONUS_NAME),
-				build_indicator_spec(BONUS_NAME),
+				build_molecule_spec(name_prefix, BYPRODUCT_NAME),
+				build_indicator_spec(BYPRODUCT_NAME),
 				-- modifier/remainder row
 				build_indicator_spec(MODIFIER_NAME),
 				build_molecule_spec(name_prefix, MODIFIER_NAME),
