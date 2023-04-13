@@ -123,7 +123,7 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 
 	local reaction_recipe = {
 		type = "recipe",
-		name = name.."-reaction",
+		name = entity.fixed_recipe,
 		subgroup = MOLECULES_SUBGROUP_NAME,
 		enabled = true,
 		ingredients = {{MOLECULE_REACTION_REACTANTS_NAME, 1}},
