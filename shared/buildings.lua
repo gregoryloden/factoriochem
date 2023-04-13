@@ -24,6 +24,18 @@ local function gen_grid(height)
 	return shape
 end
 
+local function get_target(center_x, center_y, direction)
+	if direction == "E" then
+		return (center_x + 1, center_y)
+	elseif direction == "S" then
+		return (center_x, center_y + 1)
+	elseif direction == "W" then
+		return (center_x - 1, center_y)
+	else
+		return (center_x, center_y - 1)
+	end
+end
+
 
 -- Building definitions
 BUILDING_DEFINITIONS = {
@@ -121,16 +133,7 @@ BUILDING_DEFINITIONS = {
 				local center_atom = center_row[center_x]
 				if not center_atom then return false end
 
-				local target_x, target_y = center_x, center_y
-				if direction == "E" then
-					target_x = center_x + 1
-				elseif direction == "S" then
-					target_y = center_y + 1
-				elseif direction == "W" then
-					target_x = center_x - 1
-				else
-					target_y = center_y - 1
-				end
+				local target_x, target_y = get_target(center_x, center_y, direction)
 				local atom_to_rotate = shape[target_y][target_x]
 				if not atom_to_rotate then return false end
 
