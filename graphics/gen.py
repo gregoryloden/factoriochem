@@ -138,11 +138,10 @@ def write_images(folder, images):
 	for (name, image) in images:
 		write_image(folder, name, image)
 
-def image_counter_suffix():
+def image_counter_print(s):
 	global image_counter
-	res = f" ({image_counter} images)"
+	print(f"{s} ({image_counter} images)")
 	image_counter = 0
-	return res
 
 def filled_mip_image(base_size, mips, color = None):
 	shape = (base_size, sum(base_size >> i for i in range(mips)), 4)
@@ -444,7 +443,7 @@ def gen_all_atom_images(base_size, mips):
 			if molecule_min_atoms > molecule_max_atoms:
 				molecule_max_atoms = 1
 			gen_atom_images(base_size, mips, symbol, bonds, molecule_max_atoms)
-		print(f"Atom row {atom_row_i + 1} written" + image_counter_suffix())
+		image_counter_print(f"Atom row {atom_row_i + 1} written")
 
 
 #Generate bond images
@@ -509,7 +508,7 @@ def gen_all_bond_images(base_size, mips):
 					name_spec = f"{y_scale}{x_scale}{y}{x}"
 					bond_images = gen_bond_images(base_size, mips, y_scale, x_scale, y, x)
 					write_images(bonds_folder, iter_bond_images(bond_images, name_spec, min_atoms))
-	print("Bond images written" + image_counter_suffix())
+	image_counter_print("Bond images written")
 
 
 #Generate specific full molecule images
@@ -567,11 +566,11 @@ def gen_specific_molecule(base_size, mips, molecule, include_outline = False):
 
 def gen_item_group_icon(base_size, mips):
 	write_image(".", "item-group.png", gen_specific_molecule(base_size, mips, "O1-C2-N|1N1-1O-1H|1H"))
-	print("Item group written" + image_counter_suffix())
+	image_counter_print("Item group written")
 
 def gen_molecule_reaction_reactants_icon(base_size, mips):
 	write_image(".", "molecule-reaction-reactants.png", gen_specific_molecule(base_size, mips, "-H1-O|H--1H|1O1-H"))
-	print("Molecule reaction reactants written" + image_counter_suffix())
+	image_counter_print("Molecule reaction reactants written")
 
 
 #Composite image utility
@@ -768,7 +767,7 @@ def gen_all_selectors(base_size, mips):
 		os.mkdir(selectors_folder)
 	write_images(selectors_folder, iter_gen_rotation_selectors(base_size, mips))
 	write_images(selectors_folder, iter_gen_target_and_atom_bond_selectors(base_size, mips))
-	print("Selectors written" + image_counter_suffix())
+	image_counter_print("Selectors written")
 
 
 #Generate building overlays
@@ -854,7 +853,7 @@ def gen_building_overlays(base_size):
 		write_image(building_overlays_folder, f"moleculifier{suffix}.png", moleculifier_image)
 		write_image(building_overlays_folder, f"molecule-detector{suffix}.png", gen_detector_indicators(base_size))
 		write_image(building_overlays_folder, f"molecule-detector-symbol{suffix}.png", gen_detector_symbol(base_size))
-	print("Building overlays written" + image_counter_suffix())
+	image_counter_print("Building overlays written")
 
 
 #Generate recipe icons
@@ -1001,7 +1000,7 @@ def gen_all_recipe_icons(base_size, mips):
 		os.mkdir(recipes_folder)
 	write_images(recipes_folder, iter_gen_all_building_recipe_icons(base_size, mips, False))
 	write_images(recipes_folder, iter_gen_moleculify_recipe_icons(base_size, mips))
-	print("Recipe icons written" + image_counter_suffix())
+	image_counter_print("Recipe icons written")
 
 
 #Generate building icon overlays
@@ -1013,7 +1012,7 @@ def gen_icon_overlays(base_size, mips):
 	write_images(icon_overlays_folder, iter_gen_all_building_recipe_icons(base_size, mips, True))
 	moleculifier_image = gen_specific_molecule(base_size, mips, MOLECULIFIER_MOLECULE, include_outline=True)
 	write_image(icon_overlays_folder, "moleculifier.png", moleculifier_image)
-	print("Icon overlays written" + image_counter_suffix())
+	image_counter_print("Icon overlays written")
 
 
 #Generate molecule shape backgrounds
@@ -1072,7 +1071,7 @@ def gen_molecule_shape_backgrounds(base_size, mips):
 			else:
 				simple_overlay_image(image, atom_image)
 		write_image(shapes_folder, f"{shape_n:03X}.png", image)
-	print("Molecule shape backgrounds written" + image_counter_suffix())
+	image_counter_print("Molecule shape backgrounds written")
 
 
 #Generate the reaction settings icon
@@ -1119,7 +1118,7 @@ def gen_reaction_settings_icon(base_size, mips):
 	easy_mips(image, multi_color_alpha_weighting=False)
 	easy_mips(inner_image, multi_color_alpha_weighting=False)
 	write_image(".", "reaction-settings.png", simple_overlay_image(image, inner_image))
-	print("Reaction settings icon written" + image_counter_suffix())
+	image_counter_print("Reaction settings icon written")
 
 
 #Generate all graphics
