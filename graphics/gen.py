@@ -127,8 +127,8 @@ image_counter = 0
 total_images = 0
 
 #Image utilities
-def imwrite(file_path, image):
-	cv2.imwrite(file_path, image, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+def write_image(folder, name, image):
+	cv2.imwrite(os.path.join(folder, name + ".png"), image, [cv2.IMWRITE_PNG_COMPRESSION, 9])
 	global image_counter
 	global total_images
 	image_counter += 1
@@ -136,7 +136,7 @@ def imwrite(file_path, image):
 
 def write_images(folder, images):
 	for (name, image) in images:
-		imwrite(os.path.join(folder, name + ".png"), image)
+		write_image(folder, name, image)
 
 def image_counter_suffix():
 	global image_counter
@@ -410,7 +410,7 @@ def gen_atom_images(base_size, mips, symbol, bonds, molecule_max_atoms):
 			for y in range(y_scale):
 				for x in range(x_scale):
 					image = gen_single_atom_image(base_size, mips, symbol, bonds, y_scale, x_scale, y, x)
-					imwrite(os.path.join(atom_folder, f"{y_scale}{x_scale}{y}{x}.png"), image)
+					write_image(atom_folder, f"{y_scale}{x_scale}{y}{x}.png", image)
 
 def gen_all_atom_images(base_size, mips):
 	element_number = 0
@@ -566,11 +566,11 @@ def gen_specific_molecule(base_size, mips, molecule, include_outline = False):
 	return simple_overlay_image(image_back, image_front)
 
 def gen_item_group_icon(base_size, mips):
-	imwrite("item-group.png", gen_specific_molecule(base_size, mips, "O1-C2-N|1N1-1O-1H|1H"))
+	write_image(".", "item-group.png", gen_specific_molecule(base_size, mips, "O1-C2-N|1N1-1O-1H|1H"))
 	print("Item group written" + image_counter_suffix())
 
 def gen_molecule_reaction_reactants_icon(base_size, mips):
-	imwrite("molecule-reaction-reactants.png", gen_specific_molecule(base_size, mips, "-H1-O|H--1H|1O1-H"))
+	write_image(".", "molecule-reaction-reactants.png", gen_specific_molecule(base_size, mips, "-H1-O|H--1H|1O1-H"))
 	print("Molecule reaction reactants written" + image_counter_suffix())
 
 
@@ -851,11 +851,9 @@ def gen_building_overlays(base_size):
 	for (base_size, suffix) in [(base_size, ""), (base_size * 2, "-hr")]:
 		write_images(building_overlays_folder, iter_gen_component_overlays(base_size, suffix))
 		moleculifier_image = gen_specific_molecule(base_size * 2, 1, MOLECULIFIER_MOLECULE)
-		imwrite(os.path.join(building_overlays_folder, f"moleculifier{suffix}.png"), moleculifier_image)
-		detector_indicators = gen_detector_indicators(base_size)
-		imwrite(os.path.join(building_overlays_folder, f"molecule-detector{suffix}.png"), detector_indicators)
-		detector_symbol = gen_detector_symbol(base_size)
-		imwrite(os.path.join(building_overlays_folder, f"molecule-detector-symbol{suffix}.png"), detector_symbol)
+		write_image(building_overlays_folder, f"moleculifier{suffix}.png", moleculifier_image)
+		write_image(building_overlays_folder, f"molecule-detector{suffix}.png", gen_detector_indicators(base_size))
+		write_image(building_overlays_folder, f"molecule-detector-symbol{suffix}.png", gen_detector_symbol(base_size))
 	print("Building overlays written" + image_counter_suffix())
 
 
@@ -1011,11 +1009,10 @@ def gen_icon_overlays(base_size, mips):
 	icon_overlays_folder = "icon-overlays"
 	if not os.path.exists(icon_overlays_folder):
 		os.mkdir(icon_overlays_folder)
-	detector_image = gen_specific_molecule(base_size, mips, "H|1O|1H", True)
-	imwrite(os.path.join(icon_overlays_folder, "molecule-detector.png"), detector_image)
+	write_image(icon_overlays_folder, "molecule-detector.png", gen_specific_molecule(base_size, mips, "H|1O|1H", True))
 	write_images(icon_overlays_folder, iter_gen_all_building_recipe_icons(base_size, mips, True))
 	moleculifier_image = gen_specific_molecule(base_size, mips, MOLECULIFIER_MOLECULE, include_outline=True)
-	imwrite(os.path.join(icon_overlays_folder, "moleculifier.png"), moleculifier_image)
+	write_image(icon_overlays_folder, "moleculifier.png", moleculifier_image)
 	print("Icon overlays written" + image_counter_suffix())
 
 
@@ -1074,7 +1071,7 @@ def gen_molecule_shape_backgrounds(base_size, mips):
 				image = atom_image
 			else:
 				simple_overlay_image(image, atom_image)
-		imwrite(os.path.join(shapes_folder, f"{shape_n:03X}.png"), image)
+		write_image(shapes_folder, f"{shape_n:03X}.png", image)
 	print("Molecule shape backgrounds written" + image_counter_suffix())
 
 
@@ -1121,7 +1118,7 @@ def gen_reaction_settings_icon(base_size, mips):
 	#write the file
 	easy_mips(image, multi_color_alpha_weighting=False)
 	easy_mips(inner_image, multi_color_alpha_weighting=False)
-	imwrite("reaction-settings.png", simple_overlay_image(image, inner_image))
+	write_image(".", "reaction-settings.png", simple_overlay_image(image, inner_image))
 	print("Reaction settings icon written" + image_counter_suffix())
 
 
