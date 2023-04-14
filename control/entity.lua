@@ -3,6 +3,7 @@ local REACTION_CACHE = {}
 -- give each building type a base cache, buildings will add to it based on their own selectors and reactants
 for name, definition in pairs(BUILDING_DEFINITIONS) do REACTION_CACHE[name] = {} end
 local LOGISTIC_WIRE_TYPES = {defines.wire_type.red, defines.wire_type.green}
+local DETECTOR_ATOMIC_NUMBER_SIGNAL_ID = {type = "virtual", name = "signal-A"}
 local DETECTOR_CACHE = {}
 local DETECTOR_TARGET_CACHE = {}
 
@@ -320,17 +321,28 @@ local function update_detector(detector_data)
 		local signals = circuit_network.signals
 		if not signals then goto continue_wire_types end
 		for _, signal in ipairs(signals) do
-			signal = signal.signal.name
-			local cache = DETECTOR_CACHE[signal]
+			local cache = DETECTOR_CACHE[signal.signal.name]
 			if not cache then
 				cache = {}
-				DETECTOR_CACHE[signal] = cache
-				local item_prototype = game.item_prototypes[signal]
-				if item_prototype and item_prototype.group.name == MOLECULES_GROUP_NAME then
-					cache.shape, cache.height, cache.width = parse_molecule(signal)
+				DETECTOR_CACHE[signal.signal.name] = cache
+				local item_prototype = game.item_prototypes[signal.signal.name]
+				if not item_prototype or item_prototype.group.name ~= MOLECULES_GROUP_NAME then
+					goto continue_signals
 				end
+				cache.shape, cache.height, cache.width = parse_molecule(signal.signal.name)
+				local shape_n = 0
+				for y, shape_row in pairs(cache.shape) do
+					for x, atom in pairs(shape_row) do
+						shape_n = shape_n + bit32.lshift(1, (y - 1) * MAX_GRID_WIDTH + x - 1)
+					end
+				end
+				cache.shape_signal =
+					{type = "item", name = COMPLEX_MOLECULE_ITEM_PREFIX..string.format("%03X", shape_n)}
 			end
 			if not cache.shape then goto continue_signals end
+			local count = signal.count
+			output.set_signal(output_signal_i, {signal = cache.shape_signal, count = count})
+			output_signal_i = output_signal_i + 1
 			for _, target in ipairs(targets) do
 				local output_cache = cache[target.name]
 				if not output_cache then
@@ -341,15 +353,19 @@ local function update_detector(detector_data)
 					end
 					local atom = cache.shape[target.y][target.x]
 					if not atom then goto continue_targets end
-					local atom_signal_id = {type = "item", name = ATOM_ITEM_PREFIX..atom.symbol}
-					local atomic_number_signal_id = {type = "virtual", name = "signal-A"}
-					local atomic_number = ALL_ATOMS[atom.symbol].number
-					table.insert(output_cache, {signal = atom_signal_id, count = 1})
-					table.insert(output_cache, {signal = atomic_number_signal_id, count = atomic_number})
+					output_cache.atom = {type = "item", name = ATOM_ITEM_PREFIX..atom.symbol}
+					output_cache.atom_signal = {signal = output_cache.atom}
+					output_cache.number = ALL_ATOMS[atom.symbol].number
+					output_cache.number_signal = {signal = DETECTOR_ATOMIC_NUMBER_SIGNAL_ID}
 				end
-				for _, signal in ipairs(output_cache) do
-					output.set_signal(output_signal_i, signal)
-					output_signal_i = output_signal_i + 1
+				if output_cache.atom then
+					local atom_signal = output_cache.atom_signal
+					local number_signal = output_cache.number_signal
+					atom_signal.count = count
+					number_signal.count = output_cache.number * count
+					output.set_signal(output_signal_i, atom_signal)
+					output.set_signal(output_signal_i + 1, number_signal)
+					output_signal_i = output_signal_i + 2
 				end
 				::continue_targets::
 			end

@@ -53,7 +53,6 @@ local MOLECULE_DESCRIPTION_CACHE = {}
 local ITEM_GROUP_ICON_SIZE = 128
 local ITEM_GROUP_ICON_MIPMAPS = 2
 local COMPLEX_MOLECULES_SUBGROUP_NAME = "complex-molecules"
-local COMPLEX_MOLECULE_ITEM_PREFIX = "complex-molecule-"
 
 
 -- Item groups and subgroups
@@ -522,7 +521,7 @@ end
 
 
 -- Finally, go through all possible molecule shapes and generate molecules for each shape
-for shape_n = 0, bit32.lshift(1, GRID_AREA) - 1 do
+for shape_n = 1, bit32.lshift(1, GRID_AREA) - 1 do
 	-- only accept shapes anchored to the top left
 	if not is_top_left(shape_n) then goto continue_shapes end
 
