@@ -80,6 +80,7 @@ ATOM_BOND_SELECTOR_INNER_ARROW_OFFSET_FRACTION = 6 / 64
 BASE_OVERLAY_SIZE = 32
 MOLECULIFIER_MOLECULE = "H--C|-He|N--O"
 DETECTOR_ARROW_COLOR = (128, 224, 255, 0)
+DETECTOR_SYMBOL_SIZE_FRACTION = 9 / 32
 MOLECULE_ROTATOR_NAME = "molecule-rotator"
 MOLECULE_ROTATOR_ICON_COLOR = (192, 192, 224, 0)
 MOLECULE_SORTER_NAME = "molecule-sorter"
@@ -834,6 +835,15 @@ def gen_detector_indicators(base_size):
 	]
 	return build_4_way_image(gen_composite_image(layers))
 
+def gen_detector_symbol(base_size):
+	symbol_image = gen_single_atom_shape_image(base_size, 1, 2, 2, 0, 0, TARGET_SELECTOR_HIGHLIGHT_COLOR)
+	simple_overlay_image(symbol_image, gen_single_atom_shape_image(base_size, 1, 2, 2, 0, 1, TARGET_SELECTOR_DEFAULT_COLOR))
+	simple_overlay_image(symbol_image, gen_single_atom_shape_image(base_size, 1, 2, 2, 1, 0, TARGET_SELECTOR_DEFAULT_COLOR))
+	simple_overlay_image(
+		symbol_image, gen_single_atom_shape_image(base_size, 1, 2, 2, 1, 1, TARGET_SELECTOR_HIGHLIGHT_COLOR))
+	size = int(DETECTOR_SYMBOL_SIZE_FRACTION * base_size)
+	return resize(symbol_image, size, size)
+
 def gen_building_overlays(base_size):
 	building_overlays_folder = "building-overlays"
 	if not os.path.exists(building_overlays_folder):
@@ -844,6 +854,8 @@ def gen_building_overlays(base_size):
 		imwrite(os.path.join(building_overlays_folder, f"moleculifier{suffix}.png"), moleculifier_image)
 		detector_indicators = gen_detector_indicators(base_size)
 		imwrite(os.path.join(building_overlays_folder, f"molecule-detector{suffix}.png"), detector_indicators)
+		detector_symbol = gen_detector_symbol(base_size)
+		imwrite(os.path.join(building_overlays_folder, f"molecule-detector-symbol{suffix}.png"), detector_symbol)
 	print("Building overlays written" + image_counter_suffix())
 
 
