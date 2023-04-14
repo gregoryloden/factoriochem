@@ -150,9 +150,12 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 		type = "recipe",
 		name = name,
 		enabled = true,
-		ingredients = {},
+		ingredients = {{"iron-gear-wheel", 25}, {"copper-plate", 50}},
 		result = name,
 	}
+	if name == "molecule-voider" then
+		for _, ingredient in ipairs(recipe.ingredients) do ingredient[2] = ingredient[2] * 10 end
+	end
 
 	data:extend({entity, reaction_recipe, item, recipe})
 end
@@ -241,7 +244,7 @@ local moleculifier_recipe = {
 	type = "recipe",
 	name = MOLECULIFIER_NAME,
 	enabled = true,
-	ingredients = {},
+	ingredients = {{"iron-gear-wheel", 25}, {"copper-plate", 50}},
 	result = MOLECULIFIER_NAME,
 }
 
@@ -282,7 +285,7 @@ local detector_recipe = {
 	type = "recipe",
 	name = MOLECULE_DETECTOR_NAME,
 	enabled = true,
-	ingredients = {},
+	ingredients = {{"iron-plate", 10}, {"electronic-circuit", 20}},
 	result = MOLECULE_DETECTOR_NAME,
 }
 
