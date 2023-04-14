@@ -565,11 +565,11 @@ def gen_specific_molecule(base_size, mips, molecule, include_outline = False):
 	return simple_overlay_image(image_back, image_front)
 
 def gen_item_group_icon(base_size, mips):
-	write_image(".", "item-group.png", gen_specific_molecule(base_size, mips, "O1-C2-N|1N1-1O-1H|1H"))
+	write_image(".", "item-group", gen_specific_molecule(base_size, mips, "O1-C2-N|1N1-1O-1H|1H"))
 	image_counter_print("Item group written")
 
 def gen_molecule_reaction_reactants_icon(base_size, mips):
-	write_image(".", "molecule-reaction-reactants.png", gen_specific_molecule(base_size, mips, "-H1-O|H--1H|1O1-H"))
+	write_image(".", "molecule-reaction-reactants", gen_specific_molecule(base_size, mips, "-H1-O|H--1H|1O1-H"))
 	image_counter_print("Molecule reaction reactants written")
 
 
@@ -1117,7 +1117,7 @@ def gen_reaction_settings_icon(base_size, mips):
 	#write the file
 	easy_mips(image, multi_color_alpha_weighting=False)
 	easy_mips(inner_image, multi_color_alpha_weighting=False)
-	write_image(".", "reaction-settings.png", simple_overlay_image(image, inner_image))
+	write_image(".", "reaction-settings", simple_overlay_image(image, inner_image))
 	image_counter_print("Reaction settings icon written")
 
 
