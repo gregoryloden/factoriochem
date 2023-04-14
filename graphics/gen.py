@@ -785,22 +785,6 @@ def build_4_way_image(base_image):
 		image[top:top + rotated.shape[0], left:left + rotated.shape[1]] = rotated
 	return image
 
-def gen_detector_image(base_size):
-	layers = [
-		("layer", {"height": base_size * 2, "width": base_size, "color": DETECTOR_ARROW_COLOR}),
-		("poly", [
-			(base_size * 10 / 32, base_size * 8 / 32),
-			(base_size * 16 / 32, base_size * 2 / 32),
-			(base_size * 22 / 32, base_size * 8 / 32),
-		]),
-		("poly", [
-			(base_size * 10 / 32, base_size * 62 / 32),
-			(base_size * 16 / 32, base_size * 56 / 32),
-			(base_size * 22 / 32, base_size * 62 / 32),
-		]),
-	]
-	return build_4_way_image(gen_composite_image(layers))
-
 def iter_gen_component_overlays(base_size, suffix):
 	loader_input_poly_points = [
 		(base_size * 2 / 32, base_size * 16 / 32),
@@ -834,6 +818,22 @@ def iter_gen_component_overlays(base_size, suffix):
 		])
 		yield (component + suffix, build_4_way_image(image))
 
+def gen_detector_indicators(base_size):
+	layers = [
+		("layer", {"height": base_size * 2, "width": base_size, "color": DETECTOR_ARROW_COLOR}),
+		("poly", [
+			(base_size * 10 / 32, base_size * 8 / 32),
+			(base_size * 16 / 32, base_size * 2 / 32),
+			(base_size * 22 / 32, base_size * 8 / 32),
+		]),
+		("poly", [
+			(base_size * 10 / 32, base_size * 62 / 32),
+			(base_size * 16 / 32, base_size * 56 / 32),
+			(base_size * 22 / 32, base_size * 62 / 32),
+		]),
+	]
+	return build_4_way_image(gen_composite_image(layers))
+
 def gen_building_overlays(base_size):
 	building_overlays_folder = "building-overlays"
 	if not os.path.exists(building_overlays_folder):
@@ -842,7 +842,8 @@ def gen_building_overlays(base_size):
 		write_images(building_overlays_folder, iter_gen_component_overlays(base_size, suffix))
 		moleculifier_image = gen_specific_molecule(base_size * 2, 1, MOLECULIFIER_MOLECULE)
 		imwrite(os.path.join(building_overlays_folder, f"moleculifier{suffix}.png"), moleculifier_image)
-		imwrite(os.path.join(building_overlays_folder, f"molecule-detector{suffix}.png"), gen_detector_image(base_size))
+		detector_indicators = gen_detector_indicators(base_size)
+		imwrite(os.path.join(building_overlays_folder, f"molecule-detector{suffix}.png"), detector_indicators)
 	print("Building overlays written" + image_counter_suffix())
 
 
