@@ -47,32 +47,31 @@ local function overlay_icon(prototype, icon_overlay_name, base_design)
 	if prototype.icon_mipmaps then prototype.icon_mipmaps = nil end
 end
 
+local function add_filename_and_hr_version(layer, filename_base)
+	local hr_version = table.deepcopy(layer)
+	for _, property in pairs(layer) do hr_version[property] = layer[property] end
+	for _, property in ipairs({"width", "height", "size", "x", "y"}) do
+		if hr_version[property] then hr_version[property] = hr_version[property] * 2 end
+	end
+	layer.filename = filename_base..".png"
+	hr_version.filename = filename_base.."-hr.png"
+	layer.hr_version = hr_version
+end
+
 local function add_4_way_layer(sprites, overlay_name, overlay, width, height, shift_x, shift_y)
 	for direction, get_sprite_data in pairs(DIRECTION_GET_SPRITE_DATA) do
 		local layers = sprites[direction].layers
 		local sprite_data = get_sprite_data(width, height, shift_x, shift_y)
 		local layer = {
-			filename = BUILDING_OVERLAYS_ROOT..overlay_name..".png",
 			width = sprite_data.width,
 			height = sprite_data.height,
 			x = sprite_data.x,
 			y = sprite_data.y,
 			priority = "high",
 			shift = sprite_data.shift,
-			hr_version = {
-				filename = BUILDING_OVERLAYS_ROOT..overlay_name.."-hr.png",
-				width = sprite_data.width * 2,
-				height = sprite_data.height * 2,
-				x = sprite_data.x * 2,
-				y = sprite_data.y * 2,
-				priority = "high",
-				shift = sprite_data.shift,
-			},
 		}
-		if layers[1].frame_count then
-			layer.repeat_count = layers[1].frame_count
-			layer.hr_version.repeat_count = layers[1].hr_version.frame_count
-		end
+		if layers[1].frame_count then layer.repeat_count = layers[1].frame_count end
+		add_filename_and_hr_version(layer, BUILDING_OVERLAYS_ROOT..overlay_name)
 		if overlay then
 			table.insert(layers, layer)
 		else
@@ -221,17 +220,11 @@ moleculifier_entity.module_specification = nil
 moleculifier_entity.fast_replaceable_group = nil
 moleculifier_entity.next_upgrade = nil
 local moleculifier_overlay_layer = {
-	filename = BUILDING_OVERLAYS_ROOT..MOLECULIFIER_NAME..".png",
 	size = BUILDING_OVERLAY_ICON_SIZE,
 	repeat_count = moleculifier_entity.animation.layers[1].frame_count,
 	priority = "high",
-	hr_version = {
-		filename = BUILDING_OVERLAYS_ROOT..MOLECULIFIER_NAME.."-hr.png",
-		size = BUILDING_OVERLAY_ICON_SIZE * 2,
-		repeat_count = moleculifier_entity.animation.layers[1].hr_version.frame_count,
-		priority = "high",
-	},
 }
+add_filename_and_hr_version(moleculifier_overlay_layer, BUILDING_OVERLAYS_ROOT..MOLECULIFIER_NAME)
 table.insert(moleculifier_entity.animation.layers, moleculifier_overlay_layer)
 
 local moleculifier_item = table.deepcopy(data.raw.item["assembling-machine-2"])
@@ -278,18 +271,8 @@ local detector_symbol_shifts = {
 	west = {1 / 64, -23 / 64},
 }
 for direction, shift in pairs(detector_symbol_shifts) do
-	local layer = {
-		filename = BUILDING_OVERLAYS_ROOT..MOLECULE_DETECTOR_NAME.."-symbol.png",
-		size = 9,
-		priority = "high",
-		shift = shift,
-		hr_version = {
-			filename = BUILDING_OVERLAYS_ROOT..MOLECULE_DETECTOR_NAME.."-symbol-hr.png",
-			size = 18,
-			priority = "high",
-			shift = shift,
-		},
-	}
+	local layer = {size = 9, priority = "high", shift = shift}
+	add_filename_and_hr_version(layer, BUILDING_OVERLAYS_ROOT..MOLECULE_DETECTOR_NAME.."-symbol")
 	table.insert(detector.sprites[direction].layers, layer)
 end
 
@@ -336,20 +319,9 @@ data:extend({detector_output})
 for _, component in ipairs(MOLECULE_REACTION_COMPONENT_NAMES) do
 	x = 32
 	if not MOLECULE_REACTION_IS_REACTANT[component] then x = 72 end
-	data:extend({{
-		type = "sprite",
-		name = MOLECULE_INDICATOR_PREFIX..component,
-		filename = BUILDING_OVERLAYS_ROOT..component..".png",
-		width = 16,
-		height = 32,
-		x = x,
-		priority = "high",
-		hr_version = {
-			filename = BUILDING_OVERLAYS_ROOT..component.."-hr.png",
-			width = 32,
-			height = 64,
-			x = x * 2,
-			priority = "high",
-		},
-	}})
+	sprite = {width = 16, height = 32, x = x, priority = "high"}
+	add_filename_and_hr_version(sprite, BUILDING_OVERLAYS_ROOT..component)
+	sprite.type = "sprite"
+	sprite.name = MOLECULE_INDICATOR_PREFIX..component
+	data:extend({sprite})
 end
