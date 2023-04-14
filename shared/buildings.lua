@@ -113,6 +113,11 @@ local function normalize_shape(shape)
 	return new_shape, height, width
 end
 
+local function verify_bond_count(atom)
+	local bonds = (atom.left or 0) + (atom.up or 0) + (atom.right or 0) + (atom.down or 0)
+	return bonds == 0 or bonds == ALL_ATOMS[atom.symbol].bonds
+end
+
 
 -- Building definitions
 BUILDING_DEFINITIONS = {
@@ -321,9 +326,7 @@ BUILDING_DEFINITIONS = {
 				source.symbol = new_atom.symbol
 			end
 
-			-- check that the source's bonds exactly match its bonds count
-			local source_bonds = (source.left or 0) + (source.up or 0) + (source.right or 0) + (source.down or 0)
-			if source_bonds > 0 and source_bonds ~= ALL_ATOMS[source.symbol].bonds then return false end
+			if not verify_bond_count(source) then return false end
 
 			-- we've finally done everything, reassemble the molecule(s) and deliver any fission results
 			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
@@ -343,9 +346,93 @@ BUILDING_DEFINITIONS = {
 		reactants = {BASE_NAME, CATALYST_NAME, MODIFIER_NAME},
 		products = {RESULT_NAME},
 		-- control fields
-		selectors = {[BASE_NAME] = ATOM_BOND_SELECTOR_NAME, [MODIFIER_NAME] = TARGET_SELECTOR_NAME},
+		selectors = {
+			[BASE_NAME] = ATOM_BOND_SELECTOR_NAME,
+			[CATALYST_NAME] = ATOM_SELECTOR_NAME,
+			[MODIFIER_NAME] = TARGET_SELECTOR_NAME
+		},
 		reaction = function(reaction)
-			return false
+			-- check that the base reaction is valid
+			local molecule = reaction.reactants[BASE_NAME]
+			local atom_bond = reaction.selectors[BASE_NAME]
+			if not molecule or not atom_bond then return false end
+
+			local shape, height, width = parse_molecule(molecule)
+			local y_scale, x_scale, center_y, center_x, direction = parse_atom_bond(atom_bond)
+			if y_scale ~= height or x_scale ~= width then return false end
+
+			local source = shape[center_y][center_x]
+			if not source then return false end
+
+			-- add the catalyst if it is present and matches the selector
+			local catalyst = reaction.reactants[CATALYST_NAME]
+			if catalyst ~= reaction.selectors[CATALYST_NAME] then return false end
+			if catalyst then
+				local atom_shape, atom_height, atom_width = parse_molecule(catalyst)
+				-- we already know this is an atom because it matches the atom selector
+				fusion_atom = atom_shape[1][1]
+				new_atom = ALL_ATOMS[ALL_ATOMS[source.symbol].number + ALL_ATOMS[fusion_atom.symbol].number]
+				source.symbol = new_atom.symbol
+			end
+
+			local target_x, target_y = get_target(center_x, center_y, direction)
+			local target
+			if target_y >= 1 and target_y <= height then target = shape[target_y][target_x] end
+
+			-- if a modifier molecule was specified, join it with the base molecule
+			local modifier_target = reaction.selectors[MODIFIER_NAME]
+			if modifier_target then
+				-- make sure there is not already a target atom at the position
+				if target then return false end
+
+				-- make sure we have a valid target atom to join
+				local modifier = reaction.reactants[MODIFIER_NAME]
+				if not modifier then return false end
+
+				local modifier_shape, modifier_height, modifier_width = parse_molecule(modifier)
+				local modifier_y_scale, modifier_x_scale, modifier_y, modifier_x = parse_target(modifier_target)
+				if modifier_height ~= modifier_y_scale or modifier_width ~= modifier_x_scale then
+					return false
+				end
+
+				target = modifier_shape[modifier_y][modifier_x]
+				if not target then return false end
+
+				-- merge it into the base molecule
+				local move_x, move_y = target_x - modifier_x, target_y - modifier_y
+				for y, modifier_shape_row in pairs(modifier_shape) do
+					for x, atom in pairs(modifier_shape_row) do
+						local dest_x, dest_y = x + move_x, y + move_y
+						local shape_row = shape[dest_y]
+						if not shape_row then
+							shape_row = {}
+							shape[dest_y] = shape_row
+						end
+						if shape_row[dest_x] then return false end
+						shape_row[dest_x] = atom
+					end
+				end
+
+				-- normalize the shape, and make sure that it fits within the grid
+				shape, height, width = normalize_shape(shape)
+				if not shape then return false end
+			-- if there is no modifier specified, we just have to add a bond to the molecule
+			else
+				-- make sure there is a target atom at the position
+				if not target then return false end
+
+				-- not allowed to have a modifier molecule without specifying a target for it
+				if reaction.reactants[MODIFIER_NAME] then return false end
+			end
+
+			-- add bonds between the source and the target
+			local bonds = get_bonds(source, direction) or 0
+			set_bonds(source, target, direction, bonds + 1)
+			if not verify_bond_count(source) or not verify_bond_count(target) then return false end
+
+			-- we've finally done everything, reassemble the molecule
+			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
+			return true
 		end,
 	},
 	["molecule-voider"] = {
