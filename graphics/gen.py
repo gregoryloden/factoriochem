@@ -97,6 +97,11 @@ MOLECULE_BONDER_NAME = "molecule-bonder"
 MOLECULE_BONDER_COLOR = (64, 160, 64, 0)
 MOLECULE_BONDER_TOP_FRACTION = 24 / 64
 MOLECULE_BONDER_BOTTOM_FRACTION = 40 / 64
+MOLECULE_FISSIONER_NAME = "molecule-fissioner"
+MOLECULE_FISSIONER_THICKNESS_FRACTION = 4 / 64
+MOLECULE_FISSIONER_COLOR = (192, 192, 224, 0)
+MOLECULE_FUSIONER_NAME = "molecule-fusioner"
+MOLECULE_FUSIONER_COLOR = (224, 224, 192, 0)
 MOLECULE_VOIDER_NAME = "molecule-voider"
 MOLECULE_VOIDER_COLOR = (64, 64, 224, 0)
 MOLECULE_VOIDER_XY_FRACTION = 8 / 64
@@ -519,7 +524,7 @@ def gen_specific_molecule(base_size, mips, molecule, include_outline = False):
 	image_back = filled_mip_image(base_size, mips)
 	image_front = filled_mip_image(base_size, mips)
 	shape = [row.split("-") for row in molecule.split("|")]
-	bonds = {"H": 1, "C": 4, "N": 3, "O": 2, "He": 0}
+	bonds = {"H": 1, "C": 4, "N": 3, "O": 2, "He": 0, "Be": 2}
 	y_scale = len(shape)
 	x_scale = max(len(row) for row in shape)
 	scale = max(y_scale, x_scale)
@@ -900,6 +905,32 @@ def gen_molecule_bonder_image(base_size, mips, include_outline):
 	]
 	return gen_composite_image(layers, image, include_outline)
 
+def gen_molecule_fissioner_image(base_size, mips, include_outline):
+	image = gen_specific_molecule(base_size, mips, "C--He||--Be", include_outline)
+	thickness = int(MOLECULE_FISSIONER_THICKNESS_FRACTION * base_size)
+	one_third = base_size / 3
+	two_thirds = base_size * 2 / 3
+	layers = [
+		("layer", {"size": base_size, "mips": mips, "color": MOLECULE_FISSIONER_COLOR}),
+		("line", {"start": (one_third, one_third), "end": (two_thirds, one_third), "thickness": thickness}),
+		("layer", {"size": base_size, "color": MOLECULE_FISSIONER_COLOR}),
+		("line", {"start": (one_third, one_third), "end": (two_thirds, two_thirds), "thickness": thickness}),
+	]
+	return gen_composite_image(layers, image, include_outline)
+
+def gen_molecule_fusioner_image(base_size, mips, include_outline):
+	image = gen_specific_molecule(base_size, mips, "N--O||H", include_outline)
+	thickness = int(MOLECULE_FISSIONER_THICKNESS_FRACTION * base_size)
+	one_third = base_size / 3
+	two_thirds = base_size * 2 / 3
+	layers = [
+		("layer", {"size": base_size, "mips": mips, "color": MOLECULE_FUSIONER_COLOR}),
+		("line", {"start": (one_third, one_third), "end": (two_thirds, one_third), "thickness": thickness}),
+		("layer", {"size": base_size, "color": MOLECULE_FUSIONER_COLOR}),
+		("line", {"start": (one_third, two_thirds), "end": (two_thirds, one_third), "thickness": thickness}),
+	]
+	return gen_composite_image(layers, image, include_outline)
+
 def gen_molecule_voider_image(base_size, mips, include_outline):
 	image = gen_specific_molecule(base_size, mips, "N3-N", include_outline)
 	top_left = MOLECULE_VOIDER_XY_FRACTION * base_size
@@ -918,6 +949,8 @@ def iter_gen_all_building_recipe_icons(base_size, mips, include_outline):
 	yield (MOLECULE_SORTER_NAME, gen_molecule_sorter_image(base_size, mips, include_outline))
 	yield (MOLECULE_DEBONDER_NAME, gen_molecule_debonder_image(base_size, mips, include_outline))
 	yield (MOLECULE_BONDER_NAME, gen_molecule_bonder_image(base_size, mips, include_outline))
+	yield (MOLECULE_FISSIONER_NAME, gen_molecule_fissioner_image(base_size, mips, include_outline))
+	yield (MOLECULE_FUSIONER_NAME, gen_molecule_fusioner_image(base_size, mips, include_outline))
 	yield (MOLECULE_VOIDER_NAME, gen_molecule_voider_image(base_size, mips, include_outline))
 
 def iter_gen_moleculify_recipe_icons(base_size, mips):
