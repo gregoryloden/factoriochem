@@ -152,6 +152,11 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 					table.insert(spec.elem_filters, {filter = "subgroup", subgroup = subgroup.name})
 				end
 			end
+		elseif selector == ATOM_BOND_SELECTOR_NAME then
+			spec.elem_filters = {
+				{filter = "subgroup", subgroup = ATOM_BOND_INNER_SELECTOR_SUBGROUP},
+				{filter = "subgroup", subgroup = ATOM_BOND_OUTER_SELECTOR_SUBGROUP},
+			}
 		else
 			spec.elem_filters = {{filter = "subgroup", subgroup = MOLECULE_REACTION_SELECTOR_PREFIX..selector}}
 		end
