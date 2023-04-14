@@ -45,6 +45,18 @@ ATOM_ROWS = [
 		"Lr", "Rf", "Db", "Sg", "Bh", "Hs", "Mt", "Ds", "Rg", "Cn", "Nh", "Fl", "Mc", "Lv", "Ts", "Og",
 	],
 ]
+BOND_COUNTS = {}
+for (_, atom_row) in enumerate(ATOM_ROWS):
+	atoms_in_row_m1 = len(atom_row) - 1
+	for (i, symbol) in enumerate(atom_row):
+		if i >= atoms_in_row_m1 - 4:
+			BOND_COUNTS[symbol] = atoms_in_row_m1 - i
+		elif i == atoms_in_row_m1 - 5:
+			BOND_COUNTS[symbol] = 3
+		elif i < 2:
+			BOND_COUNTS[symbol] = i + 1
+		else:
+			BOND_COUNTS[symbol] = 0
 ATOM_RADIUS_FRACTION = 30 / 64
 PRECISION_BITS = 8
 PRECISION_MULTIPLIER = 1 << PRECISION_BITS
@@ -62,6 +74,7 @@ TEXT_DATAS = {}
 TEXT_COLOR = (0, 0, 0, 0)
 SHAPE_TEXT_COLOR = (255, 255, 255, 0)
 SHAPE_ATOM_CHARACTER = "+"
+BOND_COUNTS[SHAPE_ATOM_CHARACTER] = 5
 BOND_COLOR = (0, 0, 0, 0)
 BOND_LENGTH_FRACTIONS = [0, 12 / 64, 12 / 64, 16 / 64]
 BOND_THICKNESS_FRACTION = 6 / 64
@@ -363,8 +376,8 @@ def gen_single_atom_shape_image(base_size, mips, y_scale, x_scale, y, x, color):
 		image[0:size, place_x:place_x + size, 3] = mip_datas[mip]["alpha"]
 	return image
 
-def gen_single_atom_image(base_size, mips, symbol, bonds, y_scale, x_scale, y, x):
-	image = gen_single_atom_shape_image(base_size, mips, y_scale, x_scale, y, x, COLOR_FOR_BONDS[bonds])
+def gen_single_atom_image(base_size, mips, symbol, y_scale, x_scale, y, x):
+	image = gen_single_atom_shape_image(base_size, mips, y_scale, x_scale, y, x, COLOR_FOR_BONDS[BOND_COUNTS[symbol]])
 	mip_datas = get_circle_mip_datas(base_size, mips, y_scale, x_scale, y, x)
 	scale = max(x_scale, y_scale)
 	for (mip, place_x, size) in iter_mips(base_size, mips):
@@ -400,7 +413,7 @@ def gen_single_atom_image(base_size, mips, symbol, bonds, y_scale, x_scale, y, x
 			image, text_dst_left, text_dst_top, text, text_src_left, text_src_top, text_dst_width, text_dst_height)
 	return image
 
-def gen_atom_images(base_size, mips, symbol, bonds, molecule_max_atoms):
+def gen_atom_images(base_size, mips, symbol, molecule_max_atoms):
 	atom_folder = os.path.join("atoms", symbol)
 	if not os.path.exists(atom_folder):
 		os.makedirs(atom_folder)
@@ -408,24 +421,13 @@ def gen_atom_images(base_size, mips, symbol, bonds, molecule_max_atoms):
 		for x_scale in range(1, min(molecule_max_atoms + 1 - y_scale, MAX_GRID_WIDTH) + 1):
 			for y in range(y_scale):
 				for x in range(x_scale):
-					image = gen_single_atom_image(base_size, mips, symbol, bonds, y_scale, x_scale, y, x)
+					image = gen_single_atom_image(base_size, mips, symbol, y_scale, x_scale, y, x)
 					write_image(atom_folder, f"{y_scale}{x_scale}{y}{x}", image)
 
 def gen_all_atom_images(base_size, mips):
-	element_number = 0
-	last_element_number = 0
 	for (atom_row_i, atom_row) in enumerate(ATOM_ROWS):
-		last_element_number += len(atom_row)
 		for (i, symbol) in enumerate(atom_row):
-			element_number += 1
-			if element_number >= last_element_number - 4:
-				bonds = last_element_number - element_number
-			elif element_number == last_element_number - 5:
-				bonds = 3
-			elif i < 2:
-				bonds = i + 1
-			else:
-				bonds = 0
+			bonds = BOND_COUNTS[symbol]
 			if bonds == 0:
 				molecule_max_atoms = 1
 			elif atom_row_i > 2:
@@ -442,7 +444,7 @@ def gen_all_atom_images(base_size, mips):
 			molecule_min_atoms = math.ceil(bonds / MAX_SINGLE_BONDS) + 1
 			if molecule_min_atoms > molecule_max_atoms:
 				molecule_max_atoms = 1
-			gen_atom_images(base_size, mips, symbol, bonds, molecule_max_atoms)
+			gen_atom_images(base_size, mips, symbol, molecule_max_atoms)
 		image_counter_print(f"Atom row {atom_row_i + 1} written")
 
 
@@ -524,7 +526,6 @@ def gen_specific_molecule(base_size, mips, molecule, include_outline = False):
 	image_back = filled_mip_image(base_size, mips)
 	image_front = filled_mip_image(base_size, mips)
 	shape = [row.split("-") for row in molecule.split("|")]
-	bonds = {"H": 1, "C": 4, "N": 3, "O": 2, "He": 0, "Be": 2}
 	y_scale = len(shape)
 	x_scale = max(len(row) for row in shape)
 	scale = max(y_scale, x_scale)
@@ -545,7 +546,7 @@ def gen_specific_molecule(base_size, mips, molecule, include_outline = False):
 			if include_outline:
 				simple_overlay_image(
 					image_back, gen_single_atom_outline_image(base_size, mips, y_scale, x_scale, y, x))
-			atom_image = gen_single_atom_image(base_size, mips, symbol, bonds[symbol], y_scale, x_scale, y, x)
+			atom_image = gen_single_atom_image(base_size, mips, symbol, y_scale, x_scale, y, x)
 			simple_overlay_image(image_front, atom_image)
 			if left_bonds > 0:
 				if left_bonds == 3:
@@ -1065,7 +1066,7 @@ def gen_molecule_shape_backgrounds(base_size, mips):
 				continue
 			x = i % MAX_GRID_WIDTH
 			y = i // MAX_GRID_WIDTH
-			atom_image = gen_single_atom_image(base_size, mips, SHAPE_ATOM_CHARACTER, 5, y_scale, x_scale, y, x)
+			atom_image = gen_single_atom_image(base_size, mips, SHAPE_ATOM_CHARACTER, y_scale, x_scale, y, x)
 			if i == first_slot_i:
 				image = atom_image
 			else:
