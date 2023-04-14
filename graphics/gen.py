@@ -122,6 +122,8 @@ MOLECULE_VOIDER_XY_FRACTION = 8 / 64
 MOLECULE_VOIDER_THICKNESS_FRACTION = 6 / 64
 with open("base-graphics-path.txt", "r") as file:
 	BASE_GRAPHICS_PATH = file.read()
+BASE_ICONS_PATH = os.path.join(BASE_GRAPHICS_PATH, "icons")
+BASE_FLUID_ICONS_PATH = os.path.join(BASE_ICONS_PATH, "fluid")
 MOLECULIFY_ARROW_COLOR = (128, 64, 224, 0)
 MOLECULIFY_ARROW_THICKNESS_FRACTION = 6 / 64
 MOLECULIFY_ARROW_SIZE_FRACTION = 8 / 64
@@ -135,6 +137,8 @@ REACTION_SETTINGS_RECT_INNER_THICKNESS_FRACTION = 8 / 64
 REACTION_SETTINGS_INNER_COLOR = (128, 128, 128, 0)
 REACTION_SETTINGS_BOX_SIZE_FRACTION = 12 / 64
 REACTION_SETTINGS_BOX_LEFT_SHIFT_FRACTION = 4 / 64
+TECHNOLOGY_SIZE = BASE_ICON_SIZE * 2
+TECHNOLOGY_MIPS = 3
 
 image_counter = 0
 total_images = 0
@@ -965,18 +969,16 @@ def iter_gen_all_building_recipe_icons(base_size, mips, include_outline):
 	yield (MOLECULE_VOIDER_NAME, gen_molecule_voider_image(base_size, mips, include_outline))
 
 def iter_gen_moleculify_recipe_icons(base_size, mips):
-	base_icons_folder = os.path.join(BASE_GRAPHICS_PATH, "icons")
-	base_fluid_icons_folder = os.path.join(base_icons_folder, "fluid")
 	image_pairs = [
-		("water", "-H|H1-1O", os.path.join(base_fluid_icons_folder, "water.png")),
-		("air", "N-O|3N-2O", os.path.join(base_fluid_icons_folder, "steam.png")),
+		("water", "-H|H1-1O", os.path.join(BASE_FLUID_ICONS_PATH, "water.png")),
+		("air", "N-O|3N-2O", os.path.join(BASE_FLUID_ICONS_PATH, "steam.png")),
 	]
 	for (name, moleculify_result_molecule, moleculify_source_image_path) in image_pairs:
 		moleculify_result_image = gen_specific_molecule(base_size, mips, moleculify_result_molecule)
 		moleculify_source_image = cv2.imread(moleculify_source_image_path, cv2.IMREAD_UNCHANGED)
 		image = filled_mip_image(base_size, mips)
 		#overlay the sub images at half-size at each mip level
-		for (mip, place_x, size) in iter_mips(base_size, mips):
+		for (_, place_x, size) in iter_mips(base_size, mips):
 			half_size = size // 2
 			image[0:half_size, place_x:place_x + half_size] = \
 				resize(moleculify_source_image[0:size, place_x:place_x + size], half_size, half_size)
@@ -1122,6 +1124,31 @@ def gen_reaction_settings_icon(base_size, mips):
 	image_counter_print("Reaction settings icon written")
 
 
+#Generate the technology images
+def gen_moleculify_plates_technology_image(base_size, mips):
+	image = filled_mip_image(base_size, mips)
+	iron_image = cv2.imread(os.path.join(BASE_ICONS_PATH, "iron-plate.png"), cv2.IMREAD_UNCHANGED)
+	copper_image = cv2.imread(os.path.join(BASE_ICONS_PATH, "copper-plate.png"), cv2.IMREAD_UNCHANGED)
+	iron_atom_image = gen_single_atom_image(base_size // 2, mips, "Fe", 1, 1, 0, 0)
+	copper_atom_image = gen_single_atom_image(base_size // 2, mips, "Cu", 1, 1, 0, 0)
+	for (mip, place_x, size) in iter_mips(base_size, mips):
+		size = size // 2
+		source_x = place_x // 2
+		for y in range(0, size * 3 // 4, size // 4):
+			simple_overlay_image_at(image, place_x, y, iron_image[0:size, source_x:source_x + size])
+			simple_overlay_image_at(image, place_x + size, y, copper_image[0:size, source_x:source_x + size])
+		simple_overlay_image_at(image, place_x, size, iron_atom_image[0:size, source_x:source_x + size])
+		simple_overlay_image_at(image, place_x + size, size, copper_atom_image[0:size, source_x:source_x + size])
+	return image
+
+def gen_all_technology_images(base_size, mips):
+	technologies_folder = "technologies"
+	if not os.path.exists(technologies_folder):
+		os.mkdir(technologies_folder)
+	write_image(technologies_folder, "moleculify-plates", gen_moleculify_plates_technology_image(base_size, mips))
+	image_counter_print("Technology images written")
+
+
 #Generate all graphics
 import time
 start = time.time()
@@ -1135,4 +1162,5 @@ gen_all_recipe_icons(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_icon_overlays(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_molecule_shape_backgrounds(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_reaction_settings_icon(BASE_ICON_SIZE, BASE_ICON_MIPS)
+gen_all_technology_images(TECHNOLOGY_SIZE, TECHNOLOGY_MIPS)
 print(time.strftime(f"Images generated at %Y-%m-%d %H:%M:%S after {(time.time() - start):.3f}s ({total_images} images total)"))
