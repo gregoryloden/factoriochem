@@ -1,4 +1,5 @@
 -- Constants
+local BUILDING_OVERLAYS_ROOT = GRAPHICS_ROOT.."building-overlays/"
 local MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME = MOLECULE_REACTION_NAME.."-buildings"
 local DIRECTION_GET_SPRITE_DATA = {
 	north = function(width, height, shift_x, shift_y)
@@ -51,7 +52,7 @@ local function add_4_way_layer(sprites, overlay_name, overlay, width, height, sh
 		local layers = sprites[direction].layers
 		local sprite_data = get_sprite_data(width, height, shift_x, shift_y)
 		local layer = {
-			filename = GRAPHICS_ROOT.."building-overlays/"..overlay_name..".png",
+			filename = BUILDING_OVERLAYS_ROOT..overlay_name..".png",
 			width = sprite_data.width,
 			height = sprite_data.height,
 			x = sprite_data.x,
@@ -59,7 +60,7 @@ local function add_4_way_layer(sprites, overlay_name, overlay, width, height, sh
 			priority = "high",
 			shift = sprite_data.shift,
 			hr_version = {
-				filename = GRAPHICS_ROOT.."building-overlays/"..overlay_name.."-hr.png",
+				filename = BUILDING_OVERLAYS_ROOT..overlay_name.."-hr.png",
 				width = sprite_data.width * 2,
 				height = sprite_data.height * 2,
 				x = sprite_data.x * 2,
@@ -220,12 +221,12 @@ moleculifier_entity.module_specification = nil
 moleculifier_entity.fast_replaceable_group = nil
 moleculifier_entity.next_upgrade = nil
 local moleculifier_overlay_layer = {
-	filename = GRAPHICS_ROOT.."building-overlays/"..MOLECULIFIER_NAME..".png",
+	filename = BUILDING_OVERLAYS_ROOT..MOLECULIFIER_NAME..".png",
 	size = BUILDING_OVERLAY_ICON_SIZE,
 	repeat_count = moleculifier_entity.animation.layers[1].frame_count,
 	priority = "high",
 	hr_version = {
-		filename = GRAPHICS_ROOT.."building-overlays/"..MOLECULIFIER_NAME.."-hr.png",
+		filename = BUILDING_OVERLAYS_ROOT..MOLECULIFIER_NAME.."-hr.png",
 		size = BUILDING_OVERLAY_ICON_SIZE * 2,
 		repeat_count = moleculifier_entity.animation.layers[1].hr_version.frame_count,
 		priority = "high",
@@ -270,6 +271,27 @@ for dst_property, src_property in pairs(arithmetic_combinator_copy_properties) d
 end
 overlay_icon(detector, MOLECULE_DETECTOR_NAME, arithmetic_combinator)
 add_4_way_layer(detector.sprites, MOLECULE_DETECTOR_NAME, false, 32, 64, 0, 0)
+local detector_symbol_shifts = {
+	north = {1 / 64, -11 / 64},
+	east = {1 / 64, -23 / 64},
+	south = {1 / 64, -11 / 64},
+	west = {1 / 64, -23 / 64},
+}
+for direction, shift in pairs(detector_symbol_shifts) do
+	local layer = {
+		filename = BUILDING_OVERLAYS_ROOT..MOLECULE_DETECTOR_NAME.."-symbol.png",
+		size = 9,
+		priority = "high",
+		shift = shift,
+		hr_version = {
+			filename = BUILDING_OVERLAYS_ROOT..MOLECULE_DETECTOR_NAME.."-symbol-hr.png",
+			size = 18,
+			priority = "high",
+			shift = shift,
+		},
+	}
+	table.insert(detector.sprites[direction].layers, layer)
+end
 
 local detector_item = table.deepcopy(data.raw.item["arithmetic-combinator"])
 detector_item.name = MOLECULE_DETECTOR_NAME
@@ -310,25 +332,23 @@ detector_output.circuit_wire_connection_points = table.deepcopy(arithmetic_combi
 data:extend({detector_output})
 
 
--- Incidator sprites for molecule reaction buildings
+-- Incidator sprites for molecule reaction building GUIs
 for _, component in ipairs(MOLECULE_REACTION_COMPONENT_NAMES) do
 	x = 32
 	if not MOLECULE_REACTION_IS_REACTANT[component] then x = 72 end
 	data:extend({{
 		type = "sprite",
 		name = MOLECULE_INDICATOR_PREFIX..component,
-		filename = GRAPHICS_ROOT.."building-overlays/"..component..".png",
+		filename = BUILDING_OVERLAYS_ROOT..component..".png",
 		width = 16,
 		height = 32,
 		x = x,
-		y = 0,
 		priority = "high",
 		hr_version = {
-			filename = GRAPHICS_ROOT.."building-overlays/"..component.."-hr.png",
+			filename = BUILDING_OVERLAYS_ROOT..component.."-hr.png",
 			width = 32,
 			height = 64,
 			x = x * 2,
-			y = 0,
 			priority = "high",
 		},
 	}})
