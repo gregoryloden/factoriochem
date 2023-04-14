@@ -445,7 +445,26 @@ BUILDING_DEFINITIONS = {
 		-- control fields
 		selectors = {[BASE_NAME] = ATOM_SELECTOR_NAME},
 		reaction = function(reaction)
-			return false
+			local molecule = reaction.reactants[BASE_NAME]
+			if not molecule then return false end
+
+			local shape, height, width = parse_molecule(molecule)
+			if height ~= 1 or width ~= 1 then return false end
+
+			local atom = ALL_ATOMS[shape[1][1].symbol]
+			local result_atom
+			if reaction.selectors[BASE_NAME] then
+				local result_shape, result_height, result_width = parse_molecule(reaction.selectors[BASE_NAME])
+				result_atom = ALL_ATOMS[result_shape[1][1].symbol]
+			else
+				result_atom = ALL_ATOMS[math.ceil(atom.number / 2)]
+			end
+			local remainder_atom = ALL_ATOMS[atom.number - result_atom.number]
+			if not remainder_atom then return false end
+
+			reaction.products[RESULT_NAME] = ATOM_ITEM_PREFIX..result_atom.symbol
+			reaction.products[REMAINDER_NAME] = ATOM_ITEM_PREFIX..remainder_atom.symbol
+			return true
 		end,
 	},
 	["molecule-fusioner"] = {
@@ -458,7 +477,23 @@ BUILDING_DEFINITIONS = {
 		-- control fields
 		selectors = {},
 		reaction = function(reaction)
-			return false
+			local first = reaction.reactants[BASE_NAME]
+			local second = reaction.reactants[MODIFIER_NAME]
+			if not first or not second then return false end
+
+			local first_shape, first_height, first_width = parse_molecule(first)
+			if first_height ~= 1 or first_width ~= 1 then return false end
+
+			local second_shape, second_height, second_width = parse_molecule(second)
+			if second_height ~= 1 or second_width ~= 1 then return false end
+
+			local first_atom = ALL_ATOMS[first_shape[1][1].symbol]
+			local second_atom = ALL_ATOMS[second_shape[1][1].symbol]
+			local result_atom = ALL_ATOMS[first_atom.number + second_atom.number]
+			if not result_atom then return false end
+
+			reaction.products[RESULT_NAME] = ATOM_ITEM_PREFIX..result_atom.symbol
+			return true
 		end,
 	},
 	["molecule-voider"] = {
