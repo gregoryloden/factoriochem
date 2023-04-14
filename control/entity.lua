@@ -409,7 +409,7 @@ end
 -- Global event handling
 function entity_on_init()
 	global.molecule_reaction_building_data = build_update_group_building_data(10)
-	global.molecule_detector_data = build_update_group_building_data(10)
+	global.molecule_detector_data = build_update_group_building_data(1)
 end
 
 function entity_on_tick(event_data)
