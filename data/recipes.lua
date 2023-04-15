@@ -40,6 +40,18 @@ local moleculify_recipes = {
 			{name = MOLECULE_ITEM_PREFIX.."O|2O", amount = 1, probability = 0.125},
 		},
 	},
+	{
+		name = "iron",
+		order = "c",
+		ingredients = {{"iron-plate", 1}},
+		results = {{name = ATOM_ITEM_PREFIX.."Fe", amount = 1}},
+	},
+	{
+		name = "copper",
+		order = "d",
+		ingredients = {{"copper-plate", 1}},
+		results = {{name = ATOM_ITEM_PREFIX.."Cu", amount = 1}},
+	}
 }
 for _, moleculify_recipe in ipairs(moleculify_recipes) do
 	moleculify_recipe.type = "recipe"
@@ -51,7 +63,6 @@ for _, moleculify_recipe in ipairs(moleculify_recipes) do
 	moleculify_recipe.energy_required = 1
 	moleculify_recipe.name = MOLECULIFY_PREFIX..moleculify_recipe.name
 end
-
 data:extend(moleculify_recipes)
 
 -- Science recipes
