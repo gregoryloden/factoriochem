@@ -972,6 +972,8 @@ def iter_gen_moleculify_recipe_icons(base_size, mips):
 	image_pairs = [
 		("water", "-H|H1-1O", os.path.join(BASE_FLUID_ICONS_PATH, "water.png")),
 		("air", "N-O|3N-2O", os.path.join(BASE_FLUID_ICONS_PATH, "steam.png")),
+		("iron", "Fe", os.path.join(BASE_ICONS_PATH, "iron-plate.png")),
+		("copper", "Cu", os.path.join(BASE_ICONS_PATH, "copper-plate.png")),
 	]
 	for (name, moleculify_result_molecule, moleculify_source_image_path) in image_pairs:
 		moleculify_result_image = gen_specific_molecule(base_size, mips, moleculify_result_molecule)
