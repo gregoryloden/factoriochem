@@ -1159,11 +1159,31 @@ def gen_moleculify_plates_technology_image(base_size, mips):
 	]
 	return gen_composite_image(layers, image)
 
+def gen_moleculify_air_technology_image(base_size, mips):
+	image = filled_mip_image(base_size, mips)
+	air_image = cv2.imread(os.path.join(BASE_FLUID_ICONS_PATH, "steam.png"), cv2.IMREAD_UNCHANGED)
+	left_molecules_image = gen_specific_molecule(base_size // 2, mips, "N3-N|O2-O")
+	right_molecules_image = gen_specific_molecule(base_size // 2, mips, "O-N|2O-3N")
+	for (mip, place_x, size) in iter_mips(base_size, mips):
+		size = size // 2
+		source_x = place_x // 2
+		for x in range(0, size * 3 // 2, size // 2):
+			simple_overlay_image_at(image, place_x + x, 0, air_image[0:size, source_x:source_x + size])
+		simple_overlay_image_at(image, place_x, size, left_molecules_image[0:size, source_x:source_x + size])
+		simple_overlay_image_at(image, place_x + size, size, right_molecules_image[0:size, source_x:source_x + size])
+	arrow_size = TECHNOLOGY_ARROW_SIZE_FRACTION * base_size * 2
+	layers = [
+		("layer", {"size": base_size, "mips": mips, "color": MOLECULIFY_ARROW_COLOR}),
+		("arrow", (base_size / 2, base_size / 2 - arrow_size / 2, 0, -arrow_size)),
+	]
+	return gen_composite_image(layers, image)
+
 def gen_all_technology_images(base_size, mips):
 	technologies_folder = "technologies"
 	if not os.path.exists(technologies_folder):
 		os.mkdir(technologies_folder)
 	write_image(technologies_folder, "moleculify-plates", gen_moleculify_plates_technology_image(base_size, mips))
+	write_image(technologies_folder, "moleculify-air", gen_moleculify_air_technology_image(base_size, mips))
 	image_counter_print("Technology images written")
 
 
