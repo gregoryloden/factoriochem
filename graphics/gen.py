@@ -139,6 +139,8 @@ REACTION_SETTINGS_BOX_SIZE_FRACTION = 12 / BASE_ICON_SIZE
 REACTION_SETTINGS_BOX_LEFT_SHIFT_FRACTION = 4 / BASE_ICON_SIZE
 TECHNOLOGY_SIZE = BASE_ICON_SIZE * 2
 TECHNOLOGY_MIPS = 3
+TECHNOLOGY_ARROW_THICKNESS_FRACTION = 8 / TECHNOLOGY_SIZE
+TECHNOLOGY_ARROW_SIZE_FRACTION = 12 / TECHNOLOGY_SIZE
 
 image_counter = 0
 total_images = 0
@@ -1141,7 +1143,21 @@ def gen_moleculify_plates_technology_image(base_size, mips):
 			simple_overlay_image_at(image, place_x + size, y, copper_image[0:size, source_x:source_x + size])
 		simple_overlay_image_at(image, place_x, size, iron_atom_image[0:size, source_x:source_x + size])
 		simple_overlay_image_at(image, place_x + size, size, copper_atom_image[0:size, source_x:source_x + size])
-	return image
+	iron_arrow_x = base_size / 4
+	copper_arrow_x = base_size * 3 / 4
+	arrow_top = base_size * 3 / 8
+	arrow_bottom = base_size * 5 / 8
+	thickness = int(TECHNOLOGY_ARROW_THICKNESS_FRACTION * base_size)
+	arrow_size = TECHNOLOGY_ARROW_SIZE_FRACTION * base_size
+	layers = [
+		("layer", {"size": base_size, "mips": mips, "color": MOLECULIFY_ARROW_COLOR}),
+		("line", {"start": (iron_arrow_x, arrow_top), "end": (iron_arrow_x, arrow_bottom), "thickness": thickness}),
+		("line", {"start": (copper_arrow_x, arrow_top), "end": (copper_arrow_x, arrow_bottom), "thickness": thickness}),
+		("layer", {"size": base_size, "color": MOLECULIFY_ARROW_COLOR}),
+		("arrow", (iron_arrow_x, arrow_bottom, 0, -arrow_size)),
+		("arrow", (copper_arrow_x, arrow_bottom, 0, -arrow_size)),
+	]
+	return gen_composite_image(layers, image)
 
 def gen_all_technology_images(base_size, mips):
 	technologies_folder = "technologies"
