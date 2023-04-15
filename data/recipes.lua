@@ -90,3 +90,10 @@ data.raw.recipe["automation-science-pack"].ingredients = {
 	{MOLECULE_ITEM_PREFIX.."H|1O|1H", 1},
 	{MOLECULE_ITEM_PREFIX.."H1-O1-H", 1},
 }
+data.raw.recipe["logistic-science-pack"].ingredients = {
+	{ATOM_ITEM_PREFIX.."Fe", 1},
+	{ATOM_ITEM_PREFIX.."Cu", 1},
+	{ATOM_ITEM_PREFIX.."Al", 1},
+	{MOLECULE_ITEM_PREFIX.."Be1-F|1Li", 1},
+	{MOLECULE_ITEM_PREFIX.."S1-Cl|1Li", 1},
+}
