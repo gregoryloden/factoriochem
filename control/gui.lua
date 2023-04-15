@@ -157,6 +157,12 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 				{filter = "subgroup", subgroup = ATOM_BOND_INNER_SELECTOR_SUBGROUP},
 				{filter = "subgroup", subgroup = ATOM_BOND_OUTER_SELECTOR_SUBGROUP},
 			}
+		elseif selector == DROPDOWN_SELECTOR_NAME then
+			spec.type = "drop-down"
+			spec.elem_type = nil
+			spec.items = building_definition.dropdowns[reactant_name]
+			spec.selected_index = 1
+			spec.style = "factoriochem-dropdown"
 		else
 			spec.elem_filters = {{filter = "subgroup", subgroup = MOLECULE_REACTION_SELECTOR_PREFIX..selector}}
 		end

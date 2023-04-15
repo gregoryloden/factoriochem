@@ -129,7 +129,12 @@ BUILDING_DEFINITIONS = {
 		reactants = {BASE_NAME},
 		products = {RESULT_NAME, REMAINDER_NAME},
 		-- control fields
-		selectors = {[BASE_NAME] = TARGET_SELECTOR_NAME, [MODIFIER_NAME] = ATOM_SELECTOR_NAME},
+		selectors = {
+			[BASE_NAME] = TARGET_SELECTOR_NAME,
+			[CATALYST_NAME] = DROPDOWN_SELECTOR_NAME,
+			[MODIFIER_NAME] = ATOM_SELECTOR_NAME,
+		},
+		dropdowns = {[CATALYST_NAME] = COMPARISON_SELECTOR_VALUES},
 		reaction = function(reaction)
 			local molecule = reaction.reactants[BASE_NAME]
 			local target = reaction.selectors[BASE_NAME]

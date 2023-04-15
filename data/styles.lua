@@ -3,3 +3,8 @@ data.raw["gui-style"]["default"]["factoriochem-big-slot-button"] = {
 	parent = "slot_button",
 	size = data.raw["gui-style"]["default"]["slot_button"].size + 32,
 }
+data.raw["gui-style"]["default"]["factoriochem-dropdown"] = {
+	type = "dropdown_style",
+	parent = "dropdown",
+	minimal_width = 0,
+}
