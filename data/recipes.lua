@@ -15,29 +15,32 @@ data:extend({
 		name = MOLECULIFY_RECIPE_CATEGORY,
 	},
 })
-local moleculify_recipes = {{
-	name = "water",
-	order = "a",
-	ingredients = {{name = "water", amount = 1, type = "fluid"}},
-	results = {
-		{name = MOLECULE_ITEM_PREFIX.."O1-H|1H", amount = 1, probability = 0.75},
-		{name = MOLECULE_ITEM_PREFIX.."H1-O|-1H", amount = 1, probability = 0.05},
-		{name = MOLECULE_ITEM_PREFIX.."-H|H1-1O", amount = 1, probability = 0.05},
-		{name = MOLECULE_ITEM_PREFIX.."H|1O1-H", amount = 1, probability = 0.05},
-		{name = MOLECULE_ITEM_PREFIX.."H|1O|1H", amount = 1, probability = 0.05},
-		{name = MOLECULE_ITEM_PREFIX.."H1-O1-H", amount = 1, probability = 0.05},
+local moleculify_recipes = {
+	{
+		name = "water",
+		order = "a",
+		ingredients = {{name = "water", amount = 1, type = "fluid"}},
+		results = {
+			{name = MOLECULE_ITEM_PREFIX.."O1-H|1H", amount = 1, probability = 0.75},
+			{name = MOLECULE_ITEM_PREFIX.."H1-O|-1H", amount = 1, probability = 0.05},
+			{name = MOLECULE_ITEM_PREFIX.."-H|H1-1O", amount = 1, probability = 0.05},
+			{name = MOLECULE_ITEM_PREFIX.."H|1O1-H", amount = 1, probability = 0.05},
+			{name = MOLECULE_ITEM_PREFIX.."H|1O|1H", amount = 1, probability = 0.05},
+			{name = MOLECULE_ITEM_PREFIX.."H1-O1-H", amount = 1, probability = 0.05},
+		},
 	},
-}, {
-	name = "air",
-	order = "b",
-	ingredients = {},
-	results = {
-		{name = MOLECULE_ITEM_PREFIX.."N3-N", amount = 1, probability = 0.375},
-		{name = MOLECULE_ITEM_PREFIX.."N|3N", amount = 1, probability = 0.375},
-		{name = MOLECULE_ITEM_PREFIX.."O2-O", amount = 1, probability = 0.125},
-		{name = MOLECULE_ITEM_PREFIX.."O|2O", amount = 1, probability = 0.125},
+	{
+		name = "air",
+		order = "b",
+		ingredients = {},
+		results = {
+			{name = MOLECULE_ITEM_PREFIX.."N3-N", amount = 1, probability = 0.375},
+			{name = MOLECULE_ITEM_PREFIX.."N|3N", amount = 1, probability = 0.375},
+			{name = MOLECULE_ITEM_PREFIX.."O2-O", amount = 1, probability = 0.125},
+			{name = MOLECULE_ITEM_PREFIX.."O|2O", amount = 1, probability = 0.125},
+		},
 	},
-}}
+}
 for _, moleculify_recipe in ipairs(moleculify_recipes) do
 	moleculify_recipe.type = "recipe"
 	moleculify_recipe.category = MOLECULIFY_RECIPE_CATEGORY
