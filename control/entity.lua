@@ -114,9 +114,15 @@ local function build_molecule_reaction_building(entity, building_definition)
 		_, settings = settings.silent_revive()
 		local settings_behavior = settings.get_control_behavior()
 		for i, reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
-			if not building_definition.selectors[reactant_name] then goto continue end
-			local signal = settings_behavior.get_signal(i).signal
-			if signal then building_data.reaction.selectors[reactant_name] = signal.name end
+			local selector = building_definition.selectors[reactant_name]
+			if not selector then goto continue end
+			local signal = settings_behavior.get_signal(i)
+			if not signal.signal then goto continue end
+			if selector == DROPDOWN_SELECTOR_NAME then
+				building_data.reaction.selectors[reactant_name] = signal.count
+			else
+				building_data.reaction.selectors[reactant_name] = signal.signal.name
+			end
 			::continue::
 		end
 	else
