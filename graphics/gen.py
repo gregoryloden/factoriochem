@@ -90,10 +90,10 @@ TARGET_SELECTOR_DEFAULT_COLOR = (128, 128, 128, 0)
 TARGET_SELECTOR_HIGHLIGHT_COLOR = (128, 224, 255, 0)
 ATOM_BOND_SELECTOR_INNER_ARROW_SIZE_FRACTION = 18 / BASE_ICON_SIZE
 ATOM_BOND_SELECTOR_INNER_ARROW_OFFSET_FRACTION = 6 / BASE_ICON_SIZE
-BASE_OVERLAY_SIZE = 32
+TILE_SIZE = 32
 MOLECULIFIER_MOLECULE = "H--C|-He|N--O"
 DETECTOR_ARROW_COLOR = (128, 224, 255, 0)
-DETECTOR_SYMBOL_SIZE_FRACTION = 9 / 32
+DETECTOR_SYMBOL_SIZE_FRACTION = 9 / TILE_SIZE
 MOLECULE_ROTATOR_NAME = "molecule-rotator"
 MOLECULE_ROTATOR_ICON_COLOR = (192, 192, 224, 0)
 MOLECULE_SORTER_NAME = "molecule-sorter"
@@ -792,18 +792,18 @@ def build_4_way_image(base_image):
 
 def iter_gen_component_overlays(base_size, suffix):
 	loader_input_poly_points = [
-		(base_size * 2 / 32, base_size * 16 / 32),
-		(base_size * 2 / 32, base_size * 55 / 32),
-		(base_size * 16 / 32, base_size * 48 / 32),
-		(base_size * 30 / 32, base_size * 55 / 32),
-		(base_size * 30 / 32, base_size * 16 / 32),
+		(base_size * 2 / TILE_SIZE, base_size * 16 / TILE_SIZE),
+		(base_size * 2 / TILE_SIZE, base_size * 55 / TILE_SIZE),
+		(base_size * 16 / TILE_SIZE, base_size * 48 / TILE_SIZE),
+		(base_size * 30 / TILE_SIZE, base_size * 55 / TILE_SIZE),
+		(base_size * 30 / TILE_SIZE, base_size * 16 / TILE_SIZE),
 	]
 	loader_output_poly_points = [
-		(base_size * 2 / 32, base_size * 40 / 32),
-		(base_size * 2 / 32, base_size * 8 / 32),
-		(base_size * 16 / 32, base_size * 1 / 32),
-		(base_size * 30 / 32, base_size * 8 / 32),
-		(base_size * 30 / 32, base_size * 40 / 32),
+		(base_size * 2 / TILE_SIZE, base_size * 40 / TILE_SIZE),
+		(base_size * 2 / TILE_SIZE, base_size * 8 / TILE_SIZE),
+		(base_size * 16 / TILE_SIZE, base_size * 1 / TILE_SIZE),
+		(base_size * 30 / TILE_SIZE, base_size * 8 / TILE_SIZE),
+		(base_size * 30 / TILE_SIZE, base_size * 40 / TILE_SIZE),
 	]
 	overlays = [
 		("base", (160, 160, 224, 0), loader_input_poly_points),
@@ -827,14 +827,14 @@ def gen_detector_indicators(base_size):
 	layers = [
 		("layer", {"height": base_size * 2, "width": base_size, "color": DETECTOR_ARROW_COLOR}),
 		("poly", [
-			(base_size * 10 / 32, base_size * 8 / 32),
-			(base_size * 16 / 32, base_size * 2 / 32),
-			(base_size * 22 / 32, base_size * 8 / 32),
+			(base_size * 10 / TILE_SIZE, base_size * 8 / TILE_SIZE),
+			(base_size * 16 / TILE_SIZE, base_size * 2 / TILE_SIZE),
+			(base_size * 22 / TILE_SIZE, base_size * 8 / TILE_SIZE),
 		]),
 		("poly", [
-			(base_size * 10 / 32, base_size * 62 / 32),
-			(base_size * 16 / 32, base_size * 56 / 32),
-			(base_size * 22 / 32, base_size * 62 / 32),
+			(base_size * 10 / TILE_SIZE, base_size * 62 / TILE_SIZE),
+			(base_size * 16 / TILE_SIZE, base_size * 56 / TILE_SIZE),
+			(base_size * 22 / TILE_SIZE, base_size * 62 / TILE_SIZE),
 		]),
 	]
 	return build_4_way_image(gen_composite_image(layers))
@@ -1159,7 +1159,7 @@ gen_all_bond_images(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_item_group_icon(ITEM_GROUP_SIZE, ITEM_GROUP_MIPS)
 gen_molecule_reaction_reactants_icon(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_all_selectors(BASE_ICON_SIZE, BASE_ICON_MIPS)
-gen_building_overlays(BASE_OVERLAY_SIZE)
+gen_building_overlays(TILE_SIZE)
 gen_all_recipe_icons(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_icon_overlays(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_molecule_shape_backgrounds(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
