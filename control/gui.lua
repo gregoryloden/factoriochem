@@ -61,6 +61,12 @@ local function update_all_reaction_table_sprites(gui, building_data)
 	end
 end
 
+local function indexof_reactant(reactant_name)
+	for i, found_reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
+		if reactant_name == found_reactant_name then return i end
+	end
+end
+
 local function get_demo_state(entity_name)
 	local demo_state = global.gui_demo_items[entity_name]
 	if not demo_state then
@@ -328,17 +334,13 @@ local function on_gui_elem_changed(event)
 	local reaction_table_selector_reactant_name = REACTION_TABLE_SELECTOR_NAME_MAP[element.name]
 	if reaction_table_selector_reactant_name then
 		building_data.reaction.selectors[reaction_table_selector_reactant_name] = element.elem_value
-		for i, reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
-			if reactant_name == reaction_table_selector_reactant_name then
-				local settings_behavior = building_data.settings.get_control_behavior()
-				if element.elem_value then
-					settings_behavior.set_signal(
-						i, {signal = {type = "item", name = element.elem_value}, count = 1})
-				else
-					settings_behavior.set_signal(i, nil)
-				end
-				break
-			end
+		local reactant_i = indexof_reactant(reaction_table_selector_reactant_name)
+		local settings_behavior = building_data.settings.get_control_behavior()
+		if element.elem_value then
+			settings_behavior.set_signal(
+				reactant_i, {signal = {type = "item", name = element.elem_value}, count = 1})
+		else
+			settings_behavior.set_signal(reactant_i, nil)
 		end
 		entity_assign_cache(building_data, BUILDING_DEFINITIONS[building_data.entity.name])
 		return
@@ -360,17 +362,13 @@ local function on_gui_selection_state_changed(event)
 	local reaction_table_selector_reactant_name = REACTION_TABLE_SELECTOR_NAME_MAP[element.name]
 	if reaction_table_selector_reactant_name then
 		building_data.reaction.selectors[reaction_table_selector_reactant_name] = element.selected_index
-		for i, reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
-			if reactant_name == reaction_table_selector_reactant_name then
-				local settings_behavior = building_data.settings.get_control_behavior()
-				if element.selected_index ~= 1 then
-					local info_signal = {type = "virtual", name = "signal-info"}
-					settings_behavior.set_signal(i, {signal = info_signal, count = element.selected_index})
-				else
-					settings_behavior.set_signal(i, nil)
-				end
-				break
-			end
+		local reactant_i = indexof_reactant(reaction_table_selector_reactant_name)
+		local settings_behavior = building_data.settings.get_control_behavior()
+		if element.selected_index ~= 1 then
+			settings_behavior.set_signal(
+				reactant_i, {signal = {type = "virtual", name = "signal-info"}, count = element.selected_index})
+		else
+			settings_behavior.set_signal(reactant_i, nil)
 		end
 		entity_assign_cache(building_data, BUILDING_DEFINITIONS[building_data.entity.name])
 		return
