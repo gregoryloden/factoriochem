@@ -143,15 +143,34 @@ BUILDING_DEFINITIONS = {
 
 			local y_scale, x_scale, y, x = parse_target(target)
 			local shape, height, width = parse_molecule(molecule)
+			local matches_comparison = false
 			if height == y_scale and width == x_scale then
 				local atom = shape[y][x]
-				if atom and atom.symbol == string.sub(target_atom, #ATOM_ITEM_PREFIX + 1) then
-					reaction.products[RESULT_NAME] = molecule
-					return true
+				if atom then
+					local comparator = ALL_ATOMS[atom.symbol].number
+					local comparand = ALL_ATOMS[string.sub(target_atom, #ATOM_ITEM_PREFIX + 1)].number
+					local comparison = COMPARISON_SELECTOR_VALUES[reaction.selectors[CATALYST_NAME]]
+					if comparison == "=" then
+						matches_comparison = comparator == comparand
+					elseif comparison == "<" then
+						matches_comparison = comparator < comparand
+					elseif comparison == ">" then
+						matches_comparison = comparator > comparand
+					elseif comparison == "≤" then
+						matches_comparison = comparator <= comparand
+					elseif comparison == "≥" then
+						matches_comparison = comparator >= comparand
+					elseif comparison == "≠" then
+						matches_comparison = comparator ~= comparand
+					end
 				end
 			end
 
-			reaction.products[REMAINDER_NAME] = molecule
+			if matches_comparison then
+				reaction.products[RESULT_NAME] = molecule
+			else
+				reaction.products[REMAINDER_NAME] = molecule
+			end
 			return true
 		end,
 	},
