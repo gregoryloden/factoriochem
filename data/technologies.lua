@@ -241,7 +241,7 @@ unlock_tips_and_tricks_item("splitters")
 unlock_tips_and_tricks_item("underground-belts")
 
 
--- Add technologies to unlock moleculify recipes
+-- Add technologies to unlock moleculify recipes, recipes will add themselves as effects
 local moleculify_unlock_technologies = {
 	{
 		name = "moleculify-plates",

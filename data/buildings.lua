@@ -125,7 +125,6 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 		type = "recipe",
 		name = entity.fixed_recipe,
 		subgroup = MOLECULES_SUBGROUP_NAME,
-		enabled = true,
 		ingredients = {{MOLECULE_REACTION_REACTANTS_NAME, 1}},
 		results = {},
 		energy_required = 1,
@@ -149,13 +148,14 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 	local recipe = {
 		type = "recipe",
 		name = name,
-		enabled = true,
 		ingredients = {{"iron-gear-wheel", 25}, {"copper-plate", 50}},
 		result = name,
+		unlocking_technology = definition.unlocking_technology,
 	}
 	if name == "molecule-voider" then
 		for _, ingredient in ipairs(recipe.ingredients) do ingredient[2] = ingredient[2] * 10 end
 	end
+	recipe_set_unlocking_technology(recipe)
 
 	data:extend({entity, reaction_recipe, item, recipe})
 end
@@ -237,7 +237,6 @@ overlay_icon(moleculifier_item, MOLECULIFIER_NAME)
 local moleculifier_recipe = {
 	type = "recipe",
 	name = MOLECULIFIER_NAME,
-	enabled = true,
 	ingredients = {{"iron-gear-wheel", 25}, {"copper-plate", 50}},
 	result = MOLECULIFIER_NAME,
 }
@@ -289,7 +288,6 @@ detector_item.icon_mipmaps = nil
 local detector_recipe = {
 	type = "recipe",
 	name = MOLECULE_DETECTOR_NAME,
-	enabled = true,
 	ingredients = {{"iron-plate", 10}, {"electronic-circuit", 20}},
 	result = MOLECULE_DETECTOR_NAME,
 }

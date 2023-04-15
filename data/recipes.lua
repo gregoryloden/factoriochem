@@ -3,6 +3,16 @@ local MOLECULIFY_SUBGROUP_NAME = "moleculify"
 local MOLECULIFY_PREFIX = "moleculify-"
 
 
+-- Global utilities
+function recipe_set_unlocking_technology(recipe)
+	if not recipe.unlocking_technology then return end
+	local technology = data.raw.technology[recipe.unlocking_technology]
+	table.insert(technology.effects, {type = "unlock-recipe", recipe = recipe.name})
+	recipe.unlocking_technology = nil
+	recipe.enabled = false
+end
+
+
 -- Moleculifier recipes
 data:extend({
 	{
@@ -65,12 +75,7 @@ for _, moleculify_recipe in ipairs(moleculify_recipes) do
 	moleculify_recipe.icon_mipmaps = ITEM_ICON_MIPMAPS
 	moleculify_recipe.energy_required = 1
 	moleculify_recipe.name = MOLECULIFY_PREFIX..moleculify_recipe.name
-	if moleculify_recipe.unlocking_technology then
-		local technology = data.raw.technology[moleculify_recipe.unlocking_technology]
-		table.insert(technology.effects, {type = "unlock-recipe", recipe = moleculify_recipe.name})
-		moleculify_recipe.unlocking_technology = nil
-		moleculify_recipe.enabled = false
-	end
+	recipe_set_unlocking_technology(moleculify_recipe)
 end
 data:extend(moleculify_recipes)
 

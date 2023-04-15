@@ -10,7 +10,7 @@ MOLECULIFY_RECIPE_CATEGORY = "moleculify"
 
 require("data/molecules")
 require("data/selectors")
-require("data/buildings")
 require("data/technologies")
 require("data/recipes")
+require("data/buildings")
 require("data/styles")
