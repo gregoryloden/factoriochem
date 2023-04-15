@@ -1,3 +1,9 @@
+-- Constants
+local TECHNOLOGY_ICON_ROOT = GRAPHICS_ROOT.."technologies/"
+local TECHNOLOGY_ICON_SIZE = 128
+local TECHNOLOGY_ICON_MIPMAPS = 3
+
+
 -- Helpers
 local function table_remove_value(t, rv)
 	for i, v in ipairs(t) do
@@ -12,6 +18,24 @@ local function unlock_tips_and_tricks_item(name)
 	local tips_and_tricks_item = data.raw["tips-and-tricks-item"][name]
 	tips_and_tricks_item.starting_status = "unlocked"
 	tips_and_tricks_item.trigger = nil
+end
+
+local function assign_science_prerequisites(technology)
+	-- collect all the science prerequisites needed to research this technology
+	local new_prerequisites = {}
+	for _, ingredient in ipairs(technology.unit.ingredients) do
+		new_prerequisites[ingredient.name or ingredient[1]] = true
+	end
+	-- remove any science pack that is already used to research a previous science
+	new_prerequisites["automation-science-pack"] = nil
+	for prerequisite, _ in pairs(new_prerequisites) do
+		for _, ingredient in ipairs(data.raw.technology[prerequisite].unit.ingredients) do
+			new_prerequisites[ingredient.name or ingredient[1]] = nil
+		end
+	end
+	-- now go through and reassign the prerequisites
+	technology.prerequisites = {}
+	for prerequisite, _ in pairs(new_prerequisites) do table.insert(technology.prerequisites, prerequisite) end
 end
 
 
@@ -204,22 +228,7 @@ end
 -- Now that all technologies can reach all their prerequisites without going through a science, go through each science, and
 --	reassign new prerequisites containing exclusively the science pack that it uses that none of its prerequisites use
 for science_pack, _ in pairs(future_science_packs) do
-	local technology = data.raw.technology[science_pack]
-	-- collect all the science prerequisites needed
-	local new_prerequisites = {}
-	for _, ingredient in ipairs(technology.unit.ingredients) do
-		new_prerequisites[ingredient.name or ingredient[1]] = true
-	end
-	-- remove any science pack that is already used to research a previous science
-	new_prerequisites["automation-science-pack"] = nil
-	for prerequisite, _ in pairs(new_prerequisites) do
-		for _, ingredient in ipairs(data.raw.technology[prerequisite].unit.ingredients) do
-			new_prerequisites[ingredient.name or ingredient[1]] = nil
-		end
-	end
-	-- now go through and reassign the prerequisites
-	technology.prerequisites = {}
-	for prerequisite, _ in pairs(new_prerequisites) do table.insert(technology.prerequisites, prerequisite) end
+	assign_science_prerequisites(data.raw.technology[science_pack])
 end
 
 
@@ -230,3 +239,28 @@ data.raw.recipe["underground-belt"].enabled = nil
 data.raw.recipe["splitter"].enabled = nil
 unlock_tips_and_tricks_item("splitters")
 unlock_tips_and_tricks_item("underground-belts")
+
+
+-- Add technologies to unlock moleculify recipes
+local moleculify_unlock_technologies = {
+	{
+		name = "moleculify-plates",
+		unit = {
+			count = 100,
+			time = 10,
+			ingredients = {
+				{"automation-science-pack", 1},
+				{"logistic-science-pack", 1},
+			},
+		},
+	},
+}
+for _, technology in pairs(moleculify_unlock_technologies) do
+	technology.type = "technology"
+	technology.effects = {}
+	technology.icon = TECHNOLOGY_ICON_ROOT..technology.name..".png"
+	technology.icon_size = TECHNOLOGY_ICON_SIZE
+	technology.icon_mipmaps = TECHNOLOGY_ICON_MIPMAPS
+	assign_science_prerequisites(technology)
+end
+data:extend(moleculify_unlock_technologies)
