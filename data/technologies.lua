@@ -251,6 +251,17 @@ local moleculify_unlock_technologies = {
 			ingredients = {{"automation-science-pack", 1}},
 		},
 	},
+	{
+		name = "moleculify-air",
+		unit = {
+			count = 100,
+			time = 10,
+			ingredients = {
+				{"automation-science-pack", 1},
+				{"logistic-science-pack", 1},
+			},
+		},
+	},
 }
 for _, technology in pairs(moleculify_unlock_technologies) do
 	technology.type = "technology"

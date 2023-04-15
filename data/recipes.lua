@@ -53,6 +53,7 @@ local moleculify_recipes = {
 			{name = MOLECULE_ITEM_PREFIX.."O2-O", amount = 1, probability = 0.125},
 			{name = MOLECULE_ITEM_PREFIX.."O|2O", amount = 1, probability = 0.125},
 		},
+		unlocking_technology = "moleculify-air",
 	},
 }
 for _, moleculify_recipe in ipairs(moleculify_recipes) do
