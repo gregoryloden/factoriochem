@@ -82,18 +82,34 @@ data:extend(moleculify_recipes)
 
 
 -- Science recipes
-data.raw.recipe["automation-science-pack"].ingredients = {
-	{MOLECULE_ITEM_PREFIX.."O1-H|1H", 1},
-	{MOLECULE_ITEM_PREFIX.."H1-O|-1H", 1},
-	{MOLECULE_ITEM_PREFIX.."-H|H1-1O", 1},
-	{MOLECULE_ITEM_PREFIX.."H|1O1-H", 1},
-	{MOLECULE_ITEM_PREFIX.."H|1O|1H", 1},
-	{MOLECULE_ITEM_PREFIX.."H1-O1-H", 1},
+local science_ingredients = {
+	["automation-science-pack"] = {
+		{MOLECULE_ITEM_PREFIX.."O1-H|1H", 1},
+		{MOLECULE_ITEM_PREFIX.."H1-O|-1H", 1},
+		{MOLECULE_ITEM_PREFIX.."-H|H1-1O", 1},
+		{MOLECULE_ITEM_PREFIX.."H|1O1-H", 1},
+		{MOLECULE_ITEM_PREFIX.."H|1O|1H", 1},
+		{MOLECULE_ITEM_PREFIX.."H1-O1-H", 1},
+	},
+	["logistic-science-pack"] = {
+		{ATOM_ITEM_PREFIX.."Fe", 1},
+		{ATOM_ITEM_PREFIX.."Cu", 1},
+		{ATOM_ITEM_PREFIX.."Al", 1},
+		{MOLECULE_ITEM_PREFIX.."Be1-F|1Li", 1},
+		{MOLECULE_ITEM_PREFIX.."S1-Cl|1Li", 1},
+	},
 }
-data.raw.recipe["logistic-science-pack"].ingredients = {
-	{ATOM_ITEM_PREFIX.."Fe", 1},
-	{ATOM_ITEM_PREFIX.."Cu", 1},
-	{ATOM_ITEM_PREFIX.."Al", 1},
-	{MOLECULE_ITEM_PREFIX.."Be1-F|1Li", 1},
-	{MOLECULE_ITEM_PREFIX.."S1-Cl|1Li", 1},
-}
+for science, ingredients in pairs(science_ingredients) do
+	local recipe = data.raw.recipe[science]
+	recipe.ingredients = ingredients
+	local total_atomic_number = 0
+	for _, ingredient in ipairs(ingredients) do
+		local shape = parse_molecule(ingredient[1])
+		for _, shape_row in pairs(shape) do
+			for _, atom in pairs(shape_row) do
+				total_atomic_number = total_atomic_number + ALL_ATOMS[atom.symbol].number * ingredient[2]
+			end
+		end
+	end
+	recipe.localised_description = {"recipe-description.science-pack-atomic-number", total_atomic_number}
+end
