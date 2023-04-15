@@ -150,12 +150,11 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 		name = name,
 		ingredients = {{"iron-gear-wheel", 25}, {"copper-plate", 50}},
 		result = name,
-		unlocking_technology = definition.unlocking_technology,
 	}
 	if name == "molecule-voider" then
 		for _, ingredient in ipairs(recipe.ingredients) do ingredient[2] = ingredient[2] * 10 end
 	end
-	recipe_set_unlocking_technology(recipe)
+	recipe_set_unlocking_technology(recipe, definition.unlocking_technology)
 
 	data:extend({entity, reaction_recipe, item, recipe})
 end
@@ -291,6 +290,7 @@ local detector_recipe = {
 	ingredients = {{"iron-plate", 10}, {"electronic-circuit", 20}},
 	result = MOLECULE_DETECTOR_NAME,
 }
+recipe_set_unlocking_technology(detector_recipe, "circuit-network")
 
 data:extend({detector, detector_item, detector_recipe})
 

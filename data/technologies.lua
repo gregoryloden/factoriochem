@@ -246,7 +246,7 @@ local moleculify_unlock_technologies = {
 	{
 		name = "moleculify-plates",
 		unit = {
-			count = 100,
+			count = 50,
 			time = 10,
 			ingredients = {{"automation-science-pack", 1}},
 		},
@@ -254,7 +254,7 @@ local moleculify_unlock_technologies = {
 	{
 		name = "moleculify-air",
 		unit = {
-			count = 100,
+			count = 50,
 			time = 10,
 			ingredients = {
 				{"automation-science-pack", 1},
