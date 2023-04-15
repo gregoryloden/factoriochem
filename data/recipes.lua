@@ -30,8 +30,22 @@ local moleculify_recipes = {
 		},
 	},
 	{
-		name = "air",
+		name = "iron",
 		order = "b",
+		ingredients = {{"iron-plate", 1}},
+		results = {{name = ATOM_ITEM_PREFIX.."Fe", amount = 1}},
+		unlocking_technology = "moleculify-plates",
+	},
+	{
+		name = "copper",
+		order = "c",
+		ingredients = {{"copper-plate", 1}},
+		results = {{name = ATOM_ITEM_PREFIX.."Cu", amount = 1}},
+		unlocking_technology = "moleculify-plates",
+	},
+	{
+		name = "air",
+		order = "d",
 		ingredients = {},
 		results = {
 			{name = MOLECULE_ITEM_PREFIX.."N3-N", amount = 1, probability = 0.375},
@@ -40,20 +54,6 @@ local moleculify_recipes = {
 			{name = MOLECULE_ITEM_PREFIX.."O|2O", amount = 1, probability = 0.125},
 		},
 	},
-	{
-		name = "iron",
-		order = "c",
-		ingredients = {{"iron-plate", 1}},
-		results = {{name = ATOM_ITEM_PREFIX.."Fe", amount = 1}},
-		unlocking_technology = "moleculify-plates",
-	},
-	{
-		name = "copper",
-		order = "d",
-		ingredients = {{"copper-plate", 1}},
-		results = {{name = ATOM_ITEM_PREFIX.."Cu", amount = 1}},
-		unlocking_technology = "moleculify-plates",
-	}
 }
 for _, moleculify_recipe in ipairs(moleculify_recipes) do
 	moleculify_recipe.type = "recipe"
