@@ -248,10 +248,7 @@ local moleculify_unlock_technologies = {
 		unit = {
 			count = 100,
 			time = 10,
-			ingredients = {
-				{"automation-science-pack", 1},
-				{"logistic-science-pack", 1},
-			},
+			ingredients = {{"automation-science-pack", 1}},
 		},
 	},
 }

@@ -45,12 +45,14 @@ local moleculify_recipes = {
 		order = "c",
 		ingredients = {{"iron-plate", 1}},
 		results = {{name = ATOM_ITEM_PREFIX.."Fe", amount = 1}},
+		unlocking_technology = "moleculify-plates",
 	},
 	{
 		name = "copper",
 		order = "d",
 		ingredients = {{"copper-plate", 1}},
 		results = {{name = ATOM_ITEM_PREFIX.."Cu", amount = 1}},
+		unlocking_technology = "moleculify-plates",
 	}
 }
 for _, moleculify_recipe in ipairs(moleculify_recipes) do
@@ -62,8 +64,15 @@ for _, moleculify_recipe in ipairs(moleculify_recipes) do
 	moleculify_recipe.icon_mipmaps = ITEM_ICON_MIPMAPS
 	moleculify_recipe.energy_required = 1
 	moleculify_recipe.name = MOLECULIFY_PREFIX..moleculify_recipe.name
+	if moleculify_recipe.unlocking_technology then
+		local technology = data.raw.technology[moleculify_recipe.unlocking_technology]
+		table.insert(technology.effects, {type = "unlock-recipe", recipe = moleculify_recipe.name})
+		moleculify_recipe.unlocking_technology = nil
+		moleculify_recipe.enabled = false
+	end
 end
 data:extend(moleculify_recipes)
+
 
 -- Science recipes
 data.raw.recipe["automation-science-pack"].ingredients = {
