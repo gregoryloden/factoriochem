@@ -116,6 +116,11 @@ MOLECULE_FISSIONER_THICKNESS_FRACTION = 4 / BASE_ICON_SIZE
 MOLECULE_FISSIONER_COLOR = (192, 192, 224, 0)
 MOLECULE_FUSIONER_NAME = "molecule-fusioner"
 MOLECULE_FUSIONER_COLOR = (224, 224, 192, 0)
+MOLECULE_SEVERER_NAME = "molecule-severer"
+MOLECULE_SEVERER_THICKNESS_FRACTION = 4 / BASE_ICON_SIZE
+MOLECULE_SEVERER_WIDTH_FRACTION = 0.5
+MOLECULE_SPLICER_NAME = "molecule-splicer"
+MOLECULE_SPLICER_ARROW_SIZE_FRACTION = 8 / BASE_ICON_SIZE
 MOLECULE_VOIDER_NAME = "molecule-voider"
 MOLECULE_VOIDER_COLOR = (64, 64, 224, 0)
 MOLECULE_VOIDER_XY_FRACTION = 8 / BASE_ICON_SIZE
@@ -952,6 +957,26 @@ def gen_molecule_fusioner_image(base_size, mips, include_outline):
 	]
 	return gen_composite_image(layers, image, include_outline)
 
+def gen_molecule_severer_image(base_size, mips, include_outline):
+	image = gen_specific_molecule(base_size, mips, "H|1O|1H", include_outline)
+	thickness = int(MOLECULE_SEVERER_THICKNESS_FRACTION * base_size)
+	left = (1 - MOLECULE_SEVERER_WIDTH_FRACTION) * base_size / 2
+	right = base_size - left
+	layers = [
+		("layer", {"size": base_size, "mips": mips, "color": MOLECULE_DEBONDER_COLOR}),
+		("line", {"start": (left, base_size / 2), "end": (right, base_size / 2), "thickness": thickness}),
+	]
+	return gen_composite_image(layers, image, include_outline)
+
+def gen_molecule_splicer_image(base_size, mips, include_outline):
+	image = gen_specific_molecule(base_size, mips, "H1-B1-H|-H|-1H", include_outline)
+	arrow_size = MOLECULE_SPLICER_ARROW_SIZE_FRACTION * base_size
+	layers = [
+		("layer", {"size": base_size, "mips": mips, "color": MOLECULE_BONDER_COLOR}),
+		("arrow", (base_size / 2, base_size / 3 + arrow_size / 2, 0, arrow_size)),
+	]
+	return gen_composite_image(layers, image, include_outline)
+
 def gen_molecule_voider_image(base_size, mips, include_outline):
 	image = gen_specific_molecule(base_size, mips, "N3-N", include_outline)
 	top_left = MOLECULE_VOIDER_XY_FRACTION * base_size
@@ -972,6 +997,8 @@ def iter_gen_all_building_recipe_icons(base_size, mips, include_outline):
 	yield (MOLECULE_BONDER_NAME, gen_molecule_bonder_image(base_size, mips, include_outline))
 	yield (MOLECULE_FISSIONER_NAME, gen_molecule_fissioner_image(base_size, mips, include_outline))
 	yield (MOLECULE_FUSIONER_NAME, gen_molecule_fusioner_image(base_size, mips, include_outline))
+	yield (MOLECULE_SEVERER_NAME, gen_molecule_severer_image(base_size, mips, include_outline))
+	yield (MOLECULE_SPLICER_NAME, gen_molecule_splicer_image(base_size, mips, include_outline))
 	yield (MOLECULE_VOIDER_NAME, gen_molecule_voider_image(base_size, mips, include_outline))
 
 def iter_gen_moleculify_recipe_icons(base_size, mips):
@@ -1139,7 +1166,7 @@ def gen_moleculify_plates_technology_image(base_size, mips):
 	copper_image = cv2.imread(os.path.join(BASE_ICONS_PATH, "copper-plate.png"), cv2.IMREAD_UNCHANGED)
 	iron_atom_image = gen_single_atom_image(base_size // 2, mips, "Fe", 1, 1, 0, 0)
 	copper_atom_image = gen_single_atom_image(base_size // 2, mips, "Cu", 1, 1, 0, 0)
-	for (mip, place_x, size) in iter_mips(base_size, mips):
+	for (_, place_x, size) in iter_mips(base_size, mips):
 		size = size // 2
 		source_x = place_x // 2
 		for y in range(0, size * 3 // 4, size // 4):
@@ -1168,7 +1195,7 @@ def gen_moleculify_air_technology_image(base_size, mips):
 	air_image = cv2.imread(os.path.join(BASE_FLUID_ICONS_PATH, "steam.png"), cv2.IMREAD_UNCHANGED)
 	left_molecules_image = gen_specific_molecule(base_size // 2, mips, "N3-N|O2-O")
 	right_molecules_image = gen_specific_molecule(base_size // 2, mips, "O-N|2O-3N")
-	for (mip, place_x, size) in iter_mips(base_size, mips):
+	for (_, place_x, size) in iter_mips(base_size, mips):
 		size = size // 2
 		source_x = place_x // 2
 		for x in range(0, size * 3 // 2, size // 2):
@@ -1188,7 +1215,7 @@ def gen_molecule_reaction_buildings_2_technology_image(base_size, mips):
 	bonder_image = gen_molecule_bonder_image(base_size // 2, mips, False)
 	fissioner_image = gen_molecule_fissioner_image(base_size // 2, mips, False)
 	fusioner_image = gen_molecule_fusioner_image(base_size // 2, mips, False)
-	for (mip, place_x, size) in iter_mips(base_size, mips):
+	for (_, place_x, size) in iter_mips(base_size, mips):
 		size = size // 2
 		source_x = place_x // 2
 		simple_overlay_image_at(image, place_x, 0, debonder_image[0:size, source_x:source_x + size])
@@ -1199,10 +1226,13 @@ def gen_molecule_reaction_buildings_2_technology_image(base_size, mips):
 
 def gen_molecule_reaction_buildings_3_technology_image(base_size, mips):
 	image = filled_mip_image(base_size, mips)
-	draw_center = draw_coords_from(base_size / 2, base_size / 2)
-	draw_radius = draw_radius_from(base_size / 4)
-	draw_alpha_on(image, lambda mask: draw_filled_circle_alpha(mask, draw_center, draw_radius))
-	easy_mips(image, multi_color_alpha_weighting=False)
+	severer_image = gen_molecule_severer_image(base_size // 2, mips, False)
+	splicer_image = gen_molecule_splicer_image(base_size // 2, mips, False)
+	for (_, place_x, size) in iter_mips(base_size, mips):
+		size = size // 2
+		source_x = place_x // 2
+		simple_overlay_image_at(image, place_x, size // 2, severer_image[0:size, source_x:source_x + size])
+		simple_overlay_image_at(image, place_x + size, size // 2, splicer_image[0:size, source_x:source_x + size])
 	return image
 
 def gen_all_technology_images(base_size, mips):
