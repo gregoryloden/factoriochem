@@ -38,6 +38,15 @@ local function assign_science_prerequisites(technology)
 	for prerequisite, _ in pairs(new_prerequisites) do table.insert(technology.prerequisites, prerequisite) end
 end
 
+local function set_technology_properties(technology)
+	technology.type = "technology"
+	technology.effects = {}
+	technology.icon = TECHNOLOGY_ICON_ROOT..technology.name..".png"
+	technology.icon_size = TECHNOLOGY_ICON_SIZE
+	technology.icon_mipmaps = TECHNOLOGY_ICON_MIPMAPS
+	assign_science_prerequisites(technology)
+end
+
 
 -- We want all sciences with prerequisites (except space science) to only require the previous science, but first, we need to
 --	pass their original prerequisites to all the technologies that have them as prerequisites
@@ -263,12 +272,24 @@ local moleculify_unlock_technologies = {
 		},
 	},
 }
-for _, technology in pairs(moleculify_unlock_technologies) do
-	technology.type = "technology"
-	technology.effects = {}
-	technology.icon = TECHNOLOGY_ICON_ROOT..technology.name..".png"
-	technology.icon_size = TECHNOLOGY_ICON_SIZE
-	technology.icon_mipmaps = TECHNOLOGY_ICON_MIPMAPS
-	assign_science_prerequisites(technology)
-end
+for _, technology in pairs(moleculify_unlock_technologies) do set_technology_properties(technology) end
 data:extend(moleculify_unlock_technologies)
+
+
+-- Add technologies to unlock molecule building recipes and make them prerequisites for sciences, recipes will add themselves as
+--	effects
+local reaction_building_unlock_technologies = {
+	{
+		name = "molecule-reaction-buildings-2",
+		unit = {count = 50, time = 10},
+		postrequisite = "logistic-science-pack",
+	},
+}
+for _, technology in pairs(reaction_building_unlock_technologies) do
+	local science_technology = data.raw.technology[technology.postrequisite]
+	technology.unit.ingredients = science_technology.unit.ingredients
+	technology.postrequisite = nil
+	set_technology_properties(technology)
+	science_technology.prerequisites = {technology.name}
+end
+data:extend(reaction_building_unlock_technologies)

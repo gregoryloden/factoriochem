@@ -1178,12 +1178,29 @@ def gen_moleculify_air_technology_image(base_size, mips):
 	]
 	return gen_composite_image(layers, image)
 
+def gen_molecule_reaction_buildings_2_technology_image(base_size, mips):
+	image = filled_mip_image(base_size, mips)
+	debonder_image = gen_molecule_debonder_image(base_size // 2, mips, False)
+	bonder_image = gen_molecule_bonder_image(base_size // 2, mips, False)
+	fissioner_image = gen_molecule_fissioner_image(base_size // 2, mips, False)
+	fusioner_image = gen_molecule_fusioner_image(base_size // 2, mips, False)
+	for (mip, place_x, size) in iter_mips(base_size, mips):
+		size = size // 2
+		source_x = place_x // 2
+		simple_overlay_image_at(image, place_x, 0, debonder_image[0:size, source_x:source_x + size])
+		simple_overlay_image_at(image, place_x + size, 0, bonder_image[0:size, source_x:source_x + size])
+		simple_overlay_image_at(image, place_x, size, fissioner_image[0:size, source_x:source_x + size])
+		simple_overlay_image_at(image, place_x + size, size, fusioner_image[0:size, source_x:source_x + size])
+	return image
+
 def gen_all_technology_images(base_size, mips):
 	technologies_folder = "technologies"
 	if not os.path.exists(technologies_folder):
 		os.mkdir(technologies_folder)
 	write_image(technologies_folder, "moleculify-plates", gen_moleculify_plates_technology_image(base_size, mips))
 	write_image(technologies_folder, "moleculify-air", gen_moleculify_air_technology_image(base_size, mips))
+	molecule_reaction_buildings_2_technology_image = gen_molecule_reaction_buildings_2_technology_image(base_size, mips)
+	write_image(technologies_folder, "molecule-reaction-buildings-2", molecule_reaction_buildings_2_technology_image)
 	image_counter_print("Technology images written")
 
 

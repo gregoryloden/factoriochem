@@ -286,7 +286,7 @@ BUILDING_DEFINITIONS = {
 		-- data fields
 		building_design = {"assembling-machine", "assembling-machine-2"},
 		item_order = "d",
-		unlocking_technology = "logistic-science-pack",
+		unlocking_technology = "molecule-reaction-buildings-2",
 		-- data and control fields
 		reactants = {BASE_NAME},
 		products = {RESULT_NAME, BYPRODUCT_NAME, REMAINDER_NAME},
@@ -367,7 +367,7 @@ BUILDING_DEFINITIONS = {
 		-- data fields
 		building_design = {"assembling-machine", "assembling-machine-2"},
 		item_order = "e",
-		unlocking_technology = "logistic-science-pack",
+		unlocking_technology = "molecule-reaction-buildings-2",
 		-- data and control fields
 		reactants = {BASE_NAME, CATALYST_NAME, MODIFIER_NAME},
 		products = {RESULT_NAME},
@@ -465,7 +465,7 @@ BUILDING_DEFINITIONS = {
 		-- data fields
 		building_design = {"assembling-machine", "assembling-machine-2"},
 		item_order = "f",
-		unlocking_technology = "logistic-science-pack",
+		unlocking_technology = "molecule-reaction-buildings-2",
 		-- data and control fields
 		reactants = {BASE_NAME},
 		products = {RESULT_NAME, REMAINDER_NAME},
@@ -498,7 +498,7 @@ BUILDING_DEFINITIONS = {
 		-- data fields
 		building_design = {"assembling-machine", "assembling-machine-2"},
 		item_order = "g",
-		unlocking_technology = "logistic-science-pack",
+		unlocking_technology = "molecule-reaction-buildings-2",
 		-- data and control fields
 		reactants = {BASE_NAME, MODIFIER_NAME},
 		products = {RESULT_NAME},
