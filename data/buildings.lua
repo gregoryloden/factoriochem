@@ -116,10 +116,16 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 		west = table.deepcopy(building_animation.west or building_animation),
 	}
 	for _, component in ipairs(MOLECULE_REACTION_COMPONENT_NAMES) do
-		if not definition.has_component[component] then goto continue end
+		local overlay_name = component
 		local shift = MOLECULE_REACTION_COMPONENT_OFFSETS[component]
-		add_4_way_layer(entity.animation, component, true, 32, 56, shift.x, shift.y * 1.375)
-		::continue::
+		if not definition.has_component[component] then
+			if shift.y > 0 then
+				overlay_name = "none-in"
+			else
+				overlay_name = "none-out"
+			end
+		end
+		add_4_way_layer(entity.animation, overlay_name, true, 32, 56, shift.x, shift.y * 1.375)
 	end
 	entity.working_sound = building_design.working_sound
 

@@ -807,6 +807,8 @@ def iter_gen_component_overlays(base_size, suffix):
 		(base_size * 30 / TILE_SIZE, base_size * 8 / TILE_SIZE),
 		(base_size * 30 / TILE_SIZE, base_size * 40 / TILE_SIZE),
 	]
+	loader_none_input_poly_points = [(x, min(base_size * 48 / TILE_SIZE, y)) for (x, y) in loader_input_poly_points]
+	loader_none_output_poly_points = [(x, max(base_size * 8 / TILE_SIZE, y)) for (x, y) in loader_output_poly_points]
 	overlays = [
 		("base", (160, 160, 224, 0), loader_input_poly_points),
 		("catalyst", (160, 224, 160, 0), loader_input_poly_points),
@@ -814,6 +816,8 @@ def iter_gen_component_overlays(base_size, suffix):
 		("result", (224, 224, 160, 0), loader_output_poly_points),
 		("byproduct", (224, 160, 224, 0), loader_output_poly_points),
 		("remainder", (160, 224, 224, 0), loader_output_poly_points),
+		("none-in", (160, 160, 160, 0), loader_none_input_poly_points),
+		("none-out", (160, 160, 160, 0), loader_none_output_poly_points),
 	]
 	for (component, color, loader_poly_points) in overlays:
 		image = gen_composite_image([
