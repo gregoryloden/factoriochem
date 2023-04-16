@@ -250,32 +250,6 @@ unlock_tips_and_tricks_item("splitters")
 unlock_tips_and_tricks_item("underground-belts")
 
 
--- Add technologies to unlock moleculify recipes, recipes will add themselves as effects
-local moleculify_unlock_technologies = {
-	{
-		name = "moleculify-plates",
-		unit = {
-			count = 50,
-			time = 10,
-			ingredients = {{"automation-science-pack", 1}},
-		},
-	},
-	{
-		name = "moleculify-air",
-		unit = {
-			count = 50,
-			time = 10,
-			ingredients = {
-				{"automation-science-pack", 1},
-				{"logistic-science-pack", 1},
-			},
-		},
-	},
-}
-for _, technology in pairs(moleculify_unlock_technologies) do set_technology_properties(technology) end
-data:extend(moleculify_unlock_technologies)
-
-
 -- Add technologies to unlock molecule building recipes and make them prerequisites for sciences, recipes will add themselves as
 --	effects
 local reaction_building_unlock_technologies = {
@@ -293,3 +267,33 @@ for _, technology in pairs(reaction_building_unlock_technologies) do
 	science_technology.prerequisites = {technology.name}
 end
 data:extend(reaction_building_unlock_technologies)
+
+
+-- Add technologies to unlock moleculify recipes, recipes will add themselves as effects
+local moleculify_unlock_technologies = {
+	{
+		name = "moleculify-plates",
+		unit = {
+			count = 50,
+			time = 10,
+			ingredients = {{"automation-science-pack", 1}},
+		},
+	},
+	{
+		name = "moleculify-air",
+		unit = {
+			count = 50,
+			time = 10,
+			ingredients = {{"automation-science-pack", 1}},
+		},
+		prerequisites = {"molecule-reaction-buildings-2"},
+	},
+}
+for _, technology in pairs(moleculify_unlock_technologies) do
+	local old_prerequisites = technology.prerequisites
+	set_technology_properties(technology)
+	if old_prerequisites then
+		for _, prerequisite in pairs(old_prerequisites) do table.insert(technology.prerequisites, prerequisite) end
+	end
+end
+data:extend(moleculify_unlock_technologies)
