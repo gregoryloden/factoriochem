@@ -117,10 +117,9 @@ local function build_molecule_reaction_building(entity, building_definition)
 			local selector = building_definition.selectors[reactant_name]
 			if not selector then goto continue end
 			local signal = settings_behavior.get_signal(i)
-			if not signal.signal then goto continue end
 			if selector == DROPDOWN_SELECTOR_NAME then
-				building_data.reaction.selectors[reactant_name] = signal.count
-			else
+				building_data.reaction.selectors[reactant_name] = signal.count or 1
+			elseif signal.signal then
 				building_data.reaction.selectors[reactant_name] = signal.signal.name
 			end
 			::continue::
@@ -133,6 +132,10 @@ local function build_molecule_reaction_building(entity, building_definition)
 			force = entity.force,
 			create_build_effect_smoke = false,
 		})
+		for _, reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
+			local selector = building_definition.selectors[reactant_name]
+			if selector == DROPDOWN_SELECTOR_NAME then building_data.reaction.selectors[reactant_name] = 1 end
+		end
 	end
 	settings.destructible = false
 	building_data.settings = settings

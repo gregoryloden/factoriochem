@@ -167,9 +167,9 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 			spec.style = "factoriochem-dropdown"
 			if name_prefix == REACTION_PREFIX then
 				local building_data = global.molecule_reaction_building_data[entity.unit_number]
-				spec.selected_index = building_data.reaction.selectors[reactant_name] or 1
+				spec.selected_index = building_data.reaction.selectors[reactant_name]
 			else
-				spec.selected_index = demo_state.selectors[reactant_name] or 1
+				spec.selected_index = demo_state.selectors[reactant_name]
 			end
 			-- this selector doesn't select an item so stop here
 			return spec
