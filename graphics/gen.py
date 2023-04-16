@@ -1197,6 +1197,14 @@ def gen_molecule_reaction_buildings_2_technology_image(base_size, mips):
 		simple_overlay_image_at(image, place_x + size, size, fusioner_image[0:size, source_x:source_x + size])
 	return image
 
+def gen_molecule_reaction_buildings_3_technology_image(base_size, mips):
+	image = filled_mip_image(base_size, mips)
+	draw_center = draw_coords_from(base_size / 2, base_size / 2)
+	draw_radius = draw_radius_from(base_size / 4)
+	draw_alpha_on(image, lambda mask: draw_filled_circle_alpha(mask, draw_center, draw_radius))
+	easy_mips(image, multi_color_alpha_weighting=False)
+	return image
+
 def gen_all_technology_images(base_size, mips):
 	technologies_folder = "technologies"
 	if not os.path.exists(technologies_folder):
@@ -1205,6 +1213,8 @@ def gen_all_technology_images(base_size, mips):
 	write_image(technologies_folder, "moleculify-air", gen_moleculify_air_technology_image(base_size, mips))
 	molecule_reaction_buildings_2_technology_image = gen_molecule_reaction_buildings_2_technology_image(base_size, mips)
 	write_image(technologies_folder, "molecule-reaction-buildings-2", molecule_reaction_buildings_2_technology_image)
+	molecule_reaction_buildings_3_technology_image = gen_molecule_reaction_buildings_3_technology_image(base_size, mips)
+	write_image(technologies_folder, "molecule-reaction-buildings-3", molecule_reaction_buildings_3_technology_image)
 	image_counter_print("Technology images written")
 
 
