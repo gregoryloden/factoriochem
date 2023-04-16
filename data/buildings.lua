@@ -24,6 +24,7 @@ BASE_BUILDING_PROTOTYPE.energy_source = {type = "void"}
 BASE_BUILDING_PROTOTYPE.crafting_speed = 1
 BASE_BUILDING_PROTOTYPE.fluid_boxes = nil
 BASE_BUILDING_PROTOTYPE.module_specification = nil
+BASE_BUILDING_PROTOTYPE.allowed_effects = nil
 BASE_BUILDING_PROTOTYPE.fast_replaceable_group = nil
 BASE_BUILDING_PROTOTYPE.selection_box[1][2] = BASE_BUILDING_PROTOTYPE.selection_box[1][2] - 1
 BASE_BUILDING_PROTOTYPE.selection_box[2][2] = BASE_BUILDING_PROTOTYPE.selection_box[2][2] + 1
