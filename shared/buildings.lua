@@ -570,10 +570,15 @@ BUILDING_DEFINITIONS = {
 			local remainder_shape = gen_grid(height)
 			for _, atom in ipairs(remainder_atoms) do remainder_shape[atom.y][atom.x] = atom end
 
-			-- insert the parts of the source into the result and remainder molecules
+			-- insert the parts of the source into the result and remainder molecules, and make sure that the atoms
+			--	there are valid
 			place_atom_and_assign_bonds({symbol = result_atom.symbol}, shape, center_x, center_y)
 			place_atom_and_assign_bonds(
 				{symbol = source_fission_remainder.symbol}, remainder_shape, center_x, center_y)
+			if not verify_bond_count(shape[center_y][center_x])
+					or not verify_bond_count(remainder_shape[center_y][center_x]) then
+				return false
+			end
 
 			-- and finally, normalize molecules and write everything to the output
 			local remainder_width, remainder_height
