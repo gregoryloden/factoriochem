@@ -102,6 +102,31 @@ local function extract_connected_atoms(shape, start_x, start_y)
 	return atoms
 end
 
+local function merge_with_modifier(shape, target_x, target_y, modifier, modifier_target)
+	local modifier_shape, modifier_height, modifier_width = parse_molecule(modifier)
+	local modifier_y_scale, modifier_x_scale, modifier_y, modifier_x = parse_target(modifier_target)
+	if modifier_height ~= modifier_y_scale or modifier_width ~= modifier_x_scale then return false end
+
+	local target = modifier_shape[modifier_y][modifier_x]
+	if not target then return false end
+
+	-- merge it into the base shape
+	local move_x, move_y = target_x - modifier_x, target_y - modifier_y
+	for y, modifier_shape_row in pairs(modifier_shape) do
+		for x, atom in pairs(modifier_shape_row) do
+			local dest_x, dest_y = x + move_x, y + move_y
+			local shape_row = shape[dest_y]
+			if not shape_row then
+				shape_row = {}
+				shape[dest_y] = shape_row
+			end
+			if shape_row[dest_x] then return false end
+			shape_row[dest_x] = atom
+		end
+	end
+	return true
+end
+
 local function place_atom_and_assign_bonds(center_atom, shape, center_x, center_y)
 	shape[center_y][center_x] = center_atom
 	local center_up_atom = shape[center_y - 1] and shape[center_y - 1][center_x]
@@ -417,29 +442,11 @@ BUILDING_DEFINITIONS = {
 				local modifier = reaction.reactants[MODIFIER_NAME]
 				if not modifier then return false end
 
-				local modifier_shape, modifier_height, modifier_width = parse_molecule(modifier)
-				local modifier_y_scale, modifier_x_scale, modifier_y, modifier_x = parse_target(modifier_target)
-				if modifier_height ~= modifier_y_scale or modifier_width ~= modifier_x_scale then
+				-- merge it into the base molecule
+				if not merge_with_modifier(shape, target_x, target_y, modifier, modifier_target) then
 					return false
 				end
-
-				target = modifier_shape[modifier_y][modifier_x]
-				if not target then return false end
-
-				-- merge it into the base molecule
-				local move_x, move_y = target_x - modifier_x, target_y - modifier_y
-				for y, modifier_shape_row in pairs(modifier_shape) do
-					for x, atom in pairs(modifier_shape_row) do
-						local dest_x, dest_y = x + move_x, y + move_y
-						local shape_row = shape[dest_y]
-						if not shape_row then
-							shape_row = {}
-							shape[dest_y] = shape_row
-						end
-						if shape_row[dest_x] then return false end
-						shape_row[dest_x] = atom
-					end
-				end
+				target = shape[target_y][target_x]
 
 				-- normalize the shape, and make sure that it fits within the grid
 				shape, height, width = normalize_shape(shape)
