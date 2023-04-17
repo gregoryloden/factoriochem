@@ -159,7 +159,7 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 		ingredients = {{"iron-gear-wheel", 25}, {"copper-plate", 50}},
 		result = name,
 	}
-	if name == "molecule-voider" then
+	if name == MOLECULE_VOIDER_NAME then
 		for _, ingredient in ipairs(recipe.ingredients) do ingredient[2] = ingredient[2] * 10 end
 	end
 	recipe_set_unlocking_technology(recipe, definition.unlocking_technology)

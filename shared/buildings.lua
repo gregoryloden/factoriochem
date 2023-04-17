@@ -660,7 +660,7 @@ BUILDING_DEFINITIONS = {
 			return true
 		end,
 	},
-	["molecule-voider"] = {
+	[MOLECULE_VOIDER_NAME] = {
 		-- data fields
 		building_design = {"assembling-machine", "assembling-machine-3"},
 		item_order = "j",
