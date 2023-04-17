@@ -524,10 +524,28 @@ BUILDING_DEFINITIONS = {
 			return true
 		end,
 	},
+	["molecule-severer"] = {
+		-- data fields
+		building_design = {"assembling-machine", "assembling-machine-2"},
+		item_order = "h",
+		unlocking_technology = "molecule-reaction-buildings-3",
+		-- data and control fields
+		reactants = {BASE_NAME},
+		products = {RESULT_NAME, BYPRODUCT_NAME, REMAINDER_NAME},
+		-- control fields
+		selectors = {
+			[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME,
+			[CATALYST_NAME] = ATOM_SELECTOR_NAME,
+			[MODIFIER_NAME] = ATOM_SELECTOR_NAME,
+		},
+		reaction = function(reaction)
+			return false
+		end,
+	},
 	["molecule-voider"] = {
 		-- data fields
 		building_design = {"assembling-machine", "assembling-machine-3"},
-		item_order = "h",
+		item_order = "i",
 		-- data and control fields
 		reactants = {BASE_NAME},
 		products = {},
