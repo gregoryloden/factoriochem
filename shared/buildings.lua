@@ -386,7 +386,7 @@ BUILDING_DEFINITIONS = {
 		selectors = {
 			[BASE_NAME] = ATOM_BOND_SELECTOR_NAME,
 			[CATALYST_NAME] = ATOM_SELECTOR_NAME,
-			[MODIFIER_NAME] = TARGET_SELECTOR_NAME
+			[MODIFIER_NAME] = TARGET_SELECTOR_NAME,
 		},
 		reaction = function(reaction)
 			local source, shape, height, width, center_y, center_x, direction = verify_base_atom_bond(reaction)
@@ -586,10 +586,28 @@ BUILDING_DEFINITIONS = {
 			return true
 		end,
 	},
+	["molecule-splicer"] = {
+		-- data fields
+		building_design = {"assembling-machine", "assembling-machine-2"},
+		item_order = "i",
+		unlocking_technology = "molecule-reaction-buildings-3",
+		-- data and control fields
+		reactants = {BASE_NAME, CATALYST_NAME, MODIFIER_NAME},
+		products = {RESULT_NAME},
+		-- control fields
+		selectors = {
+			[BASE_NAME] = TARGET_SELECTOR_NAME,
+			[CATALYST_NAME] = ATOM_SELECTOR_NAME,
+			[MODIFIER_NAME] = TARGET_SELECTOR_NAME,
+		},
+		reaction = function(reaction)
+			return false
+		end,
+	},
 	["molecule-voider"] = {
 		-- data fields
 		building_design = {"assembling-machine", "assembling-machine-3"},
-		item_order = "i",
+		item_order = "j",
 		-- data and control fields
 		reactants = {BASE_NAME},
 		products = {},
