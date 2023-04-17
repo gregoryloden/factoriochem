@@ -128,6 +128,7 @@ local function merge_with_modifier(shape, target_x, target_y, modifier, modifier
 end
 
 local function place_atom_and_assign_bonds(center_atom, shape, center_x, center_y)
+	center_atom.x, center_atom.y = center_x, center_y
 	shape[center_y][center_x] = center_atom
 	local center_up_atom = shape[center_y - 1] and shape[center_y - 1][center_x]
 	local center_left_atom = shape[center_y][center_x - 1]
@@ -613,7 +614,50 @@ BUILDING_DEFINITIONS = {
 			[MODIFIER_NAME] = TARGET_SELECTOR_NAME,
 		},
 		reaction = function(reaction)
-			return false
+			-- check that the base reaction is valid
+			local molecule = reaction.reactants[BASE_NAME]
+			local molecule_target = reaction.selectors[BASE_NAME]
+			if not molecule or not molecule_target then return false end
+
+			local shape, height, width = parse_molecule(molecule)
+			local y_scale, x_scale, center_y, center_x = parse_target(molecule_target)
+			if y_scale ~= height or x_scale ~= width then return false end
+
+			local source = shape[center_y][center_x]
+			if not source then return false end
+
+			-- remove the target atom and move in the modifier
+			shape[center_y][center_x] = nil
+			local modifier = reaction.reactants[MODIFIER_NAME]
+			local modifier_target = reaction.selectors[MODIFIER_NAME]
+			if not modifier or not modifier_target then return false end
+			if not merge_with_modifier(shape, center_x, center_y, modifier, modifier_target) then return false end
+
+			local result_atom = shape[center_y][center_x]
+			local result_atomic_number = ALL_ATOMS[source.symbol].number + ALL_ATOMS[result_atom.symbol].number
+
+			-- add the catalyst if it is present and matches the selector
+			local catalyst = reaction.reactants[CATALYST_NAME]
+			if catalyst ~= reaction.selectors[CATALYST_NAME] then return false end
+			if catalyst then
+				local atom_shape, atom_height, atom_width = parse_molecule(catalyst)
+				result_atomic_number = result_atomic_number + ALL_ATOMS[atom_shape[1][1].symbol].number
+			end
+
+			-- update the combined atom
+			local result_atom_atom = ALL_ATOMS[result_atomic_number]
+			if not result_atom_atom then return false end
+			result_atom = {symbol = result_atom_atom.symbol}
+			place_atom_and_assign_bonds(result_atom, shape, center_x, center_y)
+			if not verify_bond_count(result_atom) then return false end
+
+			-- make sure it's valid
+			shape, height, width = normalize_shape(shape)
+			if not shape then return false end
+
+			-- we've finally done everything, reassemble the molecule
+			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
+			return true
 		end,
 	},
 	["molecule-voider"] = {
