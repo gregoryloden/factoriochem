@@ -24,6 +24,21 @@ local function gen_grid(height)
 	return shape
 end
 
+local function verify_base_atom_bond(reaction)
+	local molecule = reaction.reactants[BASE_NAME]
+	local atom_bond = reaction.selectors[BASE_NAME]
+	if not molecule or not atom_bond then return nil end
+
+	local shape, height, width = parse_molecule(molecule)
+	local y_scale, x_scale, center_y, center_x, direction = parse_atom_bond(atom_bond)
+	if y_scale ~= height or x_scale ~= width then return nil end
+
+	local source = shape[center_y][center_x]
+	if not source then return nil end
+
+	return source, shape, height, width, center_y, center_x, direction
+end
+
 local function get_target(center_x, center_y, direction)
 	if direction == "E" then
 		return center_x + 1, center_y
@@ -62,7 +77,9 @@ end
 
 local function extract_connected_atoms(shape, start_x, start_y)
 	-- make sure we actually have an atom at the starting position
-	local atom = shape[start_y][start_x]
+	local start_row = shape[start_y]
+	if not start_row then return nil end
+	local atom = start_row[start_x]
 	if not atom then return nil end
 
 	-- BFS through the shape, removing any atom connected through bonds to the starting atom
@@ -295,16 +312,7 @@ BUILDING_DEFINITIONS = {
 		-- control fields
 		selectors = {[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME, [CATALYST_NAME] = ATOM_SELECTOR_NAME},
 		reaction = function(reaction)
-			-- check that the base reaction is valid
-			local molecule = reaction.reactants[BASE_NAME]
-			local atom_bond = reaction.selectors[BASE_NAME]
-			if not molecule or not atom_bond then return false end
-
-			local shape, height, width = parse_molecule(molecule)
-			local y_scale, x_scale, center_y, center_x, direction = parse_atom_bond(atom_bond)
-			if y_scale ~= height or x_scale ~= width then return false end
-
-			local source = shape[center_y][center_x]
+			local source, shape, height, width, center_y, center_x, direction = verify_base_atom_bond(reaction)
 			if not source then return false end
 
 			local bonds = get_bonds(source, direction)
@@ -314,9 +322,11 @@ BUILDING_DEFINITIONS = {
 			--	on bonds or atomic numbers
 			local byproduct = reaction.selectors[CATALYST_NAME]
 			local target_x, target_y = get_target(center_x, center_y, direction)
+			if target_y < 1 or target_y > height then return false end
 			local target = shape[target_y][target_x]
+			if not target then return false end
 
-			-- if we removed the last bond, check to see if it was disconnected
+			-- if we removed the last bond, check to see if it disconnected the molecule
 			local remainder_shape, remainder_width, remainder_height
 			if bonds == 1 then
 				set_bonds(source, target, direction, nil)
@@ -339,7 +349,7 @@ BUILDING_DEFINITIONS = {
 					-- no split, restore all the atoms to the original shape
 					for _, atom in ipairs(extracted_atoms) do shape[atom.y][atom.x] = atom end
 				end
-			-- we didn't remove the last bond, the molecule is still connected
+			-- we didn't remove the last bond, the atoms are still connected
 			else
 				set_bonds(source, target, direction, bonds - 1)
 			end
@@ -379,16 +389,7 @@ BUILDING_DEFINITIONS = {
 			[MODIFIER_NAME] = TARGET_SELECTOR_NAME
 		},
 		reaction = function(reaction)
-			-- check that the base reaction is valid
-			local molecule = reaction.reactants[BASE_NAME]
-			local atom_bond = reaction.selectors[BASE_NAME]
-			if not molecule or not atom_bond then return false end
-
-			local shape, height, width = parse_molecule(molecule)
-			local y_scale, x_scale, center_y, center_x, direction = parse_atom_bond(atom_bond)
-			if y_scale ~= height or x_scale ~= width then return false end
-
-			local source = shape[center_y][center_x]
+			local source, shape, height, width, center_y, center_x, direction = verify_base_atom_bond(reaction)
 			if not source then return false end
 
 			-- add the catalyst if it is present and matches the selector
@@ -541,20 +542,11 @@ BUILDING_DEFINITIONS = {
 		},
 		reaction = function(reaction)
 			-- check that the base reaction is valid
-			local molecule = reaction.reactants[BASE_NAME]
-			local atom_bond = reaction.selectors[BASE_NAME]
-			local remainder_atom = reaction.selectors[MODIFIER_NAME]
-			if not molecule or not atom_bond or not remainder_atom then return false end
-
-			local shape, height, width = parse_molecule(molecule)
-			local y_scale, x_scale, center_y, center_x, direction = parse_atom_bond(atom_bond)
-			if y_scale ~= height or x_scale ~= width then return false end
-
-			local source = shape[center_y][center_x]
+			local source, shape, height, width, center_y, center_x, direction = verify_base_atom_bond(reaction)
 			if not source then return false end
 
-			local bonds = get_bonds(source, direction)
-			if not bonds then return false end
+			local remainder_atom = reaction.selectors[MODIFIER_NAME]
+			if not remainder_atom then return false end
 
 			-- check that the atom can be split properly
 			source_fission_remainder = parse_molecule(remainder_atom)[1][1]
