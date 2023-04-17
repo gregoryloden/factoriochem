@@ -85,6 +85,18 @@ local function extract_connected_atoms(shape, start_x, start_y)
 	return atoms
 end
 
+local function place_atom_and_assign_bonds(center_atom, shape, center_x, center_y)
+	shape[center_y][center_x] = center_atom
+	local center_up_atom = shape[center_y - 1] and shape[center_y - 1][center_x]
+	local center_left_atom = shape[center_y][center_x - 1]
+	local center_right_atom = shape[center_y][center_x + 1]
+	local center_down_atom = shape[center_y + 1] and shape[center_y + 1][center_x]
+	if center_up_atom then center_atom.up = center_up_atom.down end
+	if center_left_atom then center_atom.left = center_left_atom.right end
+	if center_right_atom then center_atom.right = center_right_atom.left end
+	if center_down_atom then center_atom.down = center_down_atom.up end
+end
+
 local function normalize_shape(shape)
 	local min_x, max_x, min_y, max_y
 	for y, shape_row in pairs(shape) do
@@ -235,10 +247,9 @@ BUILDING_DEFINITIONS = {
 				--	atom at the target
 				if height ~= y_scale or width ~= x_scale then return false end
 
-				local center_row = shape[center_y]
-				local center_atom = center_row[center_x]
-				center_row[center_x] = nil
+				local center_atom = shape[center_y][center_x]
 				if not center_atom then return false end
+				shape[center_y][center_x] = nil
 
 				-- all the requirements are met, now remove all the connected atoms from the shape so that we
 				--	can re-insert them at their rotated positions
@@ -261,16 +272,7 @@ BUILDING_DEFINITIONS = {
 				end
 
 				-- restore the center atom and reassign bonds to it now that other atoms have been rotated
-				center_atom = {symbol = center_atom.symbol}
-				center_row[center_x] = center_atom
-				local center_up_atom = shape[center_y - 1] and shape[center_y - 1][center_x]
-				local center_left_atom = center_row[center_x - 1]
-				local center_right_atom = center_row[center_x + 1]
-				local center_down_atom = shape[center_y + 1] and shape[center_y + 1][center_x]
-				if center_up_atom then center_atom.up = center_up_atom.down end
-				if center_left_atom then center_atom.left = center_left_atom.right end
-				if center_right_atom then center_atom.right = center_right_atom.left end
-				if center_down_atom then center_atom.down = center_down_atom.up end
+				place_atom_and_assign_bonds({symbol = center_atom.symbol}, shape, center_x, center_y)
 
 				-- normalize the positions of all the atoms, if needed
 				shape, height, width = normalize_shape(shape)
@@ -332,7 +334,7 @@ BUILDING_DEFINITIONS = {
 					remainder_shape = gen_grid(height)
 					for _, atom in ipairs(extracted_atoms) do remainder_shape[atom.y][atom.x] = atom end
 					shape, height, width = normalize_shape(shape)
-					remainder_shape, remainder_width, remainder_height = normalize_shape(remainder_shape)
+					remainder_shape, remainder_height, remainder_width = normalize_shape(remainder_shape)
 				else
 					-- no split, restore all the atoms to the original shape
 					for _, atom in ipairs(extracted_atoms) do shape[atom.y][atom.x] = atom end
@@ -349,9 +351,8 @@ BUILDING_DEFINITIONS = {
 				new_atom = ALL_ATOMS[ALL_ATOMS[source.symbol].number - ALL_ATOMS[fission_atom.symbol].number]
 				if not new_atom then return false end
 				source.symbol = new_atom.symbol
+				if not verify_bond_count(source) then return false end
 			end
-
-			if not verify_bond_count(source) then return false end
 
 			-- we've finally done everything, reassemble the molecule(s) and deliver any fission results
 			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
@@ -539,7 +540,58 @@ BUILDING_DEFINITIONS = {
 			[MODIFIER_NAME] = ATOM_SELECTOR_NAME,
 		},
 		reaction = function(reaction)
-			return false
+			-- check that the base reaction is valid
+			local molecule = reaction.reactants[BASE_NAME]
+			local atom_bond = reaction.selectors[BASE_NAME]
+			local remainder_atom = reaction.selectors[MODIFIER_NAME]
+			if not molecule or not atom_bond or not remainder_atom then return false end
+
+			local shape, height, width = parse_molecule(molecule)
+			local y_scale, x_scale, center_y, center_x, direction = parse_atom_bond(atom_bond)
+			if y_scale ~= height or x_scale ~= width then return false end
+
+			local source = shape[center_y][center_x]
+			if not source then return false end
+
+			local bonds = get_bonds(source, direction)
+			if not bonds then return false end
+
+			-- check that the atom can be split properly
+			source_fission_remainder = parse_molecule(remainder_atom)[1][1]
+			local result_atom_number =
+				ALL_ATOMS[source.symbol].number - ALL_ATOMS[source_fission_remainder.symbol].number
+			local byproduct = reaction.selectors[CATALYST_NAME]
+			if byproduct then
+				byproduct = parse_molecule(byproduct)[1][1]
+				result_atom_number = result_atom_number - ALL_ATOMS[byproduct.symbol].number
+			end
+			local result_atom = ALL_ATOMS[result_atom_number]
+			if not result_atom then return false end
+
+			-- remove the atom and all atoms connected to it
+			shape[center_y][center_x] = nil
+			local target_x, target_y = get_target(center_x, center_y, direction)
+			local remainder_atoms = extract_connected_atoms(shape, target_x, target_y)
+			if not remainder_atoms then return false end
+
+			-- assemble the remainder molecule
+			local remainder_shape = gen_grid(height)
+			for _, atom in ipairs(remainder_atoms) do remainder_shape[atom.y][atom.x] = atom end
+
+			-- insert the parts of the source into the result and remainder molecules
+			place_atom_and_assign_bonds({symbol = result_atom.symbol}, shape, center_x, center_y)
+			place_atom_and_assign_bonds(
+				{symbol = source_fission_remainder.symbol}, remainder_shape, center_x, center_y)
+
+			-- and finally, normalize molecules and write everything to the output
+			local remainder_width, remainder_height
+			shape, height, width = normalize_shape(shape)
+			remainder_shape, remainder_height, remainder_width = normalize_shape(remainder_shape)
+			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
+			reaction.products[REMAINDER_NAME] =
+				assemble_molecule(remainder_shape, remainder_height, remainder_width)
+			if byproduct then reaction.products[BYPRODUCT_NAME] = ATOM_ITEM_PREFIX..byproduct.symbol end
+			return true
 		end,
 	},
 	["molecule-voider"] = {
