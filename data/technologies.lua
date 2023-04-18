@@ -273,6 +273,24 @@ for _, technology in pairs(reaction_building_unlock_technologies) do
 end
 data:extend(reaction_building_unlock_technologies)
 
+local molecule_printer_technology = {
+	name = "molecule-printer",
+	unit = {
+		count = 100,
+		time = 10,
+		ingredients = {
+			{"automation-science-pack", 1},
+			{"logistic-science-pack", 1},
+			{"chemical-science-pack", 1},
+			{"production-science-pack", 1},
+			{"utility-science-pack", 1},
+			{"space-science-pack", 1},
+		},
+	},
+}
+set_technology_properties(molecule_printer_technology)
+data:extend({molecule_printer_technology})
+
 
 -- Add technologies to unlock moleculify recipes, recipes will add themselves as effects
 local moleculify_unlock_technologies = {
