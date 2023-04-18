@@ -679,12 +679,52 @@ BUILDING_DEFINITIONS = {
 		item_order = "k",
 		unlocking_technology = "molecule-printer",
 		-- data and control fields
-		reactants = {BASE_NAME},
+		reactants = {},
 		products = {RESULT_NAME},
 		-- control fields
 		selectors = {[BASE_NAME] = TEXT_SELECTOR_NAME},
 		reaction = function(reaction)
-			return false
+			-- check that we can even parse the molecule ID
+			local molecule_id = reaction.selectors[BASE_NAME]
+			local shape, height, width
+			if not pcall(function() shape, height, width = parse_molecule_id(molecule_id) end) then return false end
+
+			-- make sure that the size and positioning is valid
+			if height == 0 or height > MAX_GRID_HEIGHT or width == 0 or width > MAX_GRID_WIDTH then return false end
+			local top_x
+			for x = 1, width do
+				if shape[1][x] then
+					top_x = x
+					break
+				end
+			end
+			if not top_x then return false end
+			local has_left = false
+			for y = 1, height do
+				if shape[y][1] then
+					has_left = true
+					break
+				end
+			end
+			if not has_left then return false end
+
+			-- make sure all atoms are connected
+			local all_atoms = extract_connected_atoms(shape, top_x, 1)
+			for _, shape_row in pairs(shape) do
+				for _, _ in pairs(shape_row) do return false end
+			end
+
+			-- make sure all bond counts are valid
+			for _, atom in ipairs(all_atoms) do
+				if not ALL_ATOMS[atom.symbol] or not verify_bond_count(atom) then return false end
+			end
+
+			-- we finished validating the molecule ID, reassemble it and write it to the output
+			-- while this will probably be identical to the input, molecule parsing is lenient and may approve of an
+			--	ID that doesn't directly convert to a molecule
+			for _, atom in ipairs(all_atoms) do shape[atom.y][atom.x] = atom end
+			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
+			return true
 		end,
 	},
 }
