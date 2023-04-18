@@ -124,7 +124,7 @@ MOLECULE_VOIDER_XY_FRACTION = 8 / BASE_ICON_SIZE
 MOLECULE_VOIDER_THICKNESS_FRACTION = 6 / BASE_ICON_SIZE
 MOLECULE_PRINTER_NAME = "molecule-printer"
 MOLECULE_PRINTER_TOP_CENTER_Y_FRACTION = 16 / BASE_ICON_SIZE
-with open("base-graphics-path.txt", "r") as file:
+with open(os.path.join("..", "base-graphics-path.txt"), "r") as file:
 	BASE_GRAPHICS_PATH = file.read()
 BASE_ICONS_PATH = os.path.join(BASE_GRAPHICS_PATH, "icons")
 BASE_FLUID_ICONS_PATH = os.path.join(BASE_ICONS_PATH, "fluid")

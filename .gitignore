@@ -1,6 +1,6 @@
 deploy.bat
+base-graphics-path.txt
 graphics/*.png
-graphics/base-graphics-path.txt
 graphics/atoms/*
 graphics/bonds/*
 graphics/icon-overlays/*
