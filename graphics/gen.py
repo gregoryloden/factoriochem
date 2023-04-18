@@ -1261,6 +1261,37 @@ def gen_molecule_reaction_buildings_3_technology_image(base_size, mips):
 		simple_overlay_image_at(image, place_x + size, size // 2, splicer_image[0:size, source_x:source_x + size])
 	return image
 
+def gen_molecule_printer_technology_image(base_size, mips):
+	image = filled_mip_image(base_size, mips)
+	top_left_molecules_image = gen_specific_molecule(base_size // 2, mips, "Sr1-Sb|1As2-2Ge-Ag|Au")
+	top_right_molecules_image = gen_specific_molecule(base_size // 2, mips, "--O|C2-C2-2C|2O")
+	bottom_left_molecules_image = gen_specific_molecule(base_size // 2, mips, "-Ga1-Bi|I1-2Sn-2Mg|Rb1-1Ra")
+	bottom_right_molecules_image = gen_specific_molecule(base_size // 2, mips, "-Br1-P|-Pt-2Ca|U")
+	for (_, place_x, size) in iter_mips(base_size, mips):
+		size = size // 2
+		source_x = place_x // 2
+		simple_overlay_image_at(image, place_x, 0, top_left_molecules_image[0:size, source_x:source_x + size])
+		simple_overlay_image_at(image, place_x + size, 0, top_right_molecules_image[0:size, source_x:source_x + size])
+		simple_overlay_image_at(image, place_x, size, bottom_left_molecules_image[0:size, source_x:source_x + size])
+		simple_overlay_image_at(
+			image, place_x + size, size, bottom_right_molecules_image[0:size, source_x:source_x + size])
+	horizontal_layers = [("layer", {"size": base_size, "mips": mips, "color": MOLECULE_BONDER_COLOR})]
+	vertical_layers = [("layer", {"size": base_size, "color": MOLECULE_BONDER_COLOR})]
+	thickness = int(MOLECULE_DEBONDER_THICKNESS_FRACTION * base_size / 2)
+	half_width = MOLECULE_DEBONDER_WIDTH_FRACTION * base_size / 4
+	for i in range(16):
+		x = i % 4
+		y = i // 4
+		if (x + y) % 2 != 0:
+			continue
+		x = (x + 0.5) * base_size / 4
+		y = (y + 0.5) * base_size / 4
+		horizontal_layers.append(
+			("line", {"start": (x - half_width, y), "end": (x + half_width, y), "thickness": thickness}))
+		vertical_layers.append(
+			("line", {"start": (x, y - half_width), "end": (x, y + half_width), "thickness": thickness}))
+	return gen_composite_image(horizontal_layers + vertical_layers, image)
+
 def gen_all_technology_images(base_size, mips):
 	technologies_folder = "technologies"
 	if not os.path.exists(technologies_folder):
@@ -1271,6 +1302,7 @@ def gen_all_technology_images(base_size, mips):
 	write_image(technologies_folder, "molecule-reaction-buildings-2", molecule_reaction_buildings_2_technology_image)
 	molecule_reaction_buildings_3_technology_image = gen_molecule_reaction_buildings_3_technology_image(base_size, mips)
 	write_image(technologies_folder, "molecule-reaction-buildings-3", molecule_reaction_buildings_3_technology_image)
+	write_image(technologies_folder, "molecule-printer", gen_molecule_printer_technology_image(base_size, mips))
 	image_counter_print("Technology images written")
 
 
