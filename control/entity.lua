@@ -120,6 +120,11 @@ local function build_molecule_reaction_building(entity, building_definition)
 			local signal = settings_behavior.get_signal(i)
 			if selector == DROPDOWN_SELECTOR_NAME then
 				building_data.reaction.selectors[reactant_name] = signal.count or 1
+			elseif entity.name == MOLECULE_PRINTER_NAME then
+				building_data.reaction.selectors[reactant_name] =
+					read_molecule_id_from_combinator(settings_behavior)
+				-- this selector read all the data on the combinator, we're done
+				break
 			elseif signal.signal then
 				building_data.reaction.selectors[reactant_name] = signal.signal.name
 			end

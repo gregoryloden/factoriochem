@@ -145,3 +145,10 @@ function parse_atom_bond(atom_bond)
 		tonumber(string.sub(atom_bond, -2, -2)) + 1, -- x
 		string.sub(atom_bond, -1, -1) -- direction
 end
+
+function write_molecule_id_to_combinator(behavior, molecule_id)
+end
+
+function read_molecule_id_from_combinator(behavior)
+	return ""
+end

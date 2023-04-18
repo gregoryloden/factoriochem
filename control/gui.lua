@@ -176,6 +176,12 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 		elseif selector == TEXT_SELECTOR_NAME then
 			spec.type = "textfield"
 			spec.style = "factoriochem-textfield"
+			if name_prefix == REACTION_PREFIX then
+				local building_data = global.molecule_reaction_building_data[entity.unit_number]
+				spec.text = building_data.reaction.selectors[reactant_name]
+			else
+				spec.text = demo_state.selectors[reactant_name]
+			end
 			-- this selector doesn't select an item so stop here
 			return spec
 		else
@@ -394,6 +400,29 @@ local function on_gui_selection_state_changed(event)
 	end
 end
 
+local function on_gui_text_changed(event)
+	local element = event.element
+	local building_data = global.current_gui_reaction_building_data[event.player_index]
+
+	local reaction_table_selector_reactant_name = REACTION_TABLE_SELECTOR_NAME_MAP[element.name]
+	if reaction_table_selector_reactant_name then
+		building_data.reaction.selectors[reaction_table_selector_reactant_name] = element.text
+		if building_data.entity.name == MOLECULE_PRINTER_NAME then
+			write_molecule_id_to_combinator(building_data.settings.get_control_behavior(), element.text)
+		end
+		entity_assign_cache(building_data, BUILDING_DEFINITIONS[building_data.entity.name])
+		return
+	end
+
+	local reaction_demo_table_selector_reactant_name = REACTION_DEMO_TABLE_SELECTOR_NAME_MAP[element.name]
+	if reaction_demo_table_selector_reactant_name then
+		local demo_state = get_demo_state(building_data.entity.name)
+		demo_state.selectors[reaction_demo_table_selector_reactant_name] = element.text
+		demo_reaction(building_data, demo_state, element.parent)
+		return
+	end
+end
+
 
 -- Global event handling
 function gui_on_init()
@@ -416,3 +445,4 @@ script.on_event(defines.events.on_gui_closed, on_gui_closed)
 script.on_event(defines.events.on_gui_click, on_gui_click)
 script.on_event(defines.events.on_gui_elem_changed, on_gui_elem_changed)
 script.on_event(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)
+script.on_event(defines.events.on_gui_text_changed, on_gui_text_changed)
