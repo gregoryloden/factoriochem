@@ -98,10 +98,17 @@ local science_ingredients = {
 		{MOLECULE_ITEM_PREFIX.."Be1-F|1Li", 1},
 		{MOLECULE_ITEM_PREFIX.."S1-Cl|1Li", 1},
 	},
+	["chemical-science-pack"] = {
+		{ATOM_ITEM_PREFIX.."Xe", 1},
+		{MOLECULE_ITEM_PREFIX.."K1-Br", 1},
+		{MOLECULE_ITEM_PREFIX.."N1-F|2S", 1},
+		{MOLECULE_ITEM_PREFIX.."N1-O1-N|2C2-C2-2C", 1},
+	},
 }
 for science, ingredients in pairs(science_ingredients) do
 	local recipe = data.raw.recipe[science]
 	recipe.ingredients = ingredients
+	recipe.result_count = nil
 	local total_atomic_number = 0
 	for _, ingredient in ipairs(ingredients) do
 		local shape = parse_molecule(ingredient[1])
