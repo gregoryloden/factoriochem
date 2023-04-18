@@ -60,44 +60,47 @@ local PARSE_MOLECULE_ATOM_MATCH = "([^"..ATOM_COL_SEPARATOR.."]*)"..ATOM_COL_SEP
 
 
 -- Global utilities
+function parse_molecule_id(molecule)
+	local shape = {}
+
+	-- extract the initial data from the molecule
+	local grid_height = 0
+	local grid_width = 0
+	for molecule_row in string.gmatch(molecule..ATOM_ROW_SEPARATOR, PARSE_MOLECULE_ROW_MATCH) do
+		grid_height = grid_height + 1
+		local shape_row = {}
+		local x = 0
+		for atom_data in string.gmatch(molecule_row..ATOM_COL_SEPARATOR, PARSE_MOLECULE_ATOM_MATCH) do
+			x = x + 1
+			local symbol = string.match(atom_data, "%a+")
+			if symbol then
+				local atom = {symbol = symbol}
+				local up = string.match(atom_data, "^%d")
+				if up then atom.up = tonumber(up) end
+				local right = string.match(atom_data, "%d$")
+				if right then atom.right = tonumber(right) end
+				shape_row[x] = atom
+			end
+		end
+		if x > grid_width then grid_width = x end
+		shape[grid_height] = shape_row
+	end
+
+	-- add corresponding down and left bonds and add coordinates
+	for y, shape_row in pairs(shape) do
+		for x, atom in pairs(shape_row) do
+			if atom.up then shape[y - 1][x].down = atom.up end
+			if atom.right then shape_row[x + 1].left = atom.right end
+			atom.x = x
+			atom.y = y
+		end
+	end
+	return shape, grid_height, grid_width
+end
+
 function parse_molecule(molecule)
 	if string.find(molecule, MOLECULE_ITEM_PREFIX_MATCH) then
-		molecule = string.sub(molecule, #MOLECULE_ITEM_PREFIX + 1)
-		local shape = {}
-
-		-- extract the initial data from the molecule
-		local grid_height = 0
-		local grid_width = 0
-		for molecule_row in string.gmatch(molecule..ATOM_ROW_SEPARATOR, PARSE_MOLECULE_ROW_MATCH) do
-			grid_height = grid_height + 1
-			local shape_row = {}
-			local x = 0
-			for atom_data in string.gmatch(molecule_row..ATOM_COL_SEPARATOR, PARSE_MOLECULE_ATOM_MATCH) do
-				x = x + 1
-				local symbol = string.match(atom_data, "%a+")
-				if symbol then
-					local atom = {symbol = symbol}
-					local up = string.match(atom_data, "^%d")
-					if up then atom.up = tonumber(up) end
-					local right = string.match(atom_data, "%d$")
-					if right then atom.right = tonumber(right) end
-					shape_row[x] = atom
-				end
-			end
-			if x > grid_width then grid_width = x end
-			shape[grid_height] = shape_row
-		end
-
-		-- add corresponding down and left bonds and add coordinates
-		for y, shape_row in pairs(shape) do
-			for x, atom in pairs(shape_row) do
-				if atom.up then shape[y - 1][x].down = atom.up end
-				if atom.right then shape_row[x + 1].left = atom.right end
-				atom.x = x
-				atom.y = y
-			end
-		end
-		return shape, grid_height, grid_width
+		return parse_molecule_id(string.sub(molecule, #MOLECULE_ITEM_PREFIX + 1))
 	elseif string.find(molecule, ATOM_ITEM_PREFIX_MATCH) then
 		return {{{symbol = string.sub(molecule, #ATOM_ITEM_PREFIX + 1), x = 1, y = 1}}}, 1, 1
 	else
