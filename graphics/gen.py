@@ -971,7 +971,7 @@ def gen_molecule_severer_image(base_size, mips, include_outline):
 	return gen_composite_image(layers, image, include_outline)
 
 def gen_molecule_splicer_image(base_size, mips, include_outline):
-	image = gen_specific_molecule(base_size, mips, "H1-B1-H|-H|-1H", include_outline)
+	image = gen_specific_molecule(base_size, mips, "Be2-B1-Li|-H|-1H", include_outline)
 	arrow_size = MOLECULE_SPLICER_ARROW_SIZE_FRACTION * base_size
 	layers = [
 		("layer", {"size": base_size, "mips": mips, "color": MOLECULE_BONDER_COLOR}),
@@ -1186,15 +1186,17 @@ def gen_reaction_settings_icon(base_size, mips):
 
 
 #Generate the technology images
+def iter_technology_mips(base_size, mips):
+	for (_, place_x, size) in iter_mips(base_size, mips):
+		yield place_x, place_x // 2, size // 2
+
 def gen_moleculify_plates_technology_image(base_size, mips):
 	image = filled_mip_image(base_size, mips)
 	iron_image = cv2.imread(os.path.join(BASE_ICONS_PATH, "iron-plate.png"), cv2.IMREAD_UNCHANGED)
 	copper_image = cv2.imread(os.path.join(BASE_ICONS_PATH, "copper-plate.png"), cv2.IMREAD_UNCHANGED)
 	iron_atom_image = gen_single_atom_image(base_size // 2, mips, "Fe", 1, 1, 0, 0)
 	copper_atom_image = gen_single_atom_image(base_size // 2, mips, "Cu", 1, 1, 0, 0)
-	for (_, place_x, size) in iter_mips(base_size, mips):
-		size = size // 2
-		source_x = place_x // 2
+	for (place_x, source_x, size) in iter_technology_mips(base_size, mips):
 		for y in range(0, size * 3 // 4, size // 4):
 			simple_overlay_image_at(image, place_x, y, iron_image[0:size, source_x:source_x + size])
 			simple_overlay_image_at(image, place_x + size, y, copper_image[0:size, source_x:source_x + size])
@@ -1221,9 +1223,7 @@ def gen_moleculify_air_technology_image(base_size, mips):
 	air_image = cv2.imread(os.path.join(BASE_FLUID_ICONS_PATH, "steam.png"), cv2.IMREAD_UNCHANGED)
 	left_molecules_image = gen_specific_molecule(base_size // 2, mips, "N3-N|O2-O")
 	right_molecules_image = gen_specific_molecule(base_size // 2, mips, "O-N|2O-3N")
-	for (_, place_x, size) in iter_mips(base_size, mips):
-		size = size // 2
-		source_x = place_x // 2
+	for (place_x, source_x, size) in iter_technology_mips(base_size, mips):
 		for x in range(0, size * 3 // 2, size // 2):
 			simple_overlay_image_at(image, place_x + x, 0, air_image[0:size, source_x:source_x + size])
 		simple_overlay_image_at(image, place_x, size, left_molecules_image[0:size, source_x:source_x + size])
@@ -1241,9 +1241,7 @@ def gen_molecule_reaction_buildings_2_technology_image(base_size, mips):
 	bonder_image = gen_molecule_bonder_image(base_size // 2, mips, False)
 	fissioner_image = gen_molecule_fissioner_image(base_size // 2, mips, False)
 	fusioner_image = gen_molecule_fusioner_image(base_size // 2, mips, False)
-	for (_, place_x, size) in iter_mips(base_size, mips):
-		size = size // 2
-		source_x = place_x // 2
+	for (place_x, source_x, size) in iter_technology_mips(base_size, mips):
 		simple_overlay_image_at(image, place_x, 0, debonder_image[0:size, source_x:source_x + size])
 		simple_overlay_image_at(image, place_x + size, 0, bonder_image[0:size, source_x:source_x + size])
 		simple_overlay_image_at(image, place_x, size, fissioner_image[0:size, source_x:source_x + size])
@@ -1254,9 +1252,7 @@ def gen_molecule_reaction_buildings_3_technology_image(base_size, mips):
 	image = filled_mip_image(base_size, mips)
 	severer_image = gen_molecule_severer_image(base_size // 2, mips, False)
 	splicer_image = gen_molecule_splicer_image(base_size // 2, mips, False)
-	for (_, place_x, size) in iter_mips(base_size, mips):
-		size = size // 2
-		source_x = place_x // 2
+	for (place_x, source_x, size) in iter_technology_mips(base_size, mips):
 		simple_overlay_image_at(image, place_x, size // 2, severer_image[0:size, source_x:source_x + size])
 		simple_overlay_image_at(image, place_x + size, size // 2, splicer_image[0:size, source_x:source_x + size])
 	return image
@@ -1267,9 +1263,7 @@ def gen_molecule_printer_technology_image(base_size, mips):
 	top_right_molecules_image = gen_specific_molecule(base_size // 2, mips, "--O|C2-C2-2C|2O")
 	bottom_left_molecules_image = gen_specific_molecule(base_size // 2, mips, "-Ga1-Bi|I1-2Sn-2Mg|Rb1-1Ra")
 	bottom_right_molecules_image = gen_specific_molecule(base_size // 2, mips, "-Br1-P|-Pt-2Ca|U")
-	for (_, place_x, size) in iter_mips(base_size, mips):
-		size = size // 2
-		source_x = place_x // 2
+	for (place_x, source_x, size) in iter_technology_mips(base_size, mips):
 		simple_overlay_image_at(image, place_x, 0, top_left_molecules_image[0:size, source_x:source_x + size])
 		simple_overlay_image_at(image, place_x + size, 0, top_right_molecules_image[0:size, source_x:source_x + size])
 		simple_overlay_image_at(image, place_x, size, bottom_left_molecules_image[0:size, source_x:source_x + size])
