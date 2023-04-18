@@ -6,6 +6,7 @@ local LOGISTIC_WIRE_TYPES = {defines.wire_type.red, defines.wire_type.green}
 local DETECTOR_ATOMIC_NUMBER_SIGNAL_ID = {type = "virtual", name = "signal-A"}
 local DETECTOR_CACHE = {}
 local DETECTOR_TARGET_CACHE = {}
+local CACHE_RELOAD_TICK_INTERVAL = 30 * 60 * 60 -- 30 minutes
 
 
 -- Setup
@@ -404,6 +405,26 @@ local function paste_molecule_reaction_building(source, destination)
 	entity_assign_cache(destination_building_data, BUILDING_DEFINITIONS[destination.name])
 end
 
+local function try_reload_building_caches(tick)
+	-- REACTION_CACHE doesn't get serialized, but global.molecule_reaction_building_data does and it contains caches per
+	--	building; to prevent the cache from getting too big over time, reload the cache from buildings every so often.
+	--	This has no effect on buildings who were assigned a cache since this session was loaded.
+	local reaction_building_ticks_per_update = global.molecule_reaction_building_data.ticks_per_update
+	local reaction_building_multiplied_tick = tick * reaction_building_ticks_per_update
+	if math.fmod(reaction_building_multiplied_tick, CACHE_RELOAD_TICK_INTERVAL) < reaction_building_ticks_per_update then
+		local reload_number = math.floor(reaction_building_multiplied_tick / CACHE_RELOAD_TICK_INTERVAL)
+		local update_group = math.fmod(reload_number, reaction_building_ticks_per_update)
+		local update_entities = global.molecule_reaction_building_data.update_groups[update_group]
+		-- temporarily remove the count so that we don't iterate it
+		local update_entities_n = update_entities.n
+		update_entities.n = nil
+		for _, building_data in pairs(update_entities) do
+			entity_assign_cache(building_data, BUILDING_DEFINITIONS[building_data.entity.name])
+		end
+		update_entities.n = update_entities_n
+	end
+end
+
 
 -- Event handling
 local function on_built_entity(event)
@@ -445,6 +466,7 @@ function entity_on_tick(event_data)
 	local tick = event_data.tick
 	update_buildings(global.molecule_reaction_building_data, tick, update_reaction_building)
 	update_buildings(global.molecule_detector_data, tick, update_detector)
+	try_reload_building_caches(tick)
 end
 
 script.on_event(defines.events.on_built_entity, on_built_entity)
