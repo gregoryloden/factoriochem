@@ -673,6 +673,20 @@ BUILDING_DEFINITIONS = {
 			return reaction.reactants[BASE_NAME] ~= nil
 		end,
 	},
+	[MOLECULE_PRINTER_NAME] = {
+		-- data fields
+		building_design = {"assembling-machine", "assembling-machine-3"},
+		item_order = "k",
+		unlocking_technology = "molecule-printer",
+		-- data and control fields
+		reactants = {BASE_NAME},
+		products = {RESULT_NAME},
+		-- control fields
+		selectors = {[BASE_NAME] = TEXT_SELECTOR_NAME},
+		reaction = function(reaction)
+			return false
+		end,
+	},
 }
 for _, building_definition in pairs(BUILDING_DEFINITIONS) do
 	building_definition.has_component = {}

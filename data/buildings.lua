@@ -161,6 +161,8 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 	}
 	if name == MOLECULE_VOIDER_NAME then
 		for _, ingredient in ipairs(recipe.ingredients) do ingredient[2] = ingredient[2] * 10 end
+	elseif name == MOLECULE_PRINTER_NAME then
+		recipe.ingredients = {{MOLECULE_VOIDER_NAME, 2}}
 	end
 	recipe_set_unlocking_technology(recipe, definition.unlocking_technology)
 

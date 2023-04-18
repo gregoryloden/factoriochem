@@ -134,7 +134,11 @@ local function build_molecule_reaction_building(entity, building_definition)
 		})
 		for _, reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
 			local selector = building_definition.selectors[reactant_name]
-			if selector == DROPDOWN_SELECTOR_NAME then building_data.reaction.selectors[reactant_name] = 1 end
+			if selector == DROPDOWN_SELECTOR_NAME then
+				building_data.reaction.selectors[reactant_name] = 1
+			elseif selector == TEXT_SELECTOR_NAME then
+				building_data.reaction.selectors[reactant_name] = ""
+			end
 		end
 	end
 	settings.destructible = false

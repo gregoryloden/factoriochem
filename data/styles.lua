@@ -8,3 +8,8 @@ data.raw["gui-style"]["default"]["factoriochem-dropdown"] = {
 	parent = "dropdown",
 	minimal_width = 0,
 }
+data.raw["gui-style"]["default"]["factoriochem-textfield"] = {
+	type = "textbox_style",
+	parent = "textbox",
+	width = 150,
+}

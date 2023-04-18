@@ -173,6 +173,11 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 			end
 			-- this selector doesn't select an item so stop here
 			return spec
+		elseif selector == TEXT_SELECTOR_NAME then
+			spec.type = "textfield"
+			spec.style = "factoriochem-textfield"
+			-- this selector doesn't select an item so stop here
+			return spec
 		else
 			spec.elem_filters = {{filter = "subgroup", subgroup = MOLECULE_REACTION_SELECTOR_PREFIX..selector}}
 		end
@@ -190,7 +195,7 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 		return {type = "sprite", sprite = MOLECULE_INDICATOR_PREFIX..component_name}
 	end
 	function build_reaction_table_spec(name_prefix)
-		return {
+		local spec = {
 			type = "table",
 			name = name_prefix.."table",
 			column_count = 6,
@@ -225,6 +230,12 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 				build_indicator_spec(REMAINDER_NAME),
 			},
 		}
+		-- merge the selector column with the transition column because of the size of the textfield
+		if entity.name == MOLECULE_PRINTER_NAME then
+			spec.column_count = 5
+			for _, child in ipairs({21, 15, 10, 3}) do table.remove(spec.children, child) end
+		end
+		return spec
 
 	end
 	local gui_spec = {
