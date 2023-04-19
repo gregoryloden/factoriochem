@@ -9,21 +9,25 @@ local function array_with_contents(contents)
 end
 
 local function array_push(array, v)
-	array.n = array.n + 1
-	array[array.n] = v
+	local n = array.n + 1
+	array.n = n
+	array[n] = v
 end
 
 local function array_pop(array)
-	local v = array[array.n]
-	array[array.n] = nil
-	array.n = array.n - 1
+	local n = array.n
+	local v = array[n]
+	array[n] = nil
+	array.n = n - 1
 	return v
 end
 
 local function array_clear(array)
-	while array.n > 0 do
-		array[array.n] = nil
-		array.n = array.n - 1
+	local n = array.n
+	while n > 0 do
+		array[n] = nil
+		n = n - 1
+		array.n = n
 	end
 end
 
