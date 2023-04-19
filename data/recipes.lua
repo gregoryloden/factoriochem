@@ -138,9 +138,11 @@ local science_ingredients = {
 	},
 	["chemical-science-pack"] = {
 		{ATOM_ITEM_PREFIX.."Xe", 1},
+		{MOLECULE_ITEM_PREFIX.."H1-C1-H|H1-2C1-H", 1},
+		{MOLECULE_ITEM_PREFIX.."N3-N", 1},
+		{MOLECULE_ITEM_PREFIX.."O2-O", 1},
 		{MOLECULE_ITEM_PREFIX.."K1-Br", 1},
-		{MOLECULE_ITEM_PREFIX.."N1-F|2S", 1},
-		{MOLECULE_ITEM_PREFIX.."N1-O1-N|2C2-C2-2C", 1},
+		{MOLECULE_ITEM_PREFIX.."--H|H1-N1-1O|H1-1N1-H", 1},
 	},
 }
 for science, ingredients in pairs(science_ingredients) do
