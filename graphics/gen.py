@@ -1030,9 +1030,10 @@ def iter_gen_all_building_recipe_icons(base_size, mips, include_outline):
 def iter_gen_moleculify_recipe_icons(base_size, mips):
 	image_pairs = [
 		("water", "-H|H1-1O", os.path.join(BASE_FLUID_ICONS_PATH, "water.png")),
-		("air", "N-O|3N-2O", os.path.join(BASE_FLUID_ICONS_PATH, "steam.png")),
 		("iron", "Fe", os.path.join(BASE_ICONS_PATH, "iron-plate.png")),
 		("copper", "Cu", os.path.join(BASE_ICONS_PATH, "copper-plate.png")),
+		("air", "N-O|3N-2O", os.path.join(BASE_FLUID_ICONS_PATH, "steam.png")),
+		("coal", "C2-C2-C|2C2-C2-2C", os.path.join(BASE_ICONS_PATH, "coal.png")),
 	]
 	for (name, moleculify_result_molecule, moleculify_source_image_path) in image_pairs:
 		moleculify_result_image = gen_specific_molecule(base_size, mips, moleculify_result_molecule)
@@ -1235,6 +1236,23 @@ def gen_moleculify_air_technology_image(base_size, mips):
 	]
 	return gen_composite_image(layers, image)
 
+def gen_moleculify_coal_technology_image(base_size, mips):
+	image = filled_mip_image(base_size, mips)
+	coal_image = cv2.imread(os.path.join(BASE_ICONS_PATH, "coal.png"), cv2.IMREAD_UNCHANGED)
+	left_molecule_image = gen_specific_molecule(base_size // 2, mips, "C2-C2-C|2C2-C2-2C")
+	right_molecule_image = gen_specific_molecule(base_size // 2, mips, "C2-C|2C-2C|2C2-2C")
+	for (place_x, source_x, size) in iter_technology_mips(base_size, mips):
+		for x in range(0, size * 2, size):
+			simple_overlay_image_at(image, place_x + x, 0, coal_image[0:size, source_x:source_x + size])
+		simple_overlay_image_at(image, place_x, size, left_molecule_image[0:size, source_x:source_x + size])
+		simple_overlay_image_at(image, place_x + size, size, right_molecule_image[0:size, source_x:source_x + size])
+	arrow_size = TECHNOLOGY_ARROW_SIZE_FRACTION * base_size * 2
+	layers = [
+		("layer", {"size": base_size, "mips": mips, "color": MOLECULIFY_ARROW_COLOR}),
+		("arrow", (base_size / 2, base_size / 2 - arrow_size / 2, 0, -arrow_size)),
+	]
+	return gen_composite_image(layers, image)
+
 def gen_molecule_reaction_buildings_2_technology_image(base_size, mips):
 	image = filled_mip_image(base_size, mips)
 	debonder_image = gen_molecule_debonder_image(base_size // 2, mips, False)
@@ -1292,6 +1310,7 @@ def gen_all_technology_images(base_size, mips):
 		os.mkdir(technologies_folder)
 	write_image(technologies_folder, "moleculify-plates", gen_moleculify_plates_technology_image(base_size, mips))
 	write_image(technologies_folder, "moleculify-air", gen_moleculify_air_technology_image(base_size, mips))
+	write_image(technologies_folder, "moleculify-coal", gen_moleculify_coal_technology_image(base_size, mips))
 	molecule_reaction_buildings_2_technology_image = gen_molecule_reaction_buildings_2_technology_image(base_size, mips)
 	write_image(technologies_folder, "molecule-reaction-buildings-2", molecule_reaction_buildings_2_technology_image)
 	molecule_reaction_buildings_3_technology_image = gen_molecule_reaction_buildings_3_technology_image(base_size, mips)

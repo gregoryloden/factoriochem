@@ -64,6 +64,16 @@ local moleculify_recipes = {
 		},
 		unlocking_technology = "moleculify-air",
 	},
+	{
+		name = "coal",
+		order = "e",
+		ingredients = {{"coal", 1}},
+		results = {
+			{name = MOLECULE_ITEM_PREFIX.."C2-C2-C|2C2-C2-2C", amount = 1, probability = 0.5},
+			{name = MOLECULE_ITEM_PREFIX.."C2-C|2C-2C|2C2-2C", amount = 1, probability = 0.5},
+		},
+		unlocking_technology = "moleculify-coal",
+	},
 }
 for _, moleculify_recipe in ipairs(moleculify_recipes) do
 	moleculify_recipe.type = "recipe"
