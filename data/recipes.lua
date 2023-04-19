@@ -82,6 +82,17 @@ local moleculify_recipes = {
 		unlocking_technology = "moleculify-coal",
 	},
 	moleculify_stone_recipe,
+	{
+		name = "oil",
+		order = "g",
+		ingredients = {{name = "crude-oil", amount = 1, type = "fluid"}},
+		results = {
+			{name = MOLECULE_ITEM_PREFIX.."-H|H1-1C1-H|-1H", amount = 1, probability = 1 / 3},
+			{name = MOLECULE_ITEM_PREFIX.."H-H|1C2-1C|1H-1H", amount = 1, probability = 1 / 3},
+			{name = MOLECULE_ITEM_PREFIX.."H1-C1-H|H1-2C1-H", amount = 1, probability = 1 / 3},
+		},
+		unlocking_technology = "moleculify-oil",
+	},
 }
 for atom_row_i = 3, 4 do
 	local atom_row = ATOM_ROWS[atom_row_i]
