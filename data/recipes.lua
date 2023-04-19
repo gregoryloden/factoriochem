@@ -1,6 +1,8 @@
 -- Constants
 local MOLECULIFY_SUBGROUP_NAME = "moleculify"
 local MOLECULIFY_PREFIX = "moleculify-"
+local DEMOLECULIFY_SUBGROUP_NAME = "demoleculify"
+local DEMOLECULIFY_PREFIX = "demoleculify-"
 
 
 -- Global utilities
@@ -18,12 +20,30 @@ data:extend({
 		type = "item-subgroup",
 		name = MOLECULIFY_SUBGROUP_NAME,
 		group = MOLECULES_GROUP_NAME,
+		order = "a",
+	},
+	{
+		type = "item-subgroup",
+		name = DEMOLECULIFY_SUBGROUP_NAME,
+		group = MOLECULES_GROUP_NAME,
+		order = "b",
 	},
 	{
 		type = "recipe-category",
 		name = MOLECULIFY_RECIPE_CATEGORY,
 	},
 })
+local function add_moleculifier_recipe_properties(recipe)
+	recipe.type = "recipe"
+	recipe.category = MOLECULIFY_RECIPE_CATEGORY
+	recipe.icon = GRAPHICS_ROOT.."recipes/"..recipe.name..".png"
+	recipe.icon_size = ITEM_ICON_SIZE
+	recipe.icon_mipmaps = ITEM_ICON_MIPMAPS
+	recipe.energy_required = 1
+	recipe.localised_name = {"recipe-name."..recipe.name}
+	recipe.always_show_products = true
+	if recipe_set_unlocking_technology(recipe, recipe.unlocking_technology) then recipe.unlocking_technology = nil end
+end
 local moleculify_stone_recipe = {
 	name = "stone",
 	order = "f",
@@ -104,19 +124,63 @@ for atom_row_i = 3, 4 do
 	end
 end
 for _, moleculify_recipe in ipairs(moleculify_recipes) do
-	moleculify_recipe.type = "recipe"
-	moleculify_recipe.category = MOLECULIFY_RECIPE_CATEGORY
 	moleculify_recipe.subgroup = MOLECULIFY_SUBGROUP_NAME
-	moleculify_recipe.icon = GRAPHICS_ROOT.."recipes/"..MOLECULIFY_PREFIX..moleculify_recipe.name..".png"
-	moleculify_recipe.icon_size = ITEM_ICON_SIZE
-	moleculify_recipe.icon_mipmaps = ITEM_ICON_MIPMAPS
-	moleculify_recipe.energy_required = 1
 	moleculify_recipe.name = MOLECULIFY_PREFIX..moleculify_recipe.name
-	if recipe_set_unlocking_technology(moleculify_recipe, moleculify_recipe.unlocking_technology) then
-		moleculify_recipe.unlocking_technology = nil
-	end
+	add_moleculifier_recipe_properties(moleculify_recipe)
 end
 data:extend(moleculify_recipes)
+
+
+-- Demoleculify recipes
+local demoleculify_recipes = {
+	{
+		name = "water",
+		order = "a",
+		ingredients = {{MOLECULE_ITEM_PREFIX.."O1-H|1H", 1}},
+		results = {{name = "water", amount = 1, type = "fluid"}},
+	},
+	{
+		name = "iron",
+		order = "b",
+		ingredients = {{ATOM_ITEM_PREFIX.."Fe", 1}},
+		results = {{name = "iron-plate", amount = 1}},
+		unlocking_technology = "moleculify-plates",
+	},
+	{
+		name = "copper",
+		order = "c",
+		ingredients = {{ATOM_ITEM_PREFIX.."Cu", 1}},
+		results = {{name = "copper-plate", amount = 1}},
+		unlocking_technology = "moleculify-plates",
+	},
+	{
+		name = "coal",
+		order = "d",
+		ingredients = {{MOLECULE_ITEM_PREFIX.."C2-C2-C|2C2-C2-2C", 1}},
+		results = {{name = "coal", amount = 1}},
+		unlocking_technology = "moleculify-coal",
+	},
+	{
+		name = "methane",
+		order = "e",
+		ingredients = {{MOLECULE_ITEM_PREFIX.."-H|H1-1C1-H|-1H", 1}},
+		results = {{name = "crude-oil", amount = 1, type = "fluid"}},
+		unlocking_technology = "moleculify-oil",
+	},
+	{
+		name = "ethylene",
+		order = "f",
+		ingredients = {{MOLECULE_ITEM_PREFIX.."H1-C1-H|H1-2C1-H", 1}},
+		results = {{name = "crude-oil", amount = 1, type = "fluid"}},
+		unlocking_technology = "moleculify-oil",
+	},
+}
+for _, demoleculify_recipe in ipairs(demoleculify_recipes) do
+	demoleculify_recipe.subgroup = DEMOLECULIFY_SUBGROUP_NAME
+	demoleculify_recipe.name = DEMOLECULIFY_PREFIX..demoleculify_recipe.name
+	add_moleculifier_recipe_properties(demoleculify_recipe)
+end
+data:extend(demoleculify_recipes)
 
 
 -- Science recipes

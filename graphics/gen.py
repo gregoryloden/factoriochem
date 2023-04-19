@@ -131,6 +131,7 @@ BASE_FLUID_ICONS_PATH = os.path.join(BASE_ICONS_PATH, "fluid")
 MOLECULIFY_ARROW_COLOR = (128, 64, 224, 0)
 MOLECULIFY_ARROW_THICKNESS_FRACTION = 6 / BASE_ICON_SIZE
 MOLECULIFY_ARROW_SIZE_FRACTION = 8 / BASE_ICON_SIZE
+DEMOLECULIFY_ARROW_COLOR = (128, 224, 64, 0)
 ICON_OVERLAY_OUTLINE_COLOR = (64, 64, 64, 0)
 ICON_OVERLAY_OUTLINE_FRACTION = 4 / BASE_ICON_SIZE
 ICON_OVERLAY_ARROW_OUTLINE_FRACTION = ICON_OVERLAY_OUTLINE_FRACTION * (1 + math.sqrt(2)) / 2
@@ -1029,17 +1030,25 @@ def iter_gen_all_building_recipe_icons(base_size, mips, include_outline):
 
 def iter_gen_moleculify_recipe_icons(base_size, mips):
 	image_pairs = [
-		("water", "-H|H1-1O", os.path.join(BASE_FLUID_ICONS_PATH, "water.png")),
-		("iron", "Fe", os.path.join(BASE_ICONS_PATH, "iron-plate.png")),
-		("copper", "Cu", os.path.join(BASE_ICONS_PATH, "copper-plate.png")),
-		("air", "N-O|3N-2O", os.path.join(BASE_FLUID_ICONS_PATH, "steam.png")),
-		("coal", "C2-C2-C|2C2-C2-2C", os.path.join(BASE_ICONS_PATH, "coal.png")),
-		("stone", "Si-Zn|Ni-Ca", os.path.join(BASE_ICONS_PATH, "stone.png")),
-		("oil", "H1-C1-H|H1-2C1-H", os.path.join(BASE_FLUID_ICONS_PATH, "crude-oil.png")),
+		("water", "-H|H1-1O", os.path.join(BASE_FLUID_ICONS_PATH, "water.png"), True),
+		("iron", "Fe", os.path.join(BASE_ICONS_PATH, "iron-plate.png"), True),
+		("copper", "Cu", os.path.join(BASE_ICONS_PATH, "copper-plate.png"), True),
+		("air", "N-O|3N-2O", os.path.join(BASE_FLUID_ICONS_PATH, "steam.png"), True),
+		("coal", "C2-C2-C|2C2-C2-2C", os.path.join(BASE_ICONS_PATH, "coal.png"), True),
+		("stone", "Si-Zn|Ni-Ca", os.path.join(BASE_ICONS_PATH, "stone.png"), True),
+		("oil", "H1-C1-H|H1-2C1-H", os.path.join(BASE_FLUID_ICONS_PATH, "crude-oil.png"), True),
+		("water", "O1-H|1H", os.path.join(BASE_FLUID_ICONS_PATH, "water.png"), False),
+		("iron", "Fe", os.path.join(BASE_ICONS_PATH, "iron-plate.png"), False),
+		("copper", "Cu", os.path.join(BASE_ICONS_PATH, "copper-plate.png"), False),
+		("coal", "C2-C2-C|2C2-C2-2C", os.path.join(BASE_ICONS_PATH, "coal.png"), False),
+		("methane", "-H|H1-1C1-H|-1H", os.path.join(BASE_FLUID_ICONS_PATH, "crude-oil.png"), False),
+		("ethylene", "H1-C1-H|H1-2C1-H", os.path.join(BASE_FLUID_ICONS_PATH, "crude-oil.png"), False),
 	]
-	for (name, moleculify_result_molecule, moleculify_source_image_path) in image_pairs:
+	for (name, moleculify_result_molecule, moleculify_source_image_path, moleculify) in image_pairs:
 		moleculify_result_image = gen_specific_molecule(base_size, mips, moleculify_result_molecule)
 		moleculify_source_image = cv2.imread(moleculify_source_image_path, cv2.IMREAD_UNCHANGED)
+		if not moleculify:
+			(moleculify_source_image, moleculify_result_image) = (moleculify_result_image, moleculify_source_image)
 		image = filled_mip_image(base_size, mips)
 		#overlay the sub images at half-size at each mip level
 		for (_, place_x, size) in iter_mips(base_size, mips):
@@ -1051,15 +1060,17 @@ def iter_gen_moleculify_recipe_icons(base_size, mips):
 		#add an arrow image over the sub images
 		thickness = int(MOLECULIFY_ARROW_THICKNESS_FRACTION * base_size)
 		arrow_size_offset = MOLECULIFY_ARROW_SIZE_FRACTION * base_size / -math.sqrt(2)
+		color = MOLECULIFY_ARROW_COLOR if moleculify else DEMOLECULIFY_ARROW_COLOR
 		start_xy = base_size * 3 / 8
 		end_xy = base_size * 5 / 8
 		layers = [
-			("layer", {"size": base_size, "mips": mips, "color": MOLECULIFY_ARROW_COLOR}),
+			("layer", {"size": base_size, "mips": mips, "color": color}),
 			("line", {"start": (start_xy, start_xy), "end": (end_xy, end_xy), "thickness": thickness}),
-			("layer", {"size": base_size, "color": MOLECULIFY_ARROW_COLOR}),
+			("layer", {"size": base_size, "color": color}),
 			("arrow", (end_xy, end_xy, arrow_size_offset, arrow_size_offset)),
 		]
-		yield (f"moleculify-{name}", gen_composite_image(layers, image))
+		prefix = "moleculify" if moleculify else "demoleculify"
+		yield (f"{prefix}-{name}", gen_composite_image(layers, image))
 
 def gen_all_recipe_icons(base_size, mips):
 	recipes_folder = "recipes"
