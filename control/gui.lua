@@ -236,11 +236,6 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 				build_indicator_spec(REMAINDER_NAME),
 			},
 		}
-		-- merge the selector column with the transition column because of the size of the textfield
-		if entity.name == MOLECULE_PRINTER_NAME then
-			spec.column_count = 5
-			for _, child in ipairs({21, 15, 10, 3}) do table.remove(spec.children, child) end
-		end
 		return spec
 
 	end
