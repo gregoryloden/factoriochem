@@ -212,7 +212,10 @@ local science_ingredients = {
 for science, ingredients in pairs(science_ingredients) do
 	local recipe = data.raw.recipe[science]
 	recipe.ingredients = ingredients
-	recipe.result_count = nil
+	if recipe.result_count then
+		recipe.energy_required = recipe.energy_required / recipe.result_count
+		recipe.result_count = nil
+	end
 	local total_atomic_number = 0
 	for _, ingredient in ipairs(ingredients) do
 		local shape = parse_molecule(ingredient[1])
