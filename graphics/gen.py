@@ -76,7 +76,7 @@ SHAPE_TEXT_COLOR = (255, 255, 255, 0)
 SHAPE_ATOM_CHARACTER = "+"
 BOND_COUNTS[SHAPE_ATOM_CHARACTER] = 5
 BOND_COLOR = (0, 0, 0, 0)
-BOND_LENGTH_FRACTIONS = [0, 12 / BASE_ICON_SIZE, 12 / BASE_ICON_SIZE, 16 / BASE_ICON_SIZE]
+BOND_LENGTH_FRACTIONS = [0, 12 / BASE_ICON_SIZE, 12 / BASE_ICON_SIZE, 18 / BASE_ICON_SIZE]
 BOND_THICKNESS_FRACTION = 6 / BASE_ICON_SIZE
 BOND_SPACING_FRACTION = 18 / BASE_ICON_SIZE
 ITEM_GROUP_SIZE = 128
@@ -467,35 +467,33 @@ def gen_bond_images(base_size, mips, y_scale, x_scale, y, x):
 	bond_thickness = int(BOND_THICKNESS_FRACTION * base_size / scale)
 	bond_spacing = BOND_SPACING_FRACTION * base_size / scale
 	direction_data = [
-		("L", {"center": (center_x - base_size * 0.5 / scale, center_y), "orientation": "H", "bonds": [1, 2]}),
-		("R", {"center": (center_x + base_size * 0.5 / scale, center_y), "orientation": "H", "bonds": [3]}),
-		("U", {"center": (center_x, center_y - base_size * 0.5 / scale), "orientation": "V", "bonds": [1, 2]}),
-		("D", {"center": (center_x, center_y + base_size * 0.5 / scale), "orientation": "V", "bonds": [3]}),
+		("L", {"center": (center_x - base_size * 0.5 / scale, center_y), "orientation": "H"}),
+		("U", {"center": (center_x, center_y - base_size * 0.5 / scale), "orientation": "V"}),
 	]
 	images = {}
 	for (direction, data) in direction_data:
-		if (direction == "L" and x == 0 or direction == "R" and x == x_scale - 1) \
-				or (direction == "U" and y == 0 or direction == "D" and y == y_scale - 1):
+		if direction == "L" and x == 0 or direction == "U" and y == 0:
 			continue
 		images[direction] = {}
-		for bonds in data["bonds"]:
+		for bonds in range(1, 4):
 			half_bond_length = BOND_LENGTH_FRACTIONS[bonds] * base_size / scale * 0.5
 			image = filled_mip_image(base_size, mips, BOND_COLOR)
 			(center_x, center_y) = data["center"]
 			bond_xy_min_offset = bond_spacing * (1 - bonds) * 0.5
 			for bond in range(bonds):
-				#triple bonds render 1 bond in front of the atoms and 2 behind
+				current_half_bond_length = half_bond_length
+				#the middle bond of a triple bond is shorter
 				if bonds == 3 and bond == 1:
-					continue
+					current_half_bond_length = BOND_LENGTH_FRACTIONS[1] * base_size / scale * 0.5
 				bond_xy_offset = bond_xy_min_offset + bond * bond_spacing
 				if data["orientation"] == "H":
 					bond_y = center_y + bond_xy_offset
-					draw_start = draw_coords_from(center_x - half_bond_length, bond_y)
-					draw_end = draw_coords_from(center_x + half_bond_length, bond_y)
+					draw_start = draw_coords_from(center_x - current_half_bond_length, bond_y)
+					draw_end = draw_coords_from(center_x + current_half_bond_length, bond_y)
 				else:
 					bond_x = center_x + bond_xy_offset
-					draw_start = draw_coords_from(bond_x, center_y - half_bond_length)
-					draw_end = draw_coords_from(bond_x, center_y + half_bond_length)
+					draw_start = draw_coords_from(bond_x, center_y - current_half_bond_length)
+					draw_end = draw_coords_from(bond_x, center_y + current_half_bond_length)
 				def draw_bond(mask):
 					cv2.line(mask, draw_start, draw_end, 255, bond_thickness, cv2.LINE_AA, PRECISION_BITS)
 				draw_alpha_on(image, draw_bond)
@@ -560,17 +558,9 @@ def gen_specific_molecule(base_size, mips, molecule, include_outline = False):
 			atom_image = gen_single_atom_image(base_size, mips, symbol, y_scale, x_scale, y, x)
 			simple_overlay_image(image_front, atom_image)
 			if left_bonds > 0:
-				if left_bonds == 3:
-					right_bond_images = gen_bond_images(base_size, mips, y_scale, x_scale, y, x - 1)["R"]
-					simple_overlay_image(image_back, right_bond_images[3])
-					left_bonds -= 2
 				simple_overlay_image(
 					image_front, gen_bond_images(base_size, mips, y_scale, x_scale, y, x)["L"][left_bonds])
 			if up_bonds > 0:
-				if up_bonds == 3:
-					down_bond_images = gen_bond_images(base_size, mips, y_scale, x_scale, y - 1, x)["D"]
-					simple_overlay_image(image_back, down_bond_images[3])
-					up_bonds -= 2
 				simple_overlay_image(
 					image_front, gen_bond_images(base_size, mips, y_scale, x_scale, y, x)["U"][up_bonds])
 			left_bonds = right_bonds

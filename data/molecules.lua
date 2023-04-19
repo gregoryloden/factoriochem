@@ -185,24 +185,6 @@ local function gen_molecules(grid_i_i, grid_is)
 				local atom = slot.atom
 				local symbol = atom.symbol
 				local name_spec = current_shape_height..current_shape_width..row..col
-				if slot.right_bonds == 3 then
-					table.insert(
-						icons,
-						{
-							icon = BOND_ICON_ROOT.."R"..name_spec.."3.png",
-							icon_size = ITEM_ICON_SIZE,
-							icon_mipmaps = MOLECULE_ICON_MIPMAPS,
-						})
-				end
-				if slot.down_bonds == 3 then
-					table.insert(
-						icons,
-						{
-							icon = BOND_ICON_ROOT.."D"..name_spec.."3.png",
-							icon_size = ITEM_ICON_SIZE,
-							icon_mipmaps = MOLECULE_ICON_MIPMAPS,
-						})
-				end
 				table.insert(
 					icons,
 					{
@@ -213,7 +195,6 @@ local function gen_molecules(grid_i_i, grid_is)
 				local up_bonds = slot.up_bonds
 				if slot.up_bonds > 0 then
 					array_push(MOLECULE_BUILDER, up_bonds)
-					if up_bonds == 3 then up_bonds = 1 end
 					table.insert(
 						icons,
 						{
@@ -226,7 +207,6 @@ local function gen_molecules(grid_i_i, grid_is)
 				if slot.right_bonds > 0 then array_push(MOLECULE_BUILDER, slot.right_bonds) end
 				local left_bonds = slot.left_bonds
 				if left_bonds > 0 then
-					if left_bonds == 3 then left_bonds = 1 end
 					table.insert(
 						icons,
 						{
