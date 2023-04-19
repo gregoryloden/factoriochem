@@ -320,6 +320,15 @@ local moleculify_unlock_technologies = {
 		},
 		prerequisites = {"molecule-reaction-buildings-2"},
 	},
+	{
+		name = "moleculify-stone",
+		unit = {
+			count = 50,
+			time = 10,
+			ingredients = {{"automation-science-pack", 1}},
+		},
+		prerequisites = {"molecule-reaction-buildings-2"},
+	},
 }
 for _, technology in pairs(moleculify_unlock_technologies) do
 	local old_prerequisites = technology.prerequisites

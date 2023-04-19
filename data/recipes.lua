@@ -24,6 +24,13 @@ data:extend({
 		name = MOLECULIFY_RECIPE_CATEGORY,
 	},
 })
+local moleculify_stone_recipe = {
+	name = "stone",
+	order = "f",
+	ingredients = {{"stone", 1}},
+	results = {},
+	unlocking_technology = "moleculify-stone",
+}
 local moleculify_recipes = {
 	{
 		name = "water",
@@ -74,7 +81,17 @@ local moleculify_recipes = {
 		},
 		unlocking_technology = "moleculify-coal",
 	},
+	moleculify_stone_recipe,
 }
+for atom_row_i = 3, 4 do
+	local atom_row = ATOM_ROWS[atom_row_i]
+	local atom_row_n = #atom_row - 1
+	local probability = 0.5 / atom_row_n
+	for atom_i = 1, atom_row_n do
+		local result = {name = ATOM_ITEM_PREFIX..atom_row[atom_i], amount = 1, probability = probability}
+		table.insert(moleculify_stone_recipe.results, result)
+	end
+end
 for _, moleculify_recipe in ipairs(moleculify_recipes) do
 	moleculify_recipe.type = "recipe"
 	moleculify_recipe.category = MOLECULIFY_RECIPE_CATEGORY
