@@ -2,6 +2,7 @@
 local REACTION_CACHE = {}
 -- give each building type a base cache, buildings will add to it based on their own selectors and reactants
 for name, definition in pairs(BUILDING_DEFINITIONS) do REACTION_CACHE[name] = {} end
+local REACTION_PROGRESS_COMPLETE_THRESHOLD = nil
 local LOGISTIC_WIRE_TYPES = {defines.wire_type.red, defines.wire_type.green}
 local DETECTOR_ATOMIC_NUMBER_SIGNAL_ID = {type = "virtual", name = "signal-A"}
 local DETECTOR_CACHE = {}
@@ -14,6 +15,24 @@ local function build_update_group_building_data(ticks_per_update)
 	local update_groups = {}
 	for update_group = 0, ticks_per_update - 1 do update_groups[update_group] = {n = 0} end
 	return {update_groups = update_groups, ticks_per_update = ticks_per_update}
+end
+
+local function migrate_update_group_building_data(building_datas, ticks_per_update)
+	if building_datas.ticks_per_update == ticks_per_update then return end
+	local update_groups = {}
+	for update_group = 0, ticks_per_update - 1 do update_groups[update_group] = {n = 0} end
+	building_datas.update_groups = nil
+	building_datas.ticks_per_update = nil
+	local update_group = 0
+	for entity_number, building_data in pairs(building_datas) do
+		local update_entities = update_groups[update_group]
+		update_entities[entity_number] = building_data
+		update_entities.n = update_entities.n + 1
+		building_data.update_group = update_group
+		update_group = math.fmod(update_group + 1, ticks_per_update)
+	end
+	building_datas.update_groups = update_groups
+	building_datas.ticks_per_update = ticks_per_update
 end
 
 
@@ -235,8 +254,8 @@ local function update_reaction_building(building_data)
 	-- make sure the next reaction is ready
 	local entity = building_data.entity
 	local machine_inputs = entity.get_inventory(defines.inventory.assembling_machine_input)
-	local has_next_craft = next(machine_inputs.get_contents())
-	if has_next_craft or entity.crafting_progress > 0 and entity.crafting_progress < 0.9 then return end
+	if next(machine_inputs.get_contents()) then return end
+	if entity.crafting_progress > 0 and entity.crafting_progress < REACTION_PROGRESS_COMPLETE_THRESHOLD then return end
 
 	local reaction = building_data.reaction
 	local chest_inventories = building_data.chest_inventories
@@ -469,9 +488,19 @@ end
 
 function entity_on_tick(event)
 	local tick = event.tick
+	local molecule_reaction_building_ticks_per_update = global.molecule_reaction_building_data.ticks_per_update
+	REACTION_PROGRESS_COMPLETE_THRESHOLD =
+		(molecule_reaction_building_ticks_per_update - 1) / molecule_reaction_building_ticks_per_update
 	update_buildings(global.molecule_reaction_building_data, tick, update_reaction_building)
 	update_buildings(global.molecule_detector_data, tick, update_detector)
 	try_reload_building_caches(tick)
+end
+
+function entity_on_settings_changed(event)
+	migrate_update_group_building_data(
+		global.molecule_reaction_building_data, settings.global["factoriochem-building-ticks-per-update"].value)
+	migrate_update_group_building_data(
+		global.molecule_detector_data, settings.global["factoriochem-detector-ticks-per-update"].value)
 end
 
 script.on_event(defines.events.on_built_entity, on_built_entity)

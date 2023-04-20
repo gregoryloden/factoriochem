@@ -1,3 +1,7 @@
+-- Constants
+local MOLECULE_ABSORBER_TICKS_PER_UPDATE = settings.global["factoriochem-building-ticks-per-update"].value
+
+
 -- Event handling
 local function init_player(event)
 	local player = game.players[event.player_index]
@@ -13,7 +17,7 @@ end
 
 -- Global event handling
 function player_on_tick(event)
-	if math.fmod(event.tick, 10) == 0 then
+	if math.fmod(event.tick, MOLECULE_ABSORBER_TICKS_PER_UPDATE) == 0 then
 		for _, player in pairs(game.players) do
 			local player_inventory = player.get_main_inventory()
 			if player_inventory.get_item_count(MOLECULE_ABSORBER_NAME) == 0 then goto continue_players end
@@ -26,6 +30,10 @@ function player_on_tick(event)
 			::continue_players::
 		end
 	end
+end
+
+function player_on_settings_changed(event)
+	MOLECULE_ABSORBER_TICKS_PER_UPDATE = settings.global["factoriochem-building-ticks-per-update"].value
 end
 
 script.on_event(defines.events.on_player_created, init_player)
