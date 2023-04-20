@@ -81,6 +81,11 @@ BOND_THICKNESS_FRACTION = 6 / BASE_ICON_SIZE
 BOND_SPACING_FRACTION = 18 / BASE_ICON_SIZE
 ITEM_GROUP_SIZE = 128
 ITEM_GROUP_MIPS = 2
+MOLECULE_ABSORBER_BACK_COLOR = (0, 0, 0, 0)
+MOLECULE_ABSORBER_DOT_COLOR = (255, 255, 255, 0)
+MOLECULE_ABSORBER_DOT_RADIUS_FRACTION = 3 / BASE_ICON_SIZE
+MOLECULE_ABSORBER_CORNER_DISTANCE = 16 / BASE_ICON_SIZE
+MOLECULE_ABSORBER_CORNER_RADIUS_FRACTION = 10 / BASE_ICON_SIZE
 ROTATION_SELECTOR_COLOR = (224, 224, 192, 0)
 ROTATION_SELECTOR_RADIUS_FRACTION = 24 / BASE_ICON_SIZE
 ROTATION_SELECTOR_THICKNESS_FRACTION = 4 / BASE_ICON_SIZE
@@ -666,6 +671,28 @@ def gen_composite_image(layers, base_image = None, include_outline = False):
 	if base_image is not None:
 		layer_image = simple_overlay_image(base_image, layer_image)
 	return simple_overlay_image(layer_outline_image, layer_image) if include_outline else layer_image
+
+
+#Generate other single-form images
+def gen_molecule_absorber_icon(base_size, mips):
+	image = filled_mip_image(base_size, mips)
+	layers = [("layer", {"size": base_size, "mips": mips, "color": MOLECULE_ABSORBER_DOT_COLOR})]
+	dot_radius = MOLECULE_ABSORBER_DOT_RADIUS_FRACTION * base_size
+	for xy in [(0, 1), (1, 0), (1, 1), (1, 2), (2, 1)]:
+		simple_overlay_image(
+			image, gen_single_atom_shape_image(base_size, mips, 3, 3, xy[0], xy[1], MOLECULE_ABSORBER_BACK_COLOR))
+		mip_data_0 = get_circle_mip_datas(base_size, mips, 3, 3, xy[0], xy[1])[0]
+		layers.append(("circle", {"center": (mip_data_0["center_x"], mip_data_0["center_y"]), "radius": dot_radius}))
+	layers.append(("layer", {"size": base_size, "color": MOLECULE_ABSORBER_BACK_COLOR}))
+	corner_distance = MOLECULE_ABSORBER_CORNER_DISTANCE * base_size
+	corner_radius = MOLECULE_ABSORBER_CORNER_RADIUS_FRACTION * base_size
+	for i in range(4):
+		x = base_size / 2 + (corner_distance if i == 0 or i == 3 else -corner_distance)
+		y = base_size / 2 + (corner_distance if i < 2 else -corner_distance)
+		layers.append(
+			("arc", {"center": (x, y), "radius": corner_radius, "arc": [i * 90, 90], "thickness": cv2.FILLED}))
+	write_image(".", "molecule-absorber", gen_composite_image(layers, image))
+	image_counter_print("Molecule absorber written")
 
 
 #Generate selector icons
@@ -1365,6 +1392,7 @@ gen_all_atom_images(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_all_bond_images(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_item_group_icon(ITEM_GROUP_SIZE, ITEM_GROUP_MIPS)
 gen_molecule_reaction_reactants_icon(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
+gen_molecule_absorber_icon(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_all_selectors(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_building_overlays(TILE_SIZE)
 gen_all_recipe_icons(BASE_ICON_SIZE, BASE_ICON_MIPS)
