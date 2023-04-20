@@ -15,6 +15,7 @@ local DIRECTION_GET_SPRITE_DATA = {
 		return {width = height, height = width, x = 0, y = height, shift = {shift_y, -shift_x}}
 	end,
 }
+local BUILDING_INGREDIENTS = {{"iron-gear-wheel", 15}, {"copper-plate", 20}, {"electronic-circuit", 20}}
 local HIDDEN_ENTITY_FLAGS = {"hidden", "not-deconstructable", "not-blueprintable", "player-creation"}
 local EMPTY_SPRITE = {filename = "__core__/graphics/empty.png", size = 1}
 local BUILDING_OVERLAY_ICON_SIZE = 64
@@ -156,10 +157,11 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 	local recipe = {
 		type = "recipe",
 		name = name,
-		ingredients = {{"iron-gear-wheel", 25}, {"copper-plate", 50}},
+		ingredients = BUILDING_INGREDIENTS,
 		result = name,
 	}
 	if name == MOLECULE_VOIDER_NAME then
+		recipe.ingredients = table.deepcopy(recipe.ingredients)
 		for _, ingredient in ipairs(recipe.ingredients) do ingredient[2] = ingredient[2] * 10 end
 	elseif name == MOLECULE_PRINTER_NAME then
 		recipe.ingredients = {{MOLECULE_VOIDER_NAME, 2}}
@@ -246,7 +248,7 @@ overlay_icon(moleculifier_item, MOLECULIFIER_NAME)
 local moleculifier_recipe = {
 	type = "recipe",
 	name = MOLECULIFIER_NAME,
-	ingredients = {{"iron-gear-wheel", 25}, {"copper-plate", 50}},
+	ingredients = BUILDING_INGREDIENTS,
 	result = MOLECULIFIER_NAME,
 }
 
