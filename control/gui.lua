@@ -151,7 +151,7 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 		}
 		if selector == ATOM_SELECTOR_NAME then
 			spec.elem_filters = {}
-			for _, subgroup in ipairs(GAME_ITEM_PROTOTYPES[MOLECULES_GROUP_NAME].subgroups) do
+			for _, subgroup in ipairs(GAME_ITEM_GROUP_PROTOTYPES[MOLECULES_GROUP_NAME].subgroups) do
 				if string.find(subgroup.name, ATOM_SUBGROUP_PREFIX_MATCH) then
 					table.insert(spec.elem_filters, {filter = "subgroup", subgroup = subgroup.name})
 				end
