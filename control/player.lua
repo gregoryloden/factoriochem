@@ -18,7 +18,7 @@ function player_on_tick(event)
 			local player_inventory = player.get_main_inventory()
 			if player_inventory.get_item_count(MOLECULE_ABSORBER_NAME) == 0 then goto continue_players end
 			for name, count in pairs(player_inventory.get_contents()) do
-				if game.item_prototypes[name].group.name ~= MOLECULES_GROUP_NAME then goto continue_items end
+				if GAME_ITEM_PROTOTYPES[name].group.name ~= MOLECULES_GROUP_NAME then goto continue_items end
 				if name == MOLECULE_ABSORBER_NAME then goto continue_items end
 				player_inventory.remove({name = name, count = count})
 				::continue_items::

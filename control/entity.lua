@@ -285,7 +285,7 @@ local function update_reaction_building(building_data)
 	-- our current reaction is not cached, make sure we only have molecules
 	-- a missing reactant counts as a molecule
 	for _, reactant in pairs(reaction.reactants) do
-		if game.item_prototypes[reactant].group.name ~= MOLECULES_GROUP_NAME then
+		if GAME_ITEM_PROTOTYPES[reactant].group.name ~= MOLECULES_GROUP_NAME then
 			cache.invalid = true
 			return
 		end
@@ -315,7 +315,7 @@ local function update_detector(detector_data)
 		if not cache then
 			cache = {}
 			DETECTOR_TARGET_CACHE[signal] = cache
-			local item_prototype = game.item_prototypes[signal]
+			local item_prototype = GAME_ITEM_PROTOTYPES[signal]
 			if item_prototype and item_prototype.subgroup.name == TARGET_SELECTOR_SUBGROUP then
 				cache.height, cache.width, cache.y, cache.x = parse_target(signal)
 				cache.name = signal
@@ -344,7 +344,7 @@ local function update_detector(detector_data)
 			if not cache then
 				cache = {}
 				DETECTOR_CACHE[signal.signal.name] = cache
-				local item_prototype = game.item_prototypes[signal.signal.name]
+				local item_prototype = GAME_ITEM_PROTOTYPES[signal.signal.name]
 				if not item_prototype or item_prototype.group.name ~= MOLECULES_GROUP_NAME then
 					goto continue_signals
 				end

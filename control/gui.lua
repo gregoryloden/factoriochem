@@ -83,7 +83,7 @@ local function demo_reaction(building_data, demo_state, reaction_demo_table)
 	local building_definition = BUILDING_DEFINITIONS[building_data.entity.name]
 	local valid_reaction = true
 	for _, reactant in pairs(demo_state.reactants) do
-		if game.item_prototypes[reactant].group.name ~= MOLECULES_GROUP_NAME then
+		if GAME_ITEM_PROTOTYPES[reactant].group.name ~= MOLECULES_GROUP_NAME then
 			valid_reaction = false
 			break
 		end
@@ -151,7 +151,7 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 		}
 		if selector == ATOM_SELECTOR_NAME then
 			spec.elem_filters = {}
-			for _, subgroup in ipairs(game.item_group_prototypes[MOLECULES_GROUP_NAME].subgroups) do
+			for _, subgroup in ipairs(GAME_ITEM_PROTOTYPES[MOLECULES_GROUP_NAME].subgroups) do
 				if string.find(subgroup.name, ATOM_SUBGROUP_PREFIX_MATCH) then
 					table.insert(spec.elem_filters, {filter = "subgroup", subgroup = subgroup.name})
 				end
