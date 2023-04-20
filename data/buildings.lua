@@ -93,7 +93,7 @@ data:extend({
 	{
 		type = "item",
 		name = MOLECULE_REACTION_REACTANTS_NAME,
-		subgroup = MOLECULES_SUBGROUP_NAME,
+		subgroup = MOLECULE_ITEMS_SUBGROUP_NAME,
 		localised_name = {"item-name."..MOLECULE_REACTION_REACTANTS_NAME},
 		icon = GRAPHICS_ROOT..MOLECULE_REACTION_REACTANTS_NAME..".png",
 		icon_size = ITEM_ICON_SIZE,

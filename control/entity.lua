@@ -467,8 +467,8 @@ function entity_on_init()
 	global.molecule_detector_data = build_update_group_building_data(1)
 end
 
-function entity_on_tick(event_data)
-	local tick = event_data.tick
+function entity_on_tick(event)
+	local tick = event.tick
 	update_buildings(global.molecule_reaction_building_data, tick, update_reaction_building)
 	update_buildings(global.molecule_detector_data, tick, update_detector)
 	try_reload_building_caches(tick)

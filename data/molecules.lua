@@ -81,6 +81,12 @@ data:extend({
 		group = MOLECULES_GROUP_NAME,
 		order = "b",
 	},
+	{
+		type = "item-subgroup",
+		name = MOLECULE_ITEMS_SUBGROUP_NAME,
+		group = MOLECULES_GROUP_NAME,
+		order = "f",
+	},
 })
 for row_n, _ in ipairs(ATOM_ROWS) do
 	data:extend({{

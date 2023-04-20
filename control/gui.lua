@@ -425,9 +425,8 @@ function gui_on_init()
 	global.gui_demo_items = {}
 end
 
-function gui_on_tick(event_data)
-	local reaction_building_update_group =
-		math.fmod(event_data.tick, global.molecule_reaction_building_data.ticks_per_update)
+function gui_on_tick(event)
+	local reaction_building_update_group = math.fmod(event.tick, global.molecule_reaction_building_data.ticks_per_update)
 	for player_index, building_data in pairs(global.current_gui_reaction_building_data) do
 		if building_data.update_group == reaction_building_update_group then
 			update_all_reaction_table_sprites(game.get_player(player_index).gui, building_data)

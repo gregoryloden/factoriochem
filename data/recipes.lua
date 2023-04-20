@@ -20,13 +20,13 @@ data:extend({
 		type = "item-subgroup",
 		name = MOLECULIFY_SUBGROUP_NAME,
 		group = MOLECULES_GROUP_NAME,
-		order = "a",
+		order = "d",
 	},
 	{
 		type = "item-subgroup",
 		name = DEMOLECULIFY_SUBGROUP_NAME,
 		group = MOLECULES_GROUP_NAME,
-		order = "b",
+		order = "e",
 	},
 	{
 		type = "recipe-category",
@@ -181,6 +181,26 @@ for _, demoleculify_recipe in ipairs(demoleculify_recipes) do
 	add_moleculifier_recipe_properties(demoleculify_recipe)
 end
 data:extend(demoleculify_recipes)
+
+
+-- Molecule absorber
+data:extend({
+	{
+		type = "item",
+		name = MOLECULE_ABSORBER_NAME,
+		subgroup = MOLECULE_ITEMS_SUBGROUP_NAME,
+		icon = GRAPHICS_ROOT..MOLECULE_ABSORBER_NAME..".png",
+		icon_size = ITEM_ICON_SIZE,
+		icon_mipmaps = MOLECULE_ICON_MIPMAPS,
+		stack_size = 1,
+	},
+	{
+		type = "recipe",
+		name = MOLECULE_ABSORBER_NAME,
+		ingredients = {},
+		result = MOLECULE_ABSORBER_NAME,
+	},
+})
 
 
 -- Science recipes
