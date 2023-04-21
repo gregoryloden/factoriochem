@@ -20,10 +20,11 @@ local ATOM_SUBGROUP_PREFIX_MATCH = "^"..ATOMS_SUBGROUP_PREFIX
 
 
 -- Utilities
-local function close_gui(player_index, gui)
+local function close_gui(player)
+	local gui = player.gui
 	if gui.relative[MOLECULE_REACTION_NAME] then
 		gui.relative[MOLECULE_REACTION_NAME].destroy()
-		global.current_gui_reaction_building_data[player_index] = nil
+		global.current_gui_reaction_building_data[player.index] = nil
 	end
 	if gui.screen[PERIODIC_TABLE_NAME] then gui.screen[PERIODIC_TABLE_NAME].destroy() end
 end
@@ -279,6 +280,60 @@ end
 
 -- Periodic table GUI construction
 local function build_periodic_table_gui(player)
+	function build_element_table_children()
+		local children = {}
+		for row = 1, 10 do
+			local atom_row = ATOM_ROWS[row]
+			if row >= 9 then atom_row = ATOM_ROWS[row - 3] end
+			local atom_row_count
+			if atom_row then atom_row_count = #atom_row end
+			for col = 1, 19 do
+				local atom
+				if row == 1 then
+					if col == 1 then
+						atom = atom_row[1]
+					elseif col == 19 then
+						atom = atom_row[2]
+					end
+				elseif row <= 7 then
+					if col <= 2 then
+						atom = atom_row[col]
+					elseif col >= 4 then
+						col = atom_row_count - 19 + col
+						if col > 2 then atom = atom_row[col] end
+					end
+				elseif row >= 9 then
+					if col >= 4 and col <= 17 then atom = atom_row[col - 1] end
+				end
+				local child
+				if atom then
+					item_name = ATOM_ITEM_PREFIX..atom
+					item = GAME_ITEM_PROTOTYPES[item_name]
+					child = {
+						type = "sprite",
+						sprite = "item/"..item_name,
+						tooltip = {
+							"factoriochem."..PERIODIC_TABLE_NAME.."-tooltip",
+							item.localised_name,
+							item.localised_description,
+						},
+					}
+				elseif col == 3 then
+					if row == 6 or row == 9 then
+						child = {type = "label", caption = "*"}
+					elseif row == 7 or row == 10 then
+						child = {type = "label", caption = "**"}
+					else
+						child = {type = "label", caption = " "}
+					end
+				else
+					child = {type = "empty-widget"}
+				end
+				table.insert(children, child)
+			end
+		end
+		return children
+	end
 	local gui_spec = {
 		-- outer
 		type = "frame",
@@ -296,10 +351,25 @@ local function build_periodic_table_gui(player)
 				type = "empty-widget",
 				style = "factoriochem-titlebar-drag-handle",
 				ignored_by_interaction = true,
+			}, {
+				type = "sprite-button",
+				name = "close",
+				style = "frame_action_button",
+				sprite = "utility/close_white",
+				hovered_sprite = "utility/close_black",
+				clicked_sprite = "utility/close_black",
+				tooltip = {"gui.close-instruction"},
 			}},
 		}, {
 			-- elements
-			type = "flow",
+			type = "frame",
+			style = "factoriochem-inside-deep-frame-with-padding",
+			children = {{
+				type = "table",
+				name = PERIODIC_TABLE_NAME.."-table",
+				column_count = 19,
+				children = build_element_table_children(),
+			}},
 		}},
 	}
 	local periodic_table_gui = gui_add_recursive(player.gui.screen, gui_spec)
@@ -314,13 +384,12 @@ local function on_gui_opened(event)
 	local entity = event.entity
 	if not entity then return end
 	local player = game.get_player(event.player_index)
-	local gui = player.gui
-	close_gui(event.player_index, gui)
+	close_gui(player)
 
 	local building_definition = BUILDING_DEFINITIONS[entity.name]
 	if building_definition then
-		build_molecule_reaction_gui(entity, gui, building_definition)
-		global.current_gui_reaction_building_data[event.player_index] =
+		build_molecule_reaction_gui(entity, player.gui, building_definition)
+		global.current_gui_reaction_building_data[player.index] =
 			global.molecule_reaction_building_data[entity.unit_number]
 	elseif entity.name == MOLECULE_DETECTOR_OUTPUT_NAME then
 		player.opened = nil
@@ -328,16 +397,21 @@ local function on_gui_opened(event)
 end
 
 local function on_gui_closed(event)
-	close_gui(event.player_index, game.get_player(event.player_index).gui)
+	close_gui(game.get_player(event.player_index))
 end
 
 local function on_gui_click(event)
 	local element = event.element
 	local building_data = global.current_gui_reaction_building_data[event.player_index]
+	local player = game.get_player(event.player_index)
+
+	if element.name == "close" then
+		close_gui(player)
+		return
+	end
 
 	local reaction_table_component_name = REACTION_TABLE_COMPONENT_NAME_MAP[element.name]
 	if reaction_table_component_name then
-		local player = game.get_player(event.player_index)
 		local chest_inventory = building_data.chest_inventories[reaction_table_component_name]
 		local chest_contents = chest_inventory.get_contents()
 		if next(chest_contents) then
@@ -356,7 +430,6 @@ local function on_gui_click(event)
 
 	local reaction_demo_table_reactant_name = REACTION_DEMO_TABLE_REACTANT_NAME_MAP[element.name]
 	if reaction_demo_table_reactant_name then
-		local player = game.get_player(event.player_index)
 		local demo_state = get_demo_state(building_data.entity.name)
 		local reaction_reactant =
 			next(building_data.chest_inventories[reaction_demo_table_reactant_name].get_contents())

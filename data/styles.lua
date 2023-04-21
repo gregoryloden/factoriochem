@@ -17,5 +17,10 @@ data.raw["gui-style"]["default"]["factoriochem-titlebar-drag-handle"] = {
 	type = "empty_widget_style",
 	parent = "draggable_space",
 	horizontally_stretchable = "on",
-	vertically_stretchable = "on",
+	height = 24,
+}
+data.raw["gui-style"]["default"]["factoriochem-inside-deep-frame-with-padding"] = {
+	type = "frame_style",
+	parent = "inside_deep_frame",
+	padding = 12,
 }
