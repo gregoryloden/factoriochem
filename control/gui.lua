@@ -25,6 +25,7 @@ local function close_gui(player_index, gui)
 		gui.relative[MOLECULE_REACTION_NAME].destroy()
 		global.current_gui_reaction_building_data[player_index] = nil
 	end
+	if gui.screen[PERIODIC_TABLE_NAME] then gui.screen[PERIODIC_TABLE_NAME].destroy() end
 end
 
 local function gui_add_recursive(gui, element_spec)
@@ -33,6 +34,7 @@ local function gui_add_recursive(gui, element_spec)
 	local element = gui.add(element_spec)
 	if not children_spec then return end
 	for _, child_spec in ipairs(children_spec) do gui_add_recursive(element, child_spec) end
+	return element
 end
 
 local function update_reaction_table_sprite(element, chest_inventory, product)
@@ -275,6 +277,38 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 end
 
 
+-- Periodic table GUI construction
+local function build_periodic_table_gui(player)
+	local gui_spec = {
+		-- outer
+		type = "frame",
+		name = PERIODIC_TABLE_NAME,
+		direction = "vertical",
+		children = {{
+			type = "flow",
+			name = "titlebar",
+			children = {{
+				type = "label",
+				caption = {"shortcut-name."..PERIODIC_TABLE_NAME},
+				style = "frame_title",
+				ignored_by_interaction = true,
+			}, {
+				type = "empty-widget",
+				style = "factoriochem-titlebar-drag-handle",
+				ignored_by_interaction = true,
+			}},
+		}, {
+			-- elements
+			type = "flow",
+		}},
+	}
+	local periodic_table_gui = gui_add_recursive(player.gui.screen, gui_spec)
+	periodic_table_gui.force_auto_center()
+	periodic_table_gui.titlebar.drag_target = periodic_table_gui
+	player.opened = periodic_table_gui
+end
+
+
 -- Event handling
 local function on_gui_opened(event)
 	local entity = event.entity
@@ -432,6 +466,11 @@ function gui_on_tick(event)
 			update_all_reaction_table_sprites(game.get_player(player_index).gui, building_data)
 		end
 	end
+end
+
+function gui_on_lua_shortcut(event)
+	local player = game.get_player(event.player_index)
+	if event.prototype_name == PERIODIC_TABLE_NAME then build_periodic_table_gui(player) end
 end
 
 script.on_event(defines.events.on_gui_opened, on_gui_opened)

@@ -13,3 +13,9 @@ data.raw["gui-style"]["default"]["factoriochem-textfield"] = {
 	parent = "textbox",
 	width = 150,
 }
+data.raw["gui-style"]["default"]["factoriochem-titlebar-drag-handle"] = {
+	type = "empty_widget_style",
+	parent = "draggable_space",
+	horizontally_stretchable = "on",
+	vertically_stretchable = "on",
+}

@@ -18,14 +18,10 @@ require("data/styles")
 
 
 -- Other prototypes
-local periodic_table = {
-	type = "shortcut",
-	name = PERIODIC_TABLE_NAME,
-	action = "lua",
-}
+local periodic_table = {type = "shortcut", name = PERIODIC_TABLE_NAME, action = "lua"}
 for _, disabled_prefix in ipairs({"", "disabled_"}) do
 	for size_prefix, size in pairs({[""] = 32, small_ = 24}) do
-		if disabled_prefix ~= "" and size == 32 then goto continue end
+		if disabled_prefix ~= "" and size_prefix == "" then goto continue end
 		local y = 0
 		if size == 32 then y = 48 end
 		if disabled_prefix ~= "" then y = y + size end
