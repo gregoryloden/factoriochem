@@ -86,6 +86,8 @@ MOLECULE_ABSORBER_DOT_COLOR = (255, 255, 255, 0)
 MOLECULE_ABSORBER_DOT_RADIUS_FRACTION = 3 / BASE_ICON_SIZE
 MOLECULE_ABSORBER_CORNER_DISTANCE = 16 / BASE_ICON_SIZE
 MOLECULE_ABSORBER_CORNER_RADIUS_FRACTION = 10 / BASE_ICON_SIZE
+PERIODIC_TABLE_DARK_COLOR = (0, 0, 0, 0)
+PERIODIC_TABLE_LIGHT_COLOR = (224, 224, 224, 0)
 ROTATION_SELECTOR_COLOR = (224, 224, 192, 0)
 ROTATION_SELECTOR_RADIUS_FRACTION = 24 / BASE_ICON_SIZE
 ROTATION_SELECTOR_THICKNESS_FRACTION = 4 / BASE_ICON_SIZE
@@ -693,6 +695,38 @@ def gen_molecule_absorber_icon(base_size, mips):
 			("arc", {"center": (x, y), "radius": corner_radius, "arc": [i * 90, 90], "thickness": cv2.FILLED}))
 	write_image(".", "molecule-absorber", gen_composite_image(layers, image))
 	image_counter_print("Molecule absorber written")
+
+def gen_periodic_table_icon():
+	#generate the basic icon, in alpha form
+	height = 10
+	width = 19
+	alpha = numpy.zeros((height, width), numpy.uint8)
+	alpha[0, [0, 18]] = 255
+	for i in range(1, len(ATOM_ROWS)):
+		row_len = len(ATOM_ROWS[i])
+		alpha[i, 0:2] = 255
+		alpha[i, 2 - min(row_len, 18):] = 255
+	alpha[8:, 3:3 + len(ATOM_ROWS[6]) - 18] = 255
+
+	#double it in size so that we can position it in the vertical center, and make it a square
+	big_alpha = numpy.zeros((width * 2, width * 2), numpy.uint8)
+	big_alpha[width - height:width + height, :] = resize(alpha, width * 2, height * 2, multi_color_alpha_weighting=False)
+
+	#create an image with 3 rows: a dark 24, a light 24, and a dark 32
+	image = numpy.full((24 + 24 + 32, 32 + 16, 4), PERIODIC_TABLE_DARK_COLOR, numpy.uint8)
+	image[24:24 * 2, :24 + 12] = PERIODIC_TABLE_LIGHT_COLOR
+
+	#insert all 6 mip images
+	for (y, size) in [(0, 24), (24, 24), (48, 32)]:
+		x = 0
+		for mip in range(2):
+			size = size // (1 << mip)
+			image[y:y + size, x:x + size, 3] = resize(big_alpha, size, size, multi_color_alpha_weighting=False)
+			x += size
+
+	#now write it
+	write_image(".", "periodic-table", image)
+	image_counter_print("Periodic table written")
 
 
 #Generate selector icons
@@ -1393,6 +1427,7 @@ gen_all_bond_images(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_item_group_icon(ITEM_GROUP_SIZE, ITEM_GROUP_MIPS)
 gen_molecule_reaction_reactants_icon(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_molecule_absorber_icon(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
+gen_periodic_table_icon()
 gen_all_selectors(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_building_overlays(TILE_SIZE)
 gen_all_recipe_icons(BASE_ICON_SIZE, BASE_ICON_MIPS)
