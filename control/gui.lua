@@ -278,8 +278,14 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 end
 
 
--- Periodic table GUI construction
-local function build_periodic_table_gui(player)
+-- Periodic table GUI construction / destruction
+local function toggle_periodic_table_gui(player)
+	local gui = player.gui
+	if gui.screen[PERIODIC_TABLE_NAME] then
+		gui.screen[PERIODIC_TABLE_NAME].destroy()
+		return
+	end
+
 	function build_element_table_children()
 		local children = {}
 		for row = 1, 10 do
@@ -358,7 +364,6 @@ local function build_periodic_table_gui(player)
 				sprite = "utility/close_white",
 				hovered_sprite = "utility/close_black",
 				clicked_sprite = "utility/close_black",
-				tooltip = {"gui.close-instruction"},
 			}},
 		}, {
 			-- elements
@@ -372,10 +377,13 @@ local function build_periodic_table_gui(player)
 			}},
 		}},
 	}
-	local periodic_table_gui = gui_add_recursive(player.gui.screen, gui_spec)
+	local periodic_table_gui = gui_add_recursive(gui.screen, gui_spec)
 	periodic_table_gui.force_auto_center()
 	periodic_table_gui.titlebar.drag_target = periodic_table_gui
-	player.opened = periodic_table_gui
+	if player.opened_gui_type == defines.gui_type.none then
+		periodic_table_gui.titlebar.close.tooltip = {"gui.close-instruction"}
+		player.opened = periodic_table_gui
+	end
 end
 
 
@@ -384,7 +392,6 @@ local function on_gui_opened(event)
 	local entity = event.entity
 	if not entity then return end
 	local player = game.get_player(event.player_index)
-	close_gui(player)
 
 	local building_definition = BUILDING_DEFINITIONS[entity.name]
 	if building_definition then
@@ -406,7 +413,8 @@ local function on_gui_click(event)
 	local player = game.get_player(event.player_index)
 
 	if element.name == "close" then
-		close_gui(player)
+		-- assumes the close button is a child of a titlebar flow that is a child of the GUI frame
+		element.parent.parent.destroy()
 		return
 	end
 
@@ -543,7 +551,7 @@ end
 
 function gui_on_lua_shortcut(event)
 	local player = game.get_player(event.player_index)
-	if event.prototype_name == PERIODIC_TABLE_NAME then build_periodic_table_gui(player) end
+	if event.prototype_name == PERIODIC_TABLE_NAME then toggle_periodic_table_gui(player) end
 end
 
 script.on_event(defines.events.on_gui_opened, on_gui_opened)
