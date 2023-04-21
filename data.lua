@@ -17,7 +17,7 @@ require("data/buildings")
 require("data/styles")
 
 
--- Other prototypes
+-- Periodic table prototypes
 local periodic_table = {type = "shortcut", name = PERIODIC_TABLE_NAME, action = "lua"}
 for _, disabled_prefix in ipairs({"", "disabled_"}) do
 	for size_prefix, size in pairs({[""] = 32, small_ = 24}) do
@@ -35,4 +35,7 @@ for _, disabled_prefix in ipairs({"", "disabled_"}) do
 		::continue::
 	end
 end
-data:extend({periodic_table})
+local periodic_table_24 = table.deepcopy(periodic_table.small_icon)
+periodic_table_24.type = "sprite"
+periodic_table_24.name = PERIODIC_TABLE_NAME.."-24"
+data:extend({periodic_table, periodic_table_24})

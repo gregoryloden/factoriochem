@@ -24,3 +24,8 @@ data.raw["gui-style"]["default"]["factoriochem-inside-deep-frame-with-padding"] 
 	parent = "inside_deep_frame",
 	padding = 12,
 }
+data.raw["gui-style"]["default"]["factoriochem-tool-button-24"] = {
+	type = "button_style",
+	parent = "tool_button",
+	size = data.raw["gui-style"]["default"]["tool_button"].size + 8,
+}

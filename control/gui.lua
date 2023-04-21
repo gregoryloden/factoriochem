@@ -17,6 +17,7 @@ for _, reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
 	REACTION_DEMO_TABLE_SELECTOR_NAME_MAP[REACTION_DEMO_PREFIX..reactant_name..SELECTOR_SUFFIX] = reactant_name
 end
 local ATOM_SUBGROUP_PREFIX_MATCH = "^"..ATOMS_SUBGROUP_PREFIX
+local PERIODIC_TABLE_DEMO_NAME = PERIODIC_TABLE_NAME.."-demo"
 
 
 -- Utilities
@@ -203,6 +204,15 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 		if not building_definition.has_component[component_name] then return {type = "empty-widget"} end
 		return {type = "sprite", sprite = MOLECULE_INDICATOR_PREFIX..component_name}
 	end
+	function build_periodic_table_button_spec(name_prefix)
+		if name_prefix ~= REACTION_DEMO_PREFIX then return {type = "empty-widget"} end
+		return {
+			type = "sprite-button",
+			name = PERIODIC_TABLE_DEMO_NAME,
+			sprite = PERIODIC_TABLE_NAME.."-24",
+			style = "factoriochem-tool-button-24"
+		}
+	end
 	function build_reaction_table_spec(name_prefix)
 		local spec = {
 			type = "table",
@@ -220,7 +230,7 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 				build_indicator_spec(BASE_NAME),
 				build_molecule_spec(name_prefix, BASE_NAME),
 				build_selector_spec(name_prefix, BASE_NAME),
-				{type = "empty-widget"},
+				build_periodic_table_button_spec(name_prefix),
 				build_molecule_spec(name_prefix, RESULT_NAME),
 				build_indicator_spec(RESULT_NAME),
 				-- catalyst/byproduct row
@@ -452,6 +462,8 @@ local function on_gui_click(event)
 		end
 		return
 	end
+
+	if element.name == PERIODIC_TABLE_DEMO_NAME then toggle_periodic_table_gui(player) end
 end
 
 local function on_gui_elem_changed(event)
