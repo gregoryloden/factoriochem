@@ -333,6 +333,7 @@ local function toggle_periodic_table_gui(player)
 							item.localised_name,
 							item.localised_description,
 						},
+						number = ALL_ATOMS[atom].number,
 					}
 				elseif col == 3 then
 					if row == 6 or row == 9 then
@@ -346,6 +347,23 @@ local function toggle_periodic_table_gui(player)
 					child = {type = "empty-widget"}
 				end
 				table.insert(children, child)
+			end
+			if row ~= 8 then
+				start = #children - 18
+				for child_i = start, start + 18 do
+					local child = children[child_i]
+					if child.number then
+						local number = {
+							type = "label",
+							caption = child.number,
+							style = "factoriochem-small-label"
+						}
+						child.number = nil
+						table.insert(children, number)
+					else
+						table.insert(children, {type = "empty-widget"})
+					end
+				end
 			end
 		end
 		return children
@@ -383,6 +401,7 @@ local function toggle_periodic_table_gui(player)
 				type = "table",
 				name = PERIODIC_TABLE_NAME.."-table",
 				column_count = 19,
+				style = "factoriochem-periodic-table",
 				children = build_element_table_children(),
 			}},
 		}},
