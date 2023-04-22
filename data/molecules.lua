@@ -57,6 +57,7 @@ local MOLECULE_DESCRIPTION_CACHE = {}
 local ITEM_GROUP_ICON_SIZE = 128
 local ITEM_GROUP_ICON_MIPMAPS = 2
 local COMPLEX_MOLECULES_SUBGROUP_NAME = "complex-molecules"
+local COMPLEX_MOLECULE_PARTS_NAME = COMPLEX_MOLECULE_ITEM_PREFIX.."parts"
 
 
 -- Item groups and subgroups
@@ -541,7 +542,7 @@ for shape_n = 1, bit32.lshift(1, GRID_AREA) - 1 do
 
 	-- generate a complex molecule for this shape
 	local curtent_shape_s = string.format("%03X", shape_n)
-	data:extend({{
+	local complex_molecule = {
 		type = "armor",
 		name = COMPLEX_MOLECULE_ITEM_PREFIX..curtent_shape_s,
 		subgroup = COMPLEX_MOLECULES_SUBGROUP_NAME,
@@ -551,7 +552,12 @@ for shape_n = 1, bit32.lshift(1, GRID_AREA) - 1 do
 		icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 		infinite = true,
 		stack_size = 1,
-	}})
+	}
+	if shape_n > 1 then
+		complex_molecule.equipment_grid =
+			COMPLEX_MOLECULE_ITEM_PREFIX.."grid-"..current_shape_height..current_shape_width
+	end
+	data:extend({complex_molecule})
 
 	-- don't generate a simple molecule if there are too many atoms
 	if current_atom_count > MAX_ATOMS then goto continue_shapes end
@@ -573,6 +579,25 @@ for shape_n = 1, bit32.lshift(1, GRID_AREA) - 1 do
 	gen_molecule_bonds(1, array_with_contents({first_grid_i}))
 	::continue_shapes::
 end
+
+
+-- Add complex molecule equipment grids
+data:extend({{type = "equipment-category", name = COMPLEX_MOLECULE_PARTS_NAME}})
+for y_scale = 1, 3 do
+	for x_scale = 1, 3 do
+		if y_scale == 1 and x_scale == 1 then goto continue end
+		data:extend({{
+			type = "equipment-grid",
+			name = COMPLEX_MOLECULE_ITEM_PREFIX.."grid-"..y_scale..x_scale,
+			width = x_scale * 2 - 1,
+			height = y_scale * 2 - 1,
+			equipment_categories = {COMPLEX_MOLECULE_PARTS_NAME},
+			locked = true,
+		}})
+		::continue::
+	end
+end
+
 
 -- debug
 local debug = false
