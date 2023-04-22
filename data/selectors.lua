@@ -54,7 +54,7 @@ for y_scale = 1, 3 do
 					type = "item",
 					name = TARGET_SELECTOR_SUBGROUP.."-"..name_spec,
 					subgroup = TARGET_SELECTOR_SUBGROUP,
-					localised_name = {"item-name.molecule-reaction-selector-target", x_scale, y_scale, x, y},
+					localised_name = {"item-name."..TARGET_SELECTOR_SUBGROUP, x_scale, y_scale, x, y},
 					icon = SELECTOR_ICON_ROOT..TARGET_SELECTOR_NAME.."-"..name_spec..".png",
 					icon_size = ITEM_ICON_SIZE,
 					icon_mipmaps = ITEM_ICON_MIPMAPS,
@@ -68,7 +68,7 @@ for y_scale = 1, 3 do
 					if (y_scale < 3 or inner_y) and (x_scale < 3 or inner_x) then
 						local atom_bond_name_spec = name_spec..direction
 						local localised_name_format =
-							"item-name.molecule-reaction-selector-atom-bond-"..direction
+							"item-name."..ATOM_BOND_SELECTOR_SUBGROUP.."-"..direction
 						local file_name = ATOM_BOND_SELECTOR_NAME.."-"..atom_bond_name_spec..".png"
 						data:extend({{
 							type = "item",

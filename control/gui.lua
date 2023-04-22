@@ -210,7 +210,7 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 			type = "sprite-button",
 			name = PERIODIC_TABLE_DEMO_NAME,
 			sprite = PERIODIC_TABLE_NAME.."-24",
-			style = "factoriochem-tool-button-24"
+			style = "factoriochem-tool-button-24",
 		}
 	end
 	function build_reaction_table_spec(name_prefix)
@@ -249,6 +249,19 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 				build_indicator_spec(REMAINDER_NAME),
 			},
 		}
+		if name_prefix == REACTION_DEMO_PREFIX then
+			local examples_label = {
+				type = "label",
+				caption = {"factoriochem.molecule-reaction-examples"},
+				tooltip = {"factoriochem."..entity.name.."-examples"},
+			}
+			table.insert(spec.children, {type = "empty-widget"})
+			table.insert(spec.children, {type = "empty-widget"})
+			table.insert(spec.children, {type = "empty-widget"})
+			table.insert(spec.children, examples_label)
+			table.insert(spec.children, {type = "empty-widget"})
+			table.insert(spec.children, {type = "empty-widget"})
+		end
 		return spec
 
 	end
