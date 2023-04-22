@@ -276,6 +276,99 @@ def get_draw_arrow_points(center_x, center_y, x_offset, y_offset):
 	return draw_arrow_points
 
 
+#Composite image utility
+def gen_composite_image(layers, base_image = None, include_outline = False):
+	layer_image = None
+	layer_outline_image = None
+	layer_needs_mips = False
+	base_layer_image = None
+	base_layer_outline_image = None
+	base_layer_needs_mips = False
+	for (type, layer) in layers:
+		if type == "layer":
+			if base_layer_image is not None:
+				simple_overlay_image(base_layer_image, layer_image)
+				if include_outline:
+					simple_overlay_image(base_layer_outline_image, layer_outline_image)
+			else:
+				base_layer_image = layer_image
+				base_layer_outline_image = layer_outline_image
+				base_layer_needs_mips = layer_needs_mips
+			layer_needs_mips = "mips" in layer
+			if layer_needs_mips:
+				layer_image = filled_mip_image(layer["size"], layer["mips"], layer["color"])
+				if include_outline:
+					layer_outline_image = \
+						filled_mip_image(layer["size"], layer["mips"], ICON_OVERLAY_OUTLINE_COLOR)
+			else:
+				height = layer.get("height", None) or layer["size"]
+				width = layer.get("width", None) or layer["size"]
+				layer_image = numpy.full((height, width, 4), layer["color"], numpy.uint8)
+				if include_outline:
+					layer_outline_image = \
+						numpy.full((height, width, 4), ICON_OVERLAY_OUTLINE_COLOR, numpy.uint8)
+		elif type == "overlay_at":
+			layer_image = simple_overlay_image_at(base_layer_image, *layer, layer_image)
+			layer_needs_mips = base_layer_needs_mips
+			base_layer_image = None
+		elif type == "circle":
+			draw_center = draw_coords_from(*layer["center"])
+			draw_radius = draw_radius_from(layer["radius"])
+			draw_alpha_on(layer_image, lambda mask: draw_filled_circle_alpha(mask, draw_center, draw_radius))
+		elif type == "arc":
+			draw_center = draw_coords_from(*layer["center"])
+			draw_axes = (draw_radius_from(layer["radius"]),) * 2
+			thickness = layer["thickness"]
+			def draw_arc(mask):
+				(start_angle, arc) = layer["arc"]
+				cv2.ellipse(
+					#image, center, size
+					mask, draw_center, draw_axes,
+					#angles
+					start_angle, 0, arc,
+					#color, thickness, line type, precision
+					255, thickness, cv2.LINE_AA, PRECISION_BITS)
+			draw_alpha_on(layer_image, draw_arc)
+			if include_outline:
+				thickness += int(ICON_OVERLAY_OUTLINE_FRACTION * layer_image.shape[0] * 2)
+				draw_alpha_on(layer_outline_image, draw_arc)
+		elif type == "arrow":
+			def draw_arrow(mask):
+				draw_poly_alpha(mask, [get_draw_arrow_points(*layer)])
+			draw_alpha_on(layer_image, draw_arrow)
+			if include_outline:
+				outline_add = ICON_OVERLAY_ARROW_OUTLINE_FRACTION * layer_image.shape[0]
+				old_arrow_magnitude = math.sqrt(layer[2] ** 2 + layer[3] ** 2)
+				arrow_size_multiplier = (old_arrow_magnitude + outline_add) / old_arrow_magnitude
+				layer = layer[:2] + tuple(xy * arrow_size_multiplier for xy in layer[2:])
+				draw_alpha_on(layer_outline_image, draw_arrow)
+		elif type == "poly":
+			layer = [draw_coords_from(*point) for point in layer]
+			draw_alpha_on(layer_image, lambda mask: draw_poly_alpha(mask, [layer]))
+		elif type == "line":
+			draw_start = draw_coords_from(*layer["start"])
+			draw_end = draw_coords_from(*layer["end"])
+			thickness = layer["thickness"]
+			def draw_line(mask):
+				cv2.line(mask, draw_start, draw_end, 255, thickness, cv2.LINE_AA, PRECISION_BITS)
+			draw_alpha_on(layer_image, draw_line)
+			if include_outline:
+				thickness += int(ICON_OVERLAY_OUTLINE_FRACTION * layer_image.shape[0] * 2)
+				draw_alpha_on(layer_outline_image, draw_line)
+	if base_layer_image is not None:
+		layer_image = simple_overlay_image(base_layer_image, layer_image)
+		if include_outline:
+			layer_outline_image = simple_overlay_image(base_layer_outline_image, layer_outline_image)
+		layer_needs_mips = base_layer_needs_mips
+	if layer_needs_mips:
+		easy_mips(layer_image)
+		if include_outline:
+			easy_mips(layer_outline_image, multi_color_alpha_weighting=False)
+	if base_image is not None:
+		layer_image = simple_overlay_image(base_image, layer_image)
+	return simple_overlay_image(layer_outline_image, layer_image) if include_outline else layer_image
+
+
 #Sub-image generation
 def get_circle_mip_datas(base_size, mips, y_scale, x_scale, y, x):
 	base_size_data = CIRCLE_DATA.get(base_size, None)
@@ -580,99 +673,6 @@ def gen_item_group_icon(base_size, mips):
 def gen_molecule_reaction_reactants_icon(base_size, mips):
 	write_image(".", "molecule-reaction-reactants", gen_specific_molecule(base_size, mips, "-H1-O|H--1H|1O1-H"))
 	image_counter_print("Molecule reaction reactants written")
-
-
-#Composite image utility
-def gen_composite_image(layers, base_image = None, include_outline = False):
-	layer_image = None
-	layer_outline_image = None
-	layer_needs_mips = False
-	base_layer_image = None
-	base_layer_outline_image = None
-	base_layer_needs_mips = False
-	for (type, layer) in layers:
-		if type == "layer":
-			if base_layer_image is not None:
-				simple_overlay_image(base_layer_image, layer_image)
-				if include_outline:
-					simple_overlay_image(base_layer_outline_image, layer_outline_image)
-			else:
-				base_layer_image = layer_image
-				base_layer_outline_image = layer_outline_image
-				base_layer_needs_mips = layer_needs_mips
-			layer_needs_mips = "mips" in layer
-			if layer_needs_mips:
-				layer_image = filled_mip_image(layer["size"], layer["mips"], layer["color"])
-				if include_outline:
-					layer_outline_image = \
-						filled_mip_image(layer["size"], layer["mips"], ICON_OVERLAY_OUTLINE_COLOR)
-			else:
-				height = layer.get("height", None) or layer["size"]
-				width = layer.get("width", None) or layer["size"]
-				layer_image = numpy.full((height, width, 4), layer["color"], numpy.uint8)
-				if include_outline:
-					layer_outline_image = \
-						numpy.full((height, width, 4), ICON_OVERLAY_OUTLINE_COLOR, numpy.uint8)
-		elif type == "overlay_at":
-			layer_image = simple_overlay_image_at(base_layer_image, *layer, layer_image)
-			layer_needs_mips = base_layer_needs_mips
-			base_layer_image = None
-		elif type == "circle":
-			draw_center = draw_coords_from(*layer["center"])
-			draw_radius = draw_radius_from(layer["radius"])
-			draw_alpha_on(layer_image, lambda mask: draw_filled_circle_alpha(mask, draw_center, draw_radius))
-		elif type == "arc":
-			draw_center = draw_coords_from(*layer["center"])
-			draw_axes = (draw_radius_from(layer["radius"]),) * 2
-			thickness = layer["thickness"]
-			def draw_arc(mask):
-				(start_angle, arc) = layer["arc"]
-				cv2.ellipse(
-					#image, center, size
-					mask, draw_center, draw_axes,
-					#angles
-					start_angle, 0, arc,
-					#color, thickness, line type, precision
-					255, thickness, cv2.LINE_AA, PRECISION_BITS)
-			draw_alpha_on(layer_image, draw_arc)
-			if include_outline:
-				thickness += int(ICON_OVERLAY_OUTLINE_FRACTION * layer_image.shape[0] * 2)
-				draw_alpha_on(layer_outline_image, draw_arc)
-		elif type == "arrow":
-			def draw_arrow(mask):
-				draw_poly_alpha(mask, [get_draw_arrow_points(*layer)])
-			draw_alpha_on(layer_image, draw_arrow)
-			if include_outline:
-				outline_add = ICON_OVERLAY_ARROW_OUTLINE_FRACTION * layer_image.shape[0]
-				old_arrow_magnitude = math.sqrt(layer[2] ** 2 + layer[3] ** 2)
-				arrow_size_multiplier = (old_arrow_magnitude + outline_add) / old_arrow_magnitude
-				layer = layer[:2] + tuple(xy * arrow_size_multiplier for xy in layer[2:])
-				draw_alpha_on(layer_outline_image, draw_arrow)
-		elif type == "poly":
-			layer = [draw_coords_from(*point) for point in layer]
-			draw_alpha_on(layer_image, lambda mask: draw_poly_alpha(mask, [layer]))
-		elif type == "line":
-			draw_start = draw_coords_from(*layer["start"])
-			draw_end = draw_coords_from(*layer["end"])
-			thickness = layer["thickness"]
-			def draw_line(mask):
-				cv2.line(mask, draw_start, draw_end, 255, thickness, cv2.LINE_AA, PRECISION_BITS)
-			draw_alpha_on(layer_image, draw_line)
-			if include_outline:
-				thickness += int(ICON_OVERLAY_OUTLINE_FRACTION * layer_image.shape[0] * 2)
-				draw_alpha_on(layer_outline_image, draw_line)
-	if base_layer_image is not None:
-		layer_image = simple_overlay_image(base_layer_image, layer_image)
-		if include_outline:
-			layer_outline_image = simple_overlay_image(base_layer_outline_image, layer_outline_image)
-		layer_needs_mips = base_layer_needs_mips
-	if layer_needs_mips:
-		easy_mips(layer_image)
-		if include_outline:
-			easy_mips(layer_outline_image, multi_color_alpha_weighting=False)
-	if base_image is not None:
-		layer_image = simple_overlay_image(base_image, layer_image)
-	return simple_overlay_image(layer_outline_image, layer_image) if include_outline else layer_image
 
 
 #Generate other single-form images
