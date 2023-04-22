@@ -161,18 +161,40 @@ local function gen_molecules(grid_i_i, grid_is)
 	elseif current_atom_count == 1 then
 		local slot = GRID[1]
 		local atom_number_hex = string.format("%02X", slot.atom.number)
-		data:extend({{
-			type = "item",
-			name = ATOM_ITEM_PREFIX..slot.atom.symbol,
-			subgroup = ATOMS_SUBGROUP_PREFIX..slot.atom.row,
-			order = atom_number_hex,
-			localised_name = {"item-name.atom-AA", slot.atom.localised_name, slot.atom.symbol},
-			localised_description = {"item-description.atom-AA", slot.atom.number, slot.atom.bonds},
-			icon = ATOM_ICON_ROOT..slot.atom.symbol.."/1100.png",
-			icon_size = ITEM_ICON_SIZE,
-			icon_mipmaps = MOLECULE_ICON_MIPMAPS,
-			stack_size = 1,
-		}})
+		local name = ATOM_ITEM_PREFIX..slot.atom.symbol
+		local localised_name = {"item-name.atom-AA", slot.atom.localised_name, slot.atom.symbol}
+		local localised_description = {"item-description.atom-AA", slot.atom.number, slot.atom.bonds}
+		local icon_name = ATOM_ICON_ROOT..slot.atom.symbol.."/1100.png"
+		data:extend({
+			{
+				type = "item",
+				name = name,
+				subgroup = ATOMS_SUBGROUP_PREFIX..slot.atom.row,
+				order = atom_number_hex,
+				localised_name = localised_name,
+				localised_description = localised_description,
+				icon = icon_name,
+				icon_size = ITEM_ICON_SIZE,
+				icon_mipmaps = MOLECULE_ICON_MIPMAPS,
+				placed_as_equipment_result = name,
+				stack_size = 1,
+			},
+			{
+				type = "battery-equipment",
+				name = name,
+				categories = {COMPLEX_MOLECULE_PARTS_NAME},
+				localised_name = localised_name,
+				localised_description = localised_description,
+				sprite = {
+					filename = icon_name,
+					size = ITEM_ICON_SIZE,
+					mipmap_count = MOLECULE_ICON_MIPMAPS,
+					flags = {"icon"},
+				},
+				shape = {width = 1, height = 1, type = "full"},
+				energy_source = {type = "void", usage_priority = "tertiary"},
+			},
+		})
 	else
 		array_clear(MOLECULE_BUILDER)
 		local icons = {current_shape_icon}
