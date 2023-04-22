@@ -450,14 +450,13 @@ local function on_gui_click(event)
 	local reaction_table_component_name = REACTION_TABLE_COMPONENT_NAME_MAP[element.name]
 	if reaction_table_component_name then
 		local chest_inventory = building_data.chest_inventories[reaction_table_component_name]
-		local chest_contents = chest_inventory.get_contents()
-		if next(chest_contents) then
-			local player_inventory = player.get_main_inventory()
-			for name, count in pairs(chest_contents) do
-				added = player_inventory.insert({name = name, count = count})
-				if added > 0 then chest_inventory.remove({name = name, count = added}) end
+		local chest_stack = chest_inventory[1]
+		if chest_stack.count > 0 then
+			local empty_player_stack = player.get_main_inventory().find_empty_stack()
+			if empty_player_stack then
+				empty_player_stack.transfer_stack(chest_stack)
+				update_reaction_table_sprite(element, chest_inventory)
 			end
-			update_reaction_table_sprite(element, chest_inventory)
 		elseif player.cursor_stack and player.cursor_stack.valid_for_read then
 			chest_inventory.find_empty_stack().transfer_stack(player.cursor_stack)
 			update_reaction_table_sprite(element, chest_inventory)
