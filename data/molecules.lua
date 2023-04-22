@@ -58,6 +58,7 @@ local ITEM_GROUP_ICON_SIZE = 128
 local ITEM_GROUP_ICON_MIPMAPS = 2
 local COMPLEX_MOLECULES_SUBGROUP_NAME = "complex-molecules"
 local COMPLEX_MOLECULE_PARTS_NAME = COMPLEX_MOLECULE_ITEM_PREFIX.."parts"
+local EQUIPMENT_GRID_SIZE = 32
 
 
 -- Item groups and subgroups
@@ -603,7 +604,7 @@ for shape_n = 1, bit32.lshift(1, GRID_AREA) - 1 do
 end
 
 
--- Add complex molecule equipment grids
+-- Add complex molecule equipment grids and bonds
 data:extend({{type = "equipment-category", name = COMPLEX_MOLECULE_PARTS_NAME}})
 for y_scale = 1, 3 do
 	for x_scale = 1, 3 do
@@ -617,6 +618,25 @@ for y_scale = 1, 3 do
 			locked = true,
 		}})
 		::continue::
+	end
+end
+for _, direction in ipairs({"H", "V"}) do
+	for bonds = 1, 3 do
+		data:extend({{
+			type = "battery-equipment",
+			name = MOLECULE_BONDS_PREFIX..direction..bonds,
+			categories = {COMPLEX_MOLECULE_PARTS_NAME},
+			localised_name = {"factoriochem.complex-bonds-"..direction, bonds},
+			sprite = {
+				filename = BOND_ICON_ROOT..direction..bonds..".png",
+				size = EQUIPMENT_GRID_SIZE,
+				flags = {"icon"},
+			},
+			shape = {width = 1, height = 1, type = "full"},
+			energy_source = {type = "void", usage_priority = "tertiary"},
+			-- never used, but we have to specify something valid
+			take_result = MOLECULE_ABSORBER_NAME,
+		}})
 	end
 end
 
