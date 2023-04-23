@@ -39,10 +39,9 @@ local function gui_add_recursive(gui, element_spec)
 	return element
 end
 
-local function update_reaction_table_sprite(element, chest_inventory, component)
-	local item = chest_inventory and next(chest_inventory.get_contents())
-	if item then
-		element.sprite = "item/"..item
+local function update_reaction_table_sprite(element, chest_stack, component)
+	if chest_stack and chest_stack.valid_for_read then
+		element.sprite = "item/"..chest_stack.name
 	elseif component then
 		if GAME_ITEM_PROTOTYPES[component] then
 			element.sprite = "item/"..component
@@ -58,14 +57,14 @@ local function update_all_reaction_table_sprites(gui, building_data)
 	local reaction_table =
 		gui.relative[MOLECULE_REACTION_NAME].outer[REACTION_PREFIX..FRAME_NAME][REACTION_PREFIX..TABLE_NAME]
 	local building_definition = BUILDING_DEFINITIONS[building_data.entity.name]
-	local chest_inventories = building_data.chest_inventories
+	local chest_stacks = building_data.chest_stacks
 	for _, reactant_name in ipairs(building_definition.reactants) do
-		update_reaction_table_sprite(reaction_table[REACTION_PREFIX..reactant_name], chest_inventories[reactant_name])
+		update_reaction_table_sprite(reaction_table[REACTION_PREFIX..reactant_name], chest_stacks[reactant_name])
 	end
 	local products = building_data.reaction.products
 	for _, product_name in ipairs(building_definition.products) do
 		update_reaction_table_sprite(
-			reaction_table[REACTION_PREFIX..product_name], chest_inventories[product_name], products[product_name])
+			reaction_table[REACTION_PREFIX..product_name], chest_stacks[product_name], products[product_name])
 	end
 end
 
@@ -457,17 +456,16 @@ local function on_gui_click(event)
 
 	local reaction_table_component_name = REACTION_TABLE_COMPONENT_NAME_MAP[element.name]
 	if reaction_table_component_name then
-		local chest_inventory = building_data.chest_inventories[reaction_table_component_name]
-		local chest_stack = chest_inventory[1]
-		if chest_stack.count > 0 then
+		local chest_stack = building_data.chest_stacks[reaction_table_component_name]
+		if chest_stack.valid_for_read then
 			local empty_player_stack = player.get_main_inventory().find_empty_stack()
 			if empty_player_stack then
 				empty_player_stack.transfer_stack(chest_stack)
-				update_reaction_table_sprite(element, chest_inventory)
+				update_reaction_table_sprite(element, chest_stack)
 			end
 		elseif player.cursor_stack and player.cursor_stack.valid_for_read then
-			chest_inventory.find_empty_stack().transfer_stack(player.cursor_stack)
-			update_reaction_table_sprite(element, chest_inventory)
+			chest_stack.transfer_stack(player.cursor_stack)
+			update_reaction_table_sprite(element, chest_stack)
 		end
 		return
 	end
@@ -475,8 +473,8 @@ local function on_gui_click(event)
 	local reaction_demo_table_reactant_name = REACTION_DEMO_TABLE_REACTANT_NAME_MAP[element.name]
 	if reaction_demo_table_reactant_name then
 		local demo_state = get_demo_state(building_data.entity.name)
-		local reaction_reactant =
-			next(building_data.chest_inventories[reaction_demo_table_reactant_name].get_contents())
+		local chest_stack = building_data.chest_stacks[reaction_demo_table_reactant_name]
+		local reaction_reactant = chest_stack.valid_for_read and chest_stack.name
 		if event.button == defines.mouse_button_type.right then
 			demo_reaction_with_reactant(building_data, demo_state, element, reaction_demo_table_reactant_name, nil)
 		elseif player.cursor_stack and player.cursor_stack.valid_for_read then

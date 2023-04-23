@@ -79,7 +79,7 @@ local function build_molecule_reaction_building(entity, building_definition)
 	local building_data = {
 		entity = entity,
 		chests = {},
-		chest_inventories = {},
+		chest_stacks = {},
 		loaders = {},
 		reaction = {reactants = {}, products = {}, selectors = {}},
 	}
@@ -101,7 +101,7 @@ local function build_molecule_reaction_building(entity, building_definition)
 		})
 		chest.destructible = false
 		building_data.chests[component] = chest
-		building_data.chest_inventories[component] = chest.get_inventory(defines.inventory.chest)
+		building_data.chest_stacks[component] = chest.get_inventory(defines.inventory.chest)[1]
 
 		if entity.direction == defines.direction.north or entity.direction == defines.direction.south then
 			offset_y = offset_y * 2
@@ -264,8 +264,8 @@ local function build_complex_contents(product)
 	return contents
 end
 
-local function start_reaction(reaction, chest_inventories, machine_inputs)
-	for reactant_name, _ in pairs(reaction.reactants) do chest_inventories[reactant_name].clear() end
+local function start_reaction(reaction, chest_stacks, machine_inputs)
+	for reactant_name, _ in pairs(reaction.reactants) do chest_stacks[reactant_name].clear() end
 	machine_inputs.insert({name = MOLECULE_REACTION_REACTANTS_NAME, count = 1})
 end
 
@@ -277,7 +277,7 @@ local function update_reaction_building(building_data)
 	if entity.crafting_progress > 0 and entity.crafting_progress < REACTION_PROGRESS_COMPLETE_THRESHOLD then return end
 
 	local reaction = building_data.reaction
-	local chest_inventories = building_data.chest_inventories
+	local chest_stacks = building_data.chest_stacks
 
 	-- the reaction has products which means that it needs resolving
 	if next(reaction.products) then
@@ -287,8 +287,8 @@ local function update_reaction_building(building_data)
 		-- deliver all remaining products and stop if there are any products remaining
 		local products_remaining = false
 		for product_name, product in pairs(reaction.products) do
-			local chest_stack = chest_inventories[product_name].find_empty_stack()
-			if chest_stack then
+			local chest_stack = chest_stacks[product_name]
+			if chest_stack.count == 0 then
 				reaction.products[product_name] = nil
 				local complex_contents = COMPLEX_CONTENTS[product]
 				if complex_contents then
@@ -309,9 +309,15 @@ local function update_reaction_building(building_data)
 	local cache = reaction.cache
 	local building_definition = BUILDING_DEFINITIONS[entity.name]
 	for _, reactant_name in ipairs(building_definition.reactants) do
-		local reactant = next(chest_inventories[reactant_name].get_contents())
-		reaction.reactants[reactant_name] = reactant
-		if not reactant then reactant = "" end
+		local chest_stack = chest_stacks[reactant_name]
+		local reactant
+		if chest_stack.valid_for_read then
+			reactant = chest_stack.name
+			reaction.reactants[reactant_name] = reactant
+		else
+			reactant = ""
+			reaction.reactants[reactant_name] = nil
+		end
 		local new_cache = cache[reactant]
 		if not new_cache then
 			new_cache = {}
@@ -321,7 +327,7 @@ local function update_reaction_building(building_data)
 	end
 	if cache.products then
 		for product_name, product in pairs(cache.products) do reaction.products[product_name] = product end
-		start_reaction(reaction, chest_inventories, machine_inputs)
+		start_reaction(reaction, chest_stacks, machine_inputs)
 		return
 	elseif cache.invalid then
 		return
@@ -353,7 +359,7 @@ local function update_reaction_building(building_data)
 
 		-- start it if there were no complex molecules or if complex molecules are allowed
 		if not has_complex_molecules or ALLOW_COMPLEX_MOLECULES then
-			start_reaction(reaction, chest_inventories, machine_inputs)
+			start_reaction(reaction, chest_stacks, machine_inputs)
 		-- clear out the products and invalidate this cache if complex molecules are present and not allowed
 		else
 			for product_name, _ in pairs(reaction.products) do reaction.products[product_name] = nil end
