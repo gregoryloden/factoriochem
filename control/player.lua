@@ -20,7 +20,9 @@ function player_on_tick(event)
 	if math.fmod(event.tick, MOLECULE_ABSORBER_TICKS_PER_UPDATE) == 0 then
 		for _, player in pairs(game.players) do
 			local player_inventory = player.get_main_inventory()
-			if player_inventory.get_item_count(MOLECULE_ABSORBER_NAME) == 0 then goto continue_players end
+			if not player_inventory or player_inventory.get_item_count(MOLECULE_ABSORBER_NAME) == 0 then
+				goto continue_players
+			end
 			for name, count in pairs(player_inventory.get_contents()) do
 				if GAME_ITEM_PROTOTYPES[name].group.name ~= MOLECULES_GROUP_NAME then goto continue_items end
 				if name == MOLECULE_ABSORBER_NAME then goto continue_items end
