@@ -429,24 +429,21 @@ local function paste_molecule_reaction_building(source, destination)
 	entity_assign_cache(destination_building_data, BUILDING_DEFINITIONS[destination.name])
 end
 
-local function try_reload_building_caches(tick)
-	-- REACTION_CACHE doesn't get serialized, but global.molecule_reaction_building_data does and it contains caches per
-	--	building; to prevent the cache from getting too big over time, reload the cache from buildings every so often.
-	--	This has no effect on buildings who were assigned a cache since this session was loaded.
-	local reaction_building_ticks_per_update = global.molecule_reaction_building_data.ticks_per_update
-	local reaction_building_multiplied_tick = tick * reaction_building_ticks_per_update
-	if math.fmod(reaction_building_multiplied_tick, CACHE_RELOAD_TICK_INTERVAL) < reaction_building_ticks_per_update then
-		local reload_number = math.floor(reaction_building_multiplied_tick / CACHE_RELOAD_TICK_INTERVAL)
-		local update_group = math.fmod(reload_number, reaction_building_ticks_per_update)
-		local update_entities = global.molecule_reaction_building_data.update_groups[update_group]
-		-- temporarily remove the count so that we don't iterate it
-		local update_entities_n = update_entities.n
-		update_entities.n = nil
-		for _, building_data in pairs(update_entities) do
-			entity_assign_cache(building_data, BUILDING_DEFINITIONS[building_data.entity.name])
-		end
-		update_entities.n = update_entities_n
+local function reset_building_caches()
+	local building_datas = global.molecule_reaction_building_data
+	local update_groups, ticks_per_update = building_datas.update_groups, building_datas.ticks_per_update
+	-- temporarily remove values so that we don't iterate them
+	building_datas.update_groups, building_datas.ticks_per_update = nil, nil
+	for _, building_data in pairs(building_datas) do
+		entity_assign_cache(building_data, BUILDING_DEFINITIONS[building_data.entity.name])
 	end
+	building_datas.update_groups, building_datas.ticks_per_update = update_groups, ticks_per_update
+end
+
+local function set_reaction_progress_complete_threshold()
+	local molecule_reaction_building_ticks_per_update = global.molecule_reaction_building_data.ticks_per_update
+	REACTION_PROGRESS_COMPLETE_THRESHOLD =
+		(molecule_reaction_building_ticks_per_update - 1) / molecule_reaction_building_ticks_per_update
 end
 
 
@@ -488,14 +485,18 @@ function entity_on_init()
 		build_update_group_building_data(settings.global["factoriochem-detector-ticks-per-update"].value)
 end
 
+function entity_on_first_tick()
+	-- REACTION_CACHE doesn't get serialized, but global.molecule_reaction_building_data does and it contains caches per
+	--	building; to prevent the cache from getting too big over time (and to prevent cache misses on non-serialized
+	--	caches), reset the cache for buildings any time the player reloads the game.
+	reset_building_caches()
+	set_reaction_progress_complete_threshold()
+end
+
 function entity_on_tick(event)
 	local tick = event.tick
-	local molecule_reaction_building_ticks_per_update = global.molecule_reaction_building_data.ticks_per_update
-	REACTION_PROGRESS_COMPLETE_THRESHOLD =
-		(molecule_reaction_building_ticks_per_update - 1) / molecule_reaction_building_ticks_per_update
 	update_buildings(global.molecule_reaction_building_data, tick, update_reaction_building)
 	update_buildings(global.molecule_detector_data, tick, update_detector)
-	try_reload_building_caches(tick)
 end
 
 function entity_on_settings_changed(event)
@@ -503,6 +504,7 @@ function entity_on_settings_changed(event)
 		global.molecule_reaction_building_data, settings.global["factoriochem-building-ticks-per-update"].value)
 	migrate_update_group_building_data(
 		global.molecule_detector_data, settings.global["factoriochem-detector-ticks-per-update"].value)
+	set_reaction_progress_complete_threshold()
 end
 
 script.on_event(defines.events.on_built_entity, on_built_entity)
