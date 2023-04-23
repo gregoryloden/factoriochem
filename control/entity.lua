@@ -482,8 +482,10 @@ end
 
 -- Global event handling
 function entity_on_init()
-	global.molecule_reaction_building_data = build_update_group_building_data(10)
-	global.molecule_detector_data = build_update_group_building_data(1)
+	global.molecule_reaction_building_data =
+		build_update_group_building_data(settings.global["factoriochem-building-ticks-per-update"].value)
+	global.molecule_detector_data =
+		build_update_group_building_data(settings.global["factoriochem-detector-ticks-per-update"].value)
 end
 
 function entity_on_tick(event)
