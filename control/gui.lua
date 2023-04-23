@@ -39,12 +39,16 @@ local function gui_add_recursive(gui, element_spec)
 	return element
 end
 
-local function update_reaction_table_sprite(element, chest_inventory, product)
-	local item = next(chest_inventory.get_contents())
+local function update_reaction_table_sprite(element, chest_inventory, component)
+	local item = chest_inventory and next(chest_inventory.get_contents())
 	if item then
 		element.sprite = "item/"..item
-	elseif product then
-		element.sprite = "item/"..product
+	elseif component then
+		if GAME_ITEM_PROTOTYPES[component] then
+			element.sprite = "item/"..component
+		else
+			element.sprite = "item/"..get_complex_molecule_item_name(parse_molecule(component))
+		end
 	else
 		element.sprite = nil
 	end
@@ -100,23 +104,14 @@ local function demo_reaction(building_data, demo_state, reaction_demo_table)
 	end
 	if valid_reaction then building_definition.reaction(demo_state) end
 	for _, product_name in ipairs(building_definition.products) do
-		local element = reaction_demo_table[REACTION_DEMO_PREFIX..product_name]
-		local product = demo_state.products[product_name]
-		if product then
-			element.sprite = "item/"..product
-		else
-			element.sprite = nil
-		end
+		update_reaction_table_sprite(
+			reaction_demo_table[REACTION_DEMO_PREFIX..product_name], nil, demo_state.products[product_name])
 	end
 end
 
 local function demo_reaction_with_reactant(building_data, demo_state, element, reactant_name, reactant)
 	demo_state.reactants[reactant_name] = reactant
-	if reactant then
-		element.sprite = "item/"..reactant
-	else
-		element.sprite = nil
-	end
+	update_reaction_table_sprite(element, nil, reactant)
 	demo_reaction(building_data, demo_state, element.parent)
 end
 
@@ -138,10 +133,10 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 			if MOLECULE_REACTION_IS_REACTANT[component_name] then
 				spec.tooltip = {"factoriochem.reaction-demo-table-reactant-tooltip", spec.tooltip}
 				if demo_state.reactants[component_name] then
-					spec.sprite = "item/"..demo_state.reactants[component_name]
+					update_reaction_table_sprite(spec, nil, demo_state.reactants[component_name])
 				end
 			elseif demo_state.products[component_name] then
-				spec.sprite = "item/"..demo_state.products[component_name]
+				update_reaction_table_sprite(spec, nil, demo_state.products[component_name])
 			end
 		end
 		return spec

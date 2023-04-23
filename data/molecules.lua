@@ -177,7 +177,6 @@ local function gen_molecules(grid_i_i, grid_is)
 				icon = icon_name,
 				icon_size = ITEM_ICON_SIZE,
 				icon_mipmaps = MOLECULE_ICON_MIPMAPS,
-				placed_as_equipment_result = name,
 				stack_size = 1,
 			},
 			{
@@ -194,6 +193,8 @@ local function gen_molecules(grid_i_i, grid_is)
 				},
 				shape = {width = 1, height = 1, type = "full"},
 				energy_source = {type = "void", usage_priority = "tertiary"},
+				-- never used, but we have to specify something valid
+				take_result = MOLECULE_ABSORBER_NAME,
 			},
 		})
 	else

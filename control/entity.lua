@@ -2,6 +2,7 @@
 local REACTION_CACHE = {}
 -- give each building type a base cache, buildings will add to it based on their own selectors and reactants
 for name, definition in pairs(BUILDING_DEFINITIONS) do REACTION_CACHE[name] = {} end
+local COMPLEX_CONTENTS = {}
 local REACTION_PROGRESS_COMPLETE_THRESHOLD = nil
 local LOGISTIC_WIRE_TYPES = {defines.wire_type.red, defines.wire_type.green}
 local DETECTOR_ATOMIC_NUMBER_SIGNAL_ID = {type = "virtual", name = "signal-A"}
@@ -243,10 +244,27 @@ local function update_buildings(building_datas, tick, update_building)
 	update_entities.n = update_entities_n
 end
 
-local function start_reaction(reaction, chest_inventories, machine_inputs)
-	for reactant_name, reactant in pairs(reaction.reactants) do
-		chest_inventories[reactant_name].remove({name = reactant, count = 1})
+local function build_complex_contents(product)
+	local shape, height, width = parse_molecule(product)
+	local contents = {item = get_complex_molecule_item_name(shape)}
+	for y, shape_row in pairs(shape) do
+		y = (y - 1) * 2
+		for x, atom in pairs(shape_row) do
+			x = (x - 1) * 2
+			table.insert(contents, {name = "atom-"..atom.symbol, position = {x, y}})
+			if atom.right then
+				table.insert(contents, {name = MOLECULE_BONDS_PREFIX.."H"..atom.right, position = {x + 1, y}})
+			end
+			if atom.down then
+				table.insert(contents, {name = MOLECULE_BONDS_PREFIX.."V"..atom.down, position = {x, y + 1}})
+			end
+		end
 	end
+	return contents
+end
+
+local function start_reaction(reaction, chest_inventories, machine_inputs)
+	for reactant_name, _ in pairs(reaction.reactants) do chest_inventories[reactant_name].clear() end
 	machine_inputs.insert({name = MOLECULE_REACTION_REACTANTS_NAME, count = 1})
 end
 
@@ -268,12 +286,19 @@ local function update_reaction_building(building_data)
 		-- deliver all remaining products and stop if there are any products remaining
 		local products_remaining = false
 		for product_name, product in pairs(reaction.products) do
-			local chest_inventory = chest_inventories[product_name]
-			if next(chest_inventory.get_contents()) then
-				products_remaining = true
-			else
-				chest_inventory.insert({name = product, count = 1})
+			local chest_stack = chest_inventories[product_name].find_empty_stack()
+			if chest_stack then
 				reaction.products[product_name] = nil
+				local complex_contents = COMPLEX_CONTENTS[product]
+				if complex_contents then
+					chest_stack.set_stack({name = complex_contents.item})
+					local grid = chest_stack.grid
+					for _, equipment in ipairs(complex_contents) do grid.put(equipment) end
+				else
+					chest_stack.set_stack({name = product})
+				end
+			else
+				products_remaining = true
 			end
 		end
 		if products_remaining then return end
@@ -315,7 +340,12 @@ local function update_reaction_building(building_data)
 		-- the reaction was valid, start it and cache it
 		start_reaction(reaction, chest_inventories, machine_inputs)
 		cache.products = {}
-		for product_name, product in pairs(reaction.products) do cache.products[product_name] = product end
+		for product_name, product in pairs(reaction.products) do
+			cache.products[product_name] = product
+			if not GAME_ITEM_PROTOTYPES[product] and not COMPLEX_CONTENTS[product] then
+				COMPLEX_CONTENTS[product] = build_complex_contents(product)
+			end
+		end
 	else
 		-- the reaction was not valid, cache that fact
 		cache.invalid = true
@@ -368,14 +398,7 @@ local function update_detector(detector_data)
 					goto continue_signals
 				end
 				cache.shape, cache.height, cache.width = parse_molecule(signal.signal.name)
-				local shape_n = 0
-				for y, shape_row in pairs(cache.shape) do
-					for x, atom in pairs(shape_row) do
-						shape_n = shape_n + bit32.lshift(1, (y - 1) * MAX_GRID_WIDTH + x - 1)
-					end
-				end
-				cache.shape_signal =
-					{type = "item", name = COMPLEX_MOLECULE_ITEM_PREFIX..string.format("%03X", shape_n)}
+				cache.shape_signal = {type = "item", name = get_complex_molecule_item_name(cache.shape)}
 			end
 			if not cache.shape then goto continue_signals end
 			local count = signal.count

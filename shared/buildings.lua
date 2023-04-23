@@ -169,8 +169,7 @@ local function normalize_shape(shape)
 end
 
 local function verify_bond_count(atom)
-	local bonds = (atom.left or 0) + (atom.up or 0) + (atom.right or 0) + (atom.down or 0)
-	return bonds == 0 or bonds == ALL_ATOMS[atom.symbol].bonds
+	return (atom.left or 0) + (atom.up or 0) + (atom.right or 0) + (atom.down or 0) <= ALL_ATOMS[atom.symbol].bonds
 end
 
 
