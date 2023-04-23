@@ -73,16 +73,17 @@ data:extend({
 	},
 	{
 		type = "item-subgroup",
-		name = MOLECULES_SUBGROUP_NAME,
-		group = MOLECULES_GROUP_NAME,
-		order = "c",
-	},
-	{
-		type = "item-subgroup",
 		name = COMPLEX_MOLECULES_SUBGROUP_NAME,
 		group = MOLECULES_GROUP_NAME,
 		order = "b",
 	},
+	{
+		type = "item-subgroup",
+		name = MOLECULES_SUBGROUP_NAME,
+		group = MOLECULES_GROUP_NAME,
+		order = "c",
+	},
+	-- d and e are moleculify/demoleculify
 	{
 		type = "item-subgroup",
 		name = MOLECULE_ITEMS_SUBGROUP_NAME,

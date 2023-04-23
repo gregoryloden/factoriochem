@@ -336,7 +336,10 @@ local function update_reaction_building(building_data)
 	-- our current reaction is not cached, make sure we only have molecules
 	-- a missing reactant counts as a molecule
 	for _, reactant in pairs(reaction.reactants) do
-		if GAME_ITEM_PROTOTYPES[reactant].group.name ~= MOLECULES_GROUP_NAME then
+		local item_prototype = GAME_ITEM_PROTOTYPES[reactant]
+		if item_prototype.group.name ~= MOLECULES_GROUP_NAME
+				or item_prototype.subgroup.name == MOLECULE_ITEMS_SUBGROUP_NAME
+					and entity.name ~= MOLECULE_VOIDER_NAME then
 			cache.invalid = true
 			return
 		end
