@@ -9,6 +9,7 @@ local DETECTOR_ATOMIC_NUMBER_SIGNAL_ID = {type = "virtual", name = "signal-A"}
 local DETECTOR_CACHE = {}
 local DETECTOR_TARGET_CACHE = {}
 local CACHE_RELOAD_TICK_INTERVAL = 30 * 60 * 60 -- 30 minutes
+local ALLOW_COMPLEX_MOLECULES = nil
 
 
 -- Setup
@@ -514,6 +515,7 @@ function entity_on_first_tick()
 	--	caches), reset the cache for buildings any time the player reloads the game.
 	reset_building_caches()
 	set_reaction_progress_complete_threshold()
+	ALLOW_COMPLEX_MOLECULES = settings.global["factoriochem-allow-complex-molecules"].value
 end
 
 function entity_on_tick(event)
@@ -528,6 +530,14 @@ function entity_on_settings_changed(event)
 	migrate_update_group_building_data(
 		global.molecule_detector_data, settings.global["factoriochem-detector-ticks-per-update"].value)
 	set_reaction_progress_complete_threshold()
+
+	-- if the player changed the allow-complex-molecules setting, the cache is no longer valid, so fully wipe it
+	local old_allow_complex_molecules = ALLOW_COMPLEX_MOLECULES
+	ALLOW_COMPLEX_MOLECULES = settings.global["factoriochem-allow-complex-molecules"].value
+	if ALLOW_COMPLEX_MOLECULES ~= old_allow_complex_molecules then
+		for name, _ in pairs(REACTION_CACHE) do REACTION_CACHE[name] = {} end
+		reset_building_caches()
+	end
 end
 
 script.on_event(defines.events.on_built_entity, on_built_entity)
