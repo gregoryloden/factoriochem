@@ -338,14 +338,27 @@ local function update_reaction_building(building_data)
 
 	-- our reactants are exclusively molecules, so now do building-specific handling to generate a next reaction
 	if building_definition.reaction(reaction) then
-		-- the reaction was valid, start it and cache it
-		start_reaction(reaction, chest_inventories, machine_inputs)
+		-- the reaction was valid, cache it before starting it
+		local has_complex_molecules = false
 		cache.products = {}
 		for product_name, product in pairs(reaction.products) do
 			cache.products[product_name] = product
-			if not GAME_ITEM_PROTOTYPES[product] and not COMPLEX_CONTENTS[product] then
-				COMPLEX_CONTENTS[product] = build_complex_contents(product)
+			if not GAME_ITEM_PROTOTYPES[product] then
+				has_complex_molecules = true
+				if not COMPLEX_CONTENTS[product] then
+					COMPLEX_CONTENTS[product] = build_complex_contents(product)
+				end
 			end
+		end
+
+		-- start it if there were no complex molecules or if complex molecules are allowed
+		if not has_complex_molecules or ALLOW_COMPLEX_MOLECULES then
+			start_reaction(reaction, chest_inventories, machine_inputs)
+		-- clear out the products and invalidate this cache if complex molecules are present and not allowed
+		else
+			for product_name, _ in pairs(reaction.products) do reaction.products[product_name] = nil end
+			cache.products = nil
+			cache.invalid = true
 		end
 	else
 		-- the reaction was not valid, cache that fact
