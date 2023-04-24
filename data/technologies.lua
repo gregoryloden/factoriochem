@@ -347,6 +347,19 @@ local moleculify_unlock_technologies = {
 		},
 		prerequisites = {"oil-processing"},
 	},
+	{
+		name = "moleculify-uranium",
+		unit = {
+			count = 50,
+			time = 10,
+			ingredients = {
+				{"automation-science-pack", 1},
+				{"logistic-science-pack", 1},
+				{"chemical-science-pack", 1},
+			},
+		},
+		prerequisites = {"uranium-processing"},
+	},
 }
 for _, technology in pairs(moleculify_unlock_technologies) do set_technology_properties(technology) end
 data:extend(moleculify_unlock_technologies)

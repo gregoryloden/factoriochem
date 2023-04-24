@@ -113,6 +113,13 @@ local moleculify_recipes = {
 		},
 		unlocking_technology = "moleculify-oil",
 	},
+	{
+		name = "uranium",
+		order = "h",
+		ingredients = {{"uranium-238", 1}},
+		results = {{name = ATOM_ITEM_PREFIX.."U", amount = 1}},
+		unlocking_technology = "moleculify-uranium",
+	},
 }
 for atom_row_i = 3, 4 do
 	local atom_row = ATOM_ROWS[atom_row_i]
@@ -173,6 +180,13 @@ local demoleculify_recipes = {
 		ingredients = {{MOLECULE_ITEM_PREFIX.."H1-C1-H|H1-2C1-H", 1}},
 		results = {{name = "crude-oil", amount = 1, type = "fluid"}},
 		unlocking_technology = "moleculify-oil",
+	},
+	{
+		name = "uranium",
+		order = "g",
+		ingredients = {{ATOM_ITEM_PREFIX.."U", 1}},
+		results = {{name = "uranium-238", amount = 1}},
+		unlocking_technology = "moleculify-uranium",
 	},
 }
 for _, demoleculify_recipe in ipairs(demoleculify_recipes) do

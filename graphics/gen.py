@@ -154,6 +154,8 @@ REACTION_SETTINGS_BOX_SIZE_FRACTION = 12 / BASE_ICON_SIZE
 REACTION_SETTINGS_BOX_LEFT_SHIFT_FRACTION = 4 / BASE_ICON_SIZE
 TECHNOLOGY_SIZE = BASE_ICON_SIZE * 2
 TECHNOLOGY_MIPS = 3
+TECHNOLOGY_ARROW_TOP_FRACTION = 3 / 8
+TECHNOLOGY_ARROW_BOTTOM_FRACTION = 5 / 8
 TECHNOLOGY_ARROW_THICKNESS_FRACTION = 8 / TECHNOLOGY_SIZE
 TECHNOLOGY_ARROW_SIZE_FRACTION = 12 / TECHNOLOGY_SIZE
 
@@ -1113,12 +1115,14 @@ def iter_gen_moleculify_recipe_icons(base_size, mips):
 		("coal", "C2-C2-C|2C2-C2-2C", os.path.join(BASE_ICONS_PATH, "coal.png"), True),
 		("stone", "Si-Zn|Ni-Ca", os.path.join(BASE_ICONS_PATH, "stone.png"), True),
 		("oil", "H1-C1-H|H1-2C1-H", os.path.join(BASE_FLUID_ICONS_PATH, "crude-oil.png"), True),
+		("uranium", "U", os.path.join(BASE_ICONS_PATH, "uranium-238.png"), True),
 		("water", "O1-H|1H", os.path.join(BASE_FLUID_ICONS_PATH, "water.png"), False),
 		("iron", "Fe", os.path.join(BASE_ICONS_PATH, "iron-plate.png"), False),
 		("copper", "Cu", os.path.join(BASE_ICONS_PATH, "copper-plate.png"), False),
 		("coal", "C2-C2-C|2C2-C2-2C", os.path.join(BASE_ICONS_PATH, "coal.png"), False),
 		("methane", "-H|H1-1C1-H|-1H", os.path.join(BASE_FLUID_ICONS_PATH, "crude-oil.png"), False),
 		("ethylene", "H1-C1-H|H1-2C1-H", os.path.join(BASE_FLUID_ICONS_PATH, "crude-oil.png"), False),
+		("uranium", "U", os.path.join(BASE_ICONS_PATH, "uranium-238.png"), False),
 	]
 	for (name, moleculify_result_molecule, moleculify_source_image_path, moleculify) in image_pairs:
 		moleculify_result_image = gen_specific_molecule(base_size, mips, moleculify_result_molecule)
@@ -1294,8 +1298,8 @@ def gen_moleculify_plates_technology_image(base_size, mips):
 		simple_overlay_image_at(image, place_x + size, size, copper_atom_image[0:size, source_x:source_x + size])
 	iron_arrow_x = base_size / 4
 	copper_arrow_x = base_size * 3 / 4
-	arrow_top = base_size * 3 / 8
-	arrow_bottom = base_size * 5 / 8
+	arrow_top = TECHNOLOGY_ARROW_TOP_FRACTION * base_size
+	arrow_bottom = TECHNOLOGY_ARROW_BOTTOM_FRACTION * base_size
 	thickness = int(TECHNOLOGY_ARROW_THICKNESS_FRACTION * base_size)
 	arrow_size = TECHNOLOGY_ARROW_SIZE_FRACTION * base_size
 	layers = [
@@ -1376,6 +1380,27 @@ def gen_moleculify_oil_technology_image(base_size, mips):
 	]
 	return gen_composite_image(layers, image)
 
+def gen_moleculify_uranium_technology_image(base_size, mips):
+	image = filled_mip_image(base_size, mips)
+	uranium_image = cv2.imread(os.path.join(BASE_ICONS_PATH, "uranium-238.png"), cv2.IMREAD_UNCHANGED)
+	atom_image = gen_single_atom_image(base_size // 2, mips, "U", 1, 1, 0, 0)
+	for (place_x, source_x, size) in iter_technology_mips(base_size, mips):
+		for y in range(0, size * 3 // 4, size // 4):
+			simple_overlay_image_at(image, place_x + size // 2, y, uranium_image[0:size, source_x:source_x + size])
+		simple_overlay_image_at(image, place_x + size // 2, size, atom_image[0:size, source_x:source_x + size])
+	arrow_x = base_size / 2
+	arrow_top = TECHNOLOGY_ARROW_TOP_FRACTION * base_size
+	arrow_bottom = TECHNOLOGY_ARROW_BOTTOM_FRACTION * base_size
+	thickness = int(TECHNOLOGY_ARROW_THICKNESS_FRACTION * base_size)
+	arrow_size = TECHNOLOGY_ARROW_SIZE_FRACTION * base_size
+	layers = [
+		("layer", {"size": base_size, "mips": mips, "color": MOLECULIFY_ARROW_COLOR}),
+		("line", {"start": (arrow_x, arrow_top), "end": (arrow_x, arrow_bottom), "thickness": thickness}),
+		("layer", {"size": base_size, "color": MOLECULIFY_ARROW_COLOR}),
+		("arrow", (arrow_x, arrow_bottom, 0, -arrow_size)),
+	]
+	return gen_composite_image(layers, image)
+
 def gen_molecule_reaction_buildings_2_technology_image(base_size, mips):
 	image = filled_mip_image(base_size, mips)
 	debonder_image = gen_molecule_debonder_image(base_size // 2, mips, False)
@@ -1436,6 +1461,7 @@ def gen_all_technology_images(base_size, mips):
 	write_image(technologies_folder, "moleculify-coal", gen_moleculify_coal_technology_image(base_size, mips))
 	write_image(technologies_folder, "moleculify-stone", gen_moleculify_stone_technology_image(base_size, mips))
 	write_image(technologies_folder, "moleculify-oil", gen_moleculify_oil_technology_image(base_size, mips))
+	write_image(technologies_folder, "moleculify-uranium", gen_moleculify_uranium_technology_image(base_size, mips))
 	molecule_reaction_buildings_2_technology_image = gen_molecule_reaction_buildings_2_technology_image(base_size, mips)
 	write_image(technologies_folder, "molecule-reaction-buildings-2", molecule_reaction_buildings_2_technology_image)
 	molecule_reaction_buildings_3_technology_image = gen_molecule_reaction_buildings_3_technology_image(base_size, mips)
