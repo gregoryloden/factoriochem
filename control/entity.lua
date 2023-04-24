@@ -282,7 +282,7 @@ local function update_reaction_building(building_data)
 	-- the reaction has products which means that it needs resolving
 	if next(reaction.products) then
 		-- complete the reaction if needed
-		for reactant_name, _ in pairs(reaction.reactants) do reaction[reactant_name] = nil end
+		for reactant_name, _ in pairs(reaction.reactants) do reaction.reactants[reactant_name] = nil end
 
 		-- deliver all remaining products and stop if there are any products remaining
 		local products_remaining = false
