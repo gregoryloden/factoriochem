@@ -102,6 +102,13 @@ local function extract_connected_atoms(shape, start_x, start_y)
 	return atoms
 end
 
+local function has_any_atoms(shape)
+	for _, shape_row in pairs(shape) do
+		for _, _ in pairs(shape_row) do return true end
+	end
+	return false
+end
+
 local function merge_with_modifier(shape, target_x, target_y, modifier, modifier_target)
 	local modifier_shape, modifier_height, modifier_width = parse_molecule(modifier)
 	local modifier_y_scale, modifier_x_scale, modifier_y, modifier_x = parse_target(modifier_target)
@@ -356,15 +363,7 @@ BUILDING_DEFINITIONS = {
 			if bonds == 1 then
 				set_bonds(source, target, direction, nil)
 				extracted_atoms = extract_connected_atoms(shape, target_x, target_y)
-				local split_molecule = false
-				for _, shape_row in pairs(shape) do
-					for _, _ in pairs(shape_row) do
-						split_molecule = true
-						goto break_split_molecule
-					end
-				end
-				::break_split_molecule::
-				if split_molecule then
+				if has_any_atoms(shape) then
 					-- generate a new molecule with the extracted atoms, then normalize both shapes
 					remainder_shape = gen_grid(height)
 					for _, atom in ipairs(extracted_atoms) do remainder_shape[atom.y][atom.x] = atom end
@@ -709,9 +708,7 @@ BUILDING_DEFINITIONS = {
 
 			-- make sure all atoms are connected
 			local all_atoms = extract_connected_atoms(shape, top_x, 1)
-			for _, shape_row in pairs(shape) do
-				for _, _ in pairs(shape_row) do return false end
-			end
+			if has_any_atoms(shape) then return false end
 
 			-- make sure all bond counts are valid
 			for _, atom in ipairs(all_atoms) do
