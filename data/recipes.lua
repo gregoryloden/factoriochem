@@ -228,6 +228,13 @@ local science_ingredients = {
 		{MOLECULE_ITEM_PREFIX.."K1-Br", 1},
 		{MOLECULE_ITEM_PREFIX.."--H|H1-N1-1O|H1-1N1-H", 1},
 	},
+	["military-science-pack"] = {
+		{ATOM_ITEM_PREFIX.."U", 1},
+		{MOLECULE_ITEM_PREFIX.."C2-C2-C|2C2-C2-2C", 1},
+		{ATOM_ITEM_PREFIX.."S", 1},
+		{ATOM_ITEM_PREFIX.."Ti", 1},
+		{ATOM_ITEM_PREFIX.."Si", 1},
+	},
 }
 for science, ingredients in pairs(science_ingredients) do
 	local recipe = data.raw.recipe[science]
