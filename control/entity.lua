@@ -3,6 +3,8 @@ local REACTION_CACHE = {}
 -- give each building type a base cache, buildings will add to it based on their own selectors and reactants
 for name, definition in pairs(BUILDING_DEFINITIONS) do REACTION_CACHE[name] = {} end
 local COMPLEX_CONTENTS = {}
+local COMPLEX_SHAPES = {}
+local COMPLEX_MOLECULE_BUILDER = {MOLECULE_ITEM_PREFIX}
 local REACTION_PROGRESS_COMPLETE_THRESHOLD = nil
 local LOGISTIC_WIRE_TYPES = {defines.wire_type.red, defines.wire_type.green}
 local DETECTOR_ATOMIC_NUMBER_SIGNAL_ID = {type = "virtual", name = "signal-A"}
@@ -211,21 +213,30 @@ local function delete_molecule_reaction_building(entity, event_buffer)
 	local transfer_inventory = game.create_inventory(60)
 	for _, chest in pairs(building_data.chests) do chest.mine({inventory = transfer_inventory}) end
 	for _, loader in pairs(building_data.loaders) do loader.mine({inventory = transfer_inventory}) end
-	for name, count in pairs(transfer_inventory.get_contents()) do event_buffer.insert({name = name, count = count}) end
-	transfer_inventory.destroy()
 	-- the presence of products indicates an unresolved reaction, which means we have items to return to the player
-	if next(building_data.reaction.products) then
+	local unfinished_reaction_components = building_data.reaction.products
+	if next(unfinished_reaction_components) then
 		-- the presence of reactants indicates that the reaction is not complete
 		if next(building_data.reaction.reactants) then
-			for _, reactant in pairs(building_data.reaction.reactants) do
-				event_buffer.insert({name = reactant, count = 1})
-			end
-		else
-			for _, product in pairs(building_data.reaction.products) do
-				event_buffer.insert({name = product, count = 1})
+			unfinished_reaction_components = building_data.reaction.reactants
+		end
+		for _, component in pairs(unfinished_reaction_components) do
+			local complex_contents = COMPLEX_CONTENTS[component]
+			if complex_contents then
+				local transfer_stack = transfer_inventory.find_empty_stack()
+				transfer_stack.set_stack({name = complex_contents.item})
+				local grid = transfer_stack.grid
+				for _, equipment in ipairs(complex_contents) do grid.put(equipment) end
+			else
+				transfer_inventory.insert({name = component, count = 1})
 			end
 		end
 	end
+	for stack_i = 1, #transfer_inventory do
+		local stack = transfer_inventory[stack_i]
+		if stack.count > 0 then event_buffer.insert(stack) end
+	end
+	transfer_inventory.destroy()
 	event_buffer.remove({name = MOLECULE_REACTION_REACTANTS_NAME, count = 2})
 end
 
@@ -243,6 +254,46 @@ local function update_buildings(building_datas, tick, update_building)
 	update_entities.n = nil
 	for _, building_data in pairs(update_entities) do update_building(building_data) end
 	update_entities.n = update_entities_n
+end
+
+local function parse_complex_molecule(grid, complex_shape)
+	local max_x = complex_shape.max_x
+	local builder_i = 2
+	for y = 0, complex_shape.max_y, 2 do
+		if y > 0 then
+			COMPLEX_MOLECULE_BUILDER[builder_i] = ATOM_ROW_SEPARATOR
+			builder_i = builder_i + 1
+		end
+		local last_x = 0
+		for _, x in ipairs(complex_shape[y]) do
+			while last_x < x do
+				COMPLEX_MOLECULE_BUILDER[builder_i] = ATOM_COL_SEPARATOR
+				builder_i = builder_i + 1
+				last_x = last_x + 2
+			end
+			if y > 0 then
+				local up = grid.get({x, y - 1})
+				if up then
+					COMPLEX_MOLECULE_BUILDER[builder_i] = string.sub(up.name, -1)
+					builder_i = builder_i + 1
+				end
+			end
+			COMPLEX_MOLECULE_BUILDER[builder_i] = string.sub(grid.get({x, y}).name, #ATOM_ITEM_PREFIX + 1)
+			builder_i = builder_i + 1
+			if x < max_x then
+				local right = grid.get({x + 1, y})
+				if right then
+					COMPLEX_MOLECULE_BUILDER[builder_i] = string.sub(right.name, -1)
+					builder_i = builder_i + 1
+				end
+			end
+		end
+	end
+	while COMPLEX_MOLECULE_BUILDER[builder_i] do
+		COMPLEX_MOLECULE_BUILDER[builder_i] = nil
+		builder_i = builder_i + 1
+	end
+	return table.concat(COMPLEX_MOLECULE_BUILDER)
 end
 
 local function build_complex_contents(product)
@@ -313,6 +364,8 @@ local function update_reaction_building(building_data)
 		local reactant
 		if chest_stack.valid_for_read then
 			reactant = chest_stack.name
+			local complex_shape = COMPLEX_SHAPES[reactant]
+			if complex_shape then reactant = parse_complex_molecule(chest_stack.grid, complex_shape) end
 			reaction.reactants[reactant_name] = reactant
 		else
 			reactant = ""
@@ -337,9 +390,10 @@ local function update_reaction_building(building_data)
 	-- a missing reactant counts as a molecule
 	for _, reactant in pairs(reaction.reactants) do
 		local item_prototype = GAME_ITEM_PROTOTYPES[reactant]
-		if item_prototype.group.name ~= MOLECULES_GROUP_NAME
-				or item_prototype.subgroup.name == MOLECULE_ITEMS_SUBGROUP_NAME
-					and entity.name ~= MOLECULE_VOIDER_NAME then
+		if item_prototype
+				and (item_prototype.group.name ~= MOLECULES_GROUP_NAME
+					or item_prototype.subgroup.name == MOLECULE_ITEMS_SUBGROUP_NAME
+						and entity.name ~= MOLECULE_VOIDER_NAME) then
 			cache.invalid = true
 			return
 		end
@@ -538,6 +592,26 @@ function entity_on_first_tick()
 	reset_building_caches()
 	set_reaction_progress_complete_threshold()
 	ALLOW_COMPLEX_MOLECULES = settings.global["factoriochem-allow-complex-molecules"].value
+
+	-- build the lists of which equipment grid positions to read for complex molecules
+	local complex_molecule_subgroup_filter = {filter = "subgroup", subgroup = COMPLEX_MOLECULES_SUBGROUP_NAME}
+	for name, prototype in pairs(game.get_filtered_item_prototypes({complex_molecule_subgroup_filter})) do
+		local equipment_grid = prototype.equipment_grid
+		if not equipment_grid then goto continue end
+		local complex_shape = {max_y = equipment_grid.height - 1, max_x = equipment_grid.width - 1}
+		local shape_n = tonumber(string.sub(name, -3, -1), 16)
+		for y = 0, complex_shape.max_y / 2 do
+			local shape_row = {}
+			for x = 0, complex_shape.max_x / 2 do
+				if bit32.band(shape_n, bit32.lshift(1, y * MAX_GRID_WIDTH + x)) > 0 then
+					table.insert(shape_row, x * 2)
+				end
+			end
+			complex_shape[y * 2] = shape_row
+		end
+		COMPLEX_SHAPES[name] = complex_shape
+		::continue::
+	end
 end
 
 function entity_on_tick(event)

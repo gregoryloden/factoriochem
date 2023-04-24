@@ -220,7 +220,7 @@ end
 function get_complex_molecule_item_name(shape)
 	local shape_n = 0
 	for y, shape_row in pairs(shape) do
-		for x, atom in pairs(shape_row) do shape_n = shape_n + bit32.lshift(1, (y - 1) * MAX_GRID_WIDTH + x - 1) end
+		for x, _ in pairs(shape_row) do shape_n = shape_n + bit32.lshift(1, (y - 1) * MAX_GRID_WIDTH + x - 1) end
 	end
 	return COMPLEX_MOLECULE_ITEM_PREFIX..string.format("%03X", shape_n)
 end
