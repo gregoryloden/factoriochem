@@ -45,8 +45,9 @@ local MAX_ATOMS_OTHER = 2
 local GRID = empty_array()
 local MAX_GRID_WIDTH_M1 = MAX_GRID_WIDTH - 1
 local MAX_GRID_HEIGHT_M1 = MAX_GRID_HEIGHT - 1
+local MAX_SINGLE_BONDS = 3
 local MAX_SINGLE_BONDS_HCNO = 2
-local MAX_SINGLE_BONDS_Ne = 3
+local MAX_SINGLE_BONDS_Ne = MAX_SINGLE_BONDS
 local MOLECULE_BUILDER = empty_array()
 local MOLECULE_DISPLAY_COUNTER = {}
 local MOLECULE_DISPLAY_BUILDER = empty_array()
@@ -608,8 +609,8 @@ end
 
 -- Add complex molecule equipment grids and bonds
 data:extend({{type = "equipment-category", name = COMPLEX_MOLECULE_PARTS_NAME}})
-for y_scale = 1, 3 do
-	for x_scale = 1, 3 do
+for y_scale = 1, MAX_GRID_HEIGHT do
+	for x_scale = 1, MAX_GRID_WIDTH do
 		if y_scale == 1 and x_scale == 1 then goto continue end
 		data:extend({{
 			type = "equipment-grid",
@@ -623,7 +624,7 @@ for y_scale = 1, 3 do
 	end
 end
 for _, direction in ipairs({"H", "V"}) do
-	for bonds = 1, 3 do
+	for bonds = 1, MAX_SINGLE_BONDS do
 		data:extend({{
 			type = "battery-equipment",
 			name = MOLECULE_BONDS_PREFIX..direction..bonds,
