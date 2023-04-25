@@ -129,6 +129,8 @@ MOLECULE_SEVERER_THICKNESS_FRACTION = 4 / BASE_ICON_SIZE
 MOLECULE_SEVERER_WIDTH_FRACTION = 0.5
 MOLECULE_SPLICER_NAME = "molecule-splicer"
 MOLECULE_SPLICER_ARROW_SIZE_FRACTION = 8 / BASE_ICON_SIZE
+MOLECULE_DEBONDER_2_NAME = MOLECULE_DEBONDER_NAME + "-2"
+MOLECULE_BONDER_2_NAME = MOLECULE_BONDER_NAME + "-2"
 MOLECULE_VOIDER_NAME = "molecule-voider"
 MOLECULE_VOIDER_XY_FRACTION = 8 / BASE_ICON_SIZE
 MOLECULE_VOIDER_THICKNESS_FRACTION = 6 / BASE_ICON_SIZE
@@ -1058,6 +1060,48 @@ def gen_molecule_splicer_image(base_size, mips, include_outline):
 	]
 	return gen_composite_image(layers, image, include_outline)
 
+def gen_molecule_debonder_2_image(base_size, mips, include_outline):
+	image = gen_specific_molecule(base_size, mips, "N1-O|2N1-1O", include_outline)
+	width = MOLECULE_DEBONDER_WIDTH_FRACTION * base_size
+	top = base_size / 4
+	middle = base_size / 2
+	bottom = base_size * 3 / 4
+	left = base_size / 4 - width / 2
+	right = base_size / 4 + width / 2
+	thickness = int(MOLECULE_DEBONDER_THICKNESS_FRACTION * base_size)
+	layers = [
+		("layer", {"size": base_size, "mips": mips, "color": MOLECULE_DEBONDER_COLOR}),
+		("line", {"start": (left, middle), "end": (right, middle), "thickness": thickness}),
+		("layer", {"size": base_size, "color": MOLECULE_FISSIONER_COLOR}),
+		("line", {"start": (left, top), "end": (right, top), "thickness": thickness}),
+		("line", {"start": (left, bottom), "end": (right, bottom), "thickness": thickness}),
+	]
+	return gen_composite_image(layers, image, include_outline)
+
+def gen_molecule_bonder_2_image(base_size, mips, include_outline):
+	image = gen_specific_molecule(base_size, mips, "H1-C|H1-3C", include_outline)
+	width = MOLECULE_DEBONDER_WIDTH_FRACTION * base_size
+	top = base_size / 4
+	middle = base_size / 2
+	bottom = base_size * 3 / 4
+	center = base_size / 4
+	left = center - width / 2
+	right = center + width / 2
+	thickness = int(MOLECULE_DEBONDER_THICKNESS_FRACTION * base_size)
+	layers = [
+		("layer", {"size": base_size, "mips": mips, "color": MOLECULE_FUSIONER_COLOR}),
+		("line", {"start": (center, top - width / 2), "end": (center, top + width / 2), "thickness": thickness}),
+		("line", {"start": (center, bottom - width / 2), "end": (center, bottom + width / 2), "thickness": thickness}),
+		("layer", {"size": base_size, "color": MOLECULE_BONDER_COLOR}),
+		("line", {"start": (center, middle - width / 2), "end": (center, middle + width / 2), "thickness": thickness}),
+		("layer", {"size": base_size, "color": MOLECULE_FUSIONER_COLOR}),
+		("line", {"start": (left, top), "end": (right, top), "thickness": thickness}),
+		("line", {"start": (left, bottom), "end": (right, bottom), "thickness": thickness}),
+		("layer", {"size": base_size, "color": MOLECULE_BONDER_COLOR}),
+		("line", {"start": (left, middle), "end": (right, middle), "thickness": thickness}),
+	]
+	return gen_composite_image(layers, image, include_outline)
+
 def gen_molecule_voider_image(base_size, mips, include_outline):
 	image = gen_specific_molecule(base_size, mips, "N3-N", include_outline)
 	top_left = MOLECULE_VOIDER_XY_FRACTION * base_size
@@ -1103,6 +1147,8 @@ def iter_gen_all_building_recipe_icons(base_size, mips, include_outline):
 	yield (MOLECULE_FUSIONER_NAME, gen_molecule_fusioner_image(base_size, mips, include_outline))
 	yield (MOLECULE_SEVERER_NAME, gen_molecule_severer_image(base_size, mips, include_outline))
 	yield (MOLECULE_SPLICER_NAME, gen_molecule_splicer_image(base_size, mips, include_outline))
+	yield (MOLECULE_DEBONDER_2_NAME, gen_molecule_debonder_2_image(base_size, mips, include_outline))
+	yield (MOLECULE_BONDER_2_NAME, gen_molecule_bonder_2_image(base_size, mips, include_outline))
 	yield (MOLECULE_VOIDER_NAME, gen_molecule_voider_image(base_size, mips, include_outline))
 	yield (MOLECULE_PRINTER_NAME, gen_molecule_printer_image(base_size, mips, include_outline))
 
