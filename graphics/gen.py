@@ -1555,25 +1555,24 @@ def gen_molecule_printer_technology_image(base_size, mips):
 			("line", {"start": (x, y - half_width), "end": (x, y + half_width), "thickness": thickness}))
 	return gen_composite_image(horizontal_layers + vertical_layers, image)
 
+def iter_gen_all_technology_images(base_size, mips):
+	yield ("moleculify-plates", gen_moleculify_plates_technology_image(base_size, mips))
+	yield ("moleculify-air", gen_moleculify_air_technology_image(base_size, mips))
+	yield ("moleculify-coal", gen_moleculify_coal_technology_image(base_size, mips))
+	yield ("moleculify-stone", gen_moleculify_stone_technology_image(base_size, mips))
+	yield ("moleculify-oil", gen_moleculify_oil_technology_image(base_size, mips))
+	yield ("moleculify-uranium", gen_moleculify_uranium_technology_image(base_size, mips))
+	yield ("molecule-reaction-buildings-2", gen_molecule_reaction_buildings_2_technology_image(base_size, mips))
+	yield ("molecule-reaction-buildings-3", gen_molecule_reaction_buildings_3_technology_image(base_size, mips))
+	yield ("molecule-reaction-buildings-4a", gen_molecule_reaction_buildings_4a_technology_image(base_size, mips))
+	yield ("molecule-reaction-buildings-4b", gen_molecule_reaction_buildings_4b_technology_image(base_size, mips))
+	yield ("molecule-printer", gen_molecule_printer_technology_image(base_size, mips))
+
 def gen_all_technology_images(base_size, mips):
 	technologies_folder = "technologies"
 	if not os.path.exists(technologies_folder):
 		os.mkdir(technologies_folder)
-	write_image(technologies_folder, "moleculify-plates", gen_moleculify_plates_technology_image(base_size, mips))
-	write_image(technologies_folder, "moleculify-air", gen_moleculify_air_technology_image(base_size, mips))
-	write_image(technologies_folder, "moleculify-coal", gen_moleculify_coal_technology_image(base_size, mips))
-	write_image(technologies_folder, "moleculify-stone", gen_moleculify_stone_technology_image(base_size, mips))
-	write_image(technologies_folder, "moleculify-oil", gen_moleculify_oil_technology_image(base_size, mips))
-	write_image(technologies_folder, "moleculify-uranium", gen_moleculify_uranium_technology_image(base_size, mips))
-	molecule_reaction_buildings_2_technology_image = gen_molecule_reaction_buildings_2_technology_image(base_size, mips)
-	write_image(technologies_folder, "molecule-reaction-buildings-2", molecule_reaction_buildings_2_technology_image)
-	molecule_reaction_buildings_3_technology_image = gen_molecule_reaction_buildings_3_technology_image(base_size, mips)
-	write_image(technologies_folder, "molecule-reaction-buildings-3", molecule_reaction_buildings_3_technology_image)
-	molecule_reaction_buildings_4a_technology_image = gen_molecule_reaction_buildings_4a_technology_image(base_size, mips)
-	write_image(technologies_folder, "molecule-reaction-buildings-4a", molecule_reaction_buildings_4a_technology_image)
-	molecule_reaction_buildings_4b_technology_image = gen_molecule_reaction_buildings_4b_technology_image(base_size, mips)
-	write_image(technologies_folder, "molecule-reaction-buildings-4b", molecule_reaction_buildings_4b_technology_image)
-	write_image(technologies_folder, "molecule-printer", gen_molecule_printer_technology_image(base_size, mips))
+	write_images(technologies_folder, iter_gen_all_technology_images(base_size, mips))
 	image_counter_print("Technology images written")
 
 
