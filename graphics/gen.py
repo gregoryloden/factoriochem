@@ -1186,7 +1186,8 @@ def iter_gen_moleculify_recipe_icons(base_size, mips):
 		("coal", "C2-C2-C|2C2-C2-2C", os.path.join(BASE_ICONS_PATH, "coal.png"), True),
 		("stone", "Si-Zn|Ni-Ca", os.path.join(BASE_ICONS_PATH, "stone.png"), True),
 		("oil", "H1-C1-H|H1-2C1-H", os.path.join(BASE_FLUID_ICONS_PATH, "crude-oil.png"), True),
-		("uranium", "U", os.path.join(BASE_ICONS_PATH, "uranium-238.png"), True),
+		("uranium-238", "U", os.path.join(BASE_ICONS_PATH, "uranium-238.png"), True),
+		("uranium-235", "U", os.path.join(BASE_ICONS_PATH, "uranium-235.png"), True),
 		("water", "O1-H|1H", os.path.join(BASE_FLUID_ICONS_PATH, "water.png"), False),
 		("iron", "Fe", os.path.join(BASE_ICONS_PATH, "iron-plate.png"), False),
 		("copper", "Cu", os.path.join(BASE_ICONS_PATH, "copper-plate.png"), False),
@@ -1453,22 +1454,28 @@ def gen_moleculify_oil_technology_image(base_size, mips):
 
 def gen_moleculify_uranium_technology_image(base_size, mips):
 	image = filled_mip_image(base_size, mips)
-	uranium_image = cv2.imread(os.path.join(BASE_ICONS_PATH, "uranium-238.png"), cv2.IMREAD_UNCHANGED)
+	uranium_238_image = cv2.imread(os.path.join(BASE_ICONS_PATH, "uranium-238.png"), cv2.IMREAD_UNCHANGED)
+	uranium_235_image = cv2.imread(os.path.join(BASE_ICONS_PATH, "uranium-235.png"), cv2.IMREAD_UNCHANGED)
 	atom_image = gen_single_atom_image(base_size // 2, mips, "U", 1, 1, 0, 0)
 	for (place_x, source_x, size) in iter_technology_mips(base_size, mips):
 		for y in range(0, size * 3 // 4, size // 4):
-			simple_overlay_image_at(image, place_x + size // 2, y, uranium_image[0:size, source_x:source_x + size])
-		simple_overlay_image_at(image, place_x + size // 2, size, atom_image[0:size, source_x:source_x + size])
-	arrow_x = base_size / 2
+			simple_overlay_image_at(image, place_x, y, uranium_238_image[0:size, source_x:source_x + size])
+			simple_overlay_image_at(image, place_x + size, y, uranium_235_image[0:size, source_x:source_x + size])
+		simple_overlay_image_at(image, place_x, size, atom_image[0:size, source_x:source_x + size])
+		simple_overlay_image_at(image, place_x + size, size, atom_image[0:size, source_x:source_x + size])
+	left_arrow_x = base_size / 4
+	right_arrow_x = base_size * 3 / 4
 	arrow_top = TECHNOLOGY_ARROW_TOP_FRACTION * base_size
 	arrow_bottom = TECHNOLOGY_ARROW_BOTTOM_FRACTION * base_size
 	thickness = int(TECHNOLOGY_ARROW_THICKNESS_FRACTION * base_size)
 	arrow_size = TECHNOLOGY_ARROW_SIZE_FRACTION * base_size
 	layers = [
 		("layer", {"size": base_size, "mips": mips, "color": MOLECULIFY_ARROW_COLOR}),
-		("line", {"start": (arrow_x, arrow_top), "end": (arrow_x, arrow_bottom), "thickness": thickness}),
+		("line", {"start": (left_arrow_x, arrow_top), "end": (left_arrow_x, arrow_bottom), "thickness": thickness}),
+		("line", {"start": (right_arrow_x, arrow_top), "end": (right_arrow_x, arrow_bottom), "thickness": thickness}),
 		("layer", {"size": base_size, "color": MOLECULIFY_ARROW_COLOR}),
-		("arrow", (arrow_x, arrow_bottom, 0, -arrow_size)),
+		("arrow", (left_arrow_x, arrow_bottom, 0, -arrow_size)),
+		("arrow", (right_arrow_x, arrow_bottom, 0, -arrow_size)),
 	]
 	return gen_composite_image(layers, image)
 

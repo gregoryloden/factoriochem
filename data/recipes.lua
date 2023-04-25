@@ -114,9 +114,16 @@ local moleculify_recipes = {
 		unlocking_technology = "moleculify-oil",
 	},
 	{
-		name = "uranium",
+		name = "uranium-238",
 		order = "h",
 		ingredients = {{"uranium-238", 1}},
+		results = {{name = ATOM_ITEM_PREFIX.."U", amount = 1}},
+		unlocking_technology = "moleculify-uranium",
+	},
+	{
+		name = "uranium-235",
+		order = "i",
+		ingredients = {{"uranium-235", 1}},
 		results = {{name = ATOM_ITEM_PREFIX.."U", amount = 1}},
 		unlocking_technology = "moleculify-uranium",
 	},
@@ -185,7 +192,7 @@ local demoleculify_recipes = {
 		name = "uranium",
 		order = "g",
 		ingredients = {{ATOM_ITEM_PREFIX.."U", 1}},
-		results = {{name = "uranium-238", amount = 1}},
+		results = table.deepcopy(data.raw.recipe["uranium-processing"].results),
 		unlocking_technology = "moleculify-uranium",
 	},
 }
