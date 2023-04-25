@@ -269,6 +269,18 @@ local reaction_building_unlock_technologies = {
 		unit = {count = 50, time = 10},
 		postrequisite = "chemical-science-pack",
 	},
+	{
+		name = "molecule-reaction-buildings-4a",
+		unit = {count = 50, time = 10},
+		localised_description = {"technology-description.molecule-reaction-buildings"},
+		postrequisite = "production-science-pack",
+	},
+	{
+		name = "molecule-reaction-buildings-4b",
+		unit = {count = 50, time = 10},
+		localised_description = {"technology-description.molecule-reaction-buildings"},
+		postrequisite = "utility-science-pack",
+	},
 }
 for _, technology in pairs(reaction_building_unlock_technologies) do
 	local science_technology = data.raw.technology[technology.postrequisite]
