@@ -658,10 +658,82 @@ BUILDING_DEFINITIONS = {
 			return true
 		end,
 	},
-	[MOLECULE_VOIDER_NAME] = {
+	["molecule-debonder-2"] = {
 		-- data fields
 		building_design = {"assembling-machine", "assembling-machine-3"},
 		item_order = "j",
+		unlocking_technology = "molecule-reaction-buildings-4a",
+		-- data and control fields
+		reactants = {BASE_NAME},
+		products = {RESULT_NAME, BYPRODUCT_NAME, REMAINDER_NAME},
+		-- control fields
+		selectors = {
+			[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME,
+			[CATALYST_NAME] = ATOM_SELECTOR_NAME,
+			[MODIFIER_NAME] = ATOM_SELECTOR_NAME,
+		},
+		reaction = function(reaction)
+			return false
+		end,
+	},
+	["molecule-bonder-2"] = {
+		-- data fields
+		building_design = {"assembling-machine", "assembling-machine-3"},
+		item_order = "k",
+		unlocking_technology = "molecule-reaction-buildings-4a",
+		-- data and control fields
+		reactants = {BASE_NAME, CATALYST_NAME, MODIFIER_NAME},
+		products = {RESULT_NAME},
+		-- control fields
+		selectors = {
+			[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME,
+			[CATALYST_NAME] = ATOM_SELECTOR_NAME,
+			[MODIFIER_NAME] = ATOM_SELECTOR_NAME,
+		},
+		reaction = function(reaction)
+			return false
+		end,
+	},
+	["molecule-fissioner-2"] = {
+		-- data fields
+		building_design = {"assembling-machine", "assembling-machine-3"},
+		item_order = "l",
+		unlocking_technology = "molecule-reaction-buildings-4b",
+		-- data and control fields
+		reactants = {BASE_NAME},
+		products = {RESULT_NAME, BYPRODUCT_NAME, REMAINDER_NAME},
+		-- control fields
+		selectors = {
+			[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME,
+			[CATALYST_NAME] = ATOM_SELECTOR_NAME,
+			[MODIFIER_NAME] = ATOM_SELECTOR_NAME,
+		},
+		reaction = function(reaction)
+			return false
+		end,
+	},
+	["molecule-fusioner-2"] = {
+		-- data fields
+		building_design = {"assembling-machine", "assembling-machine-3"},
+		item_order = "m",
+		unlocking_technology = "molecule-reaction-buildings-4b",
+		-- data and control fields
+		reactants = {BASE_NAME, CATALYST_NAME, MODIFIER_NAME},
+		products = {RESULT_NAME},
+		-- control fields
+		selectors = {
+			[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME,
+			[CATALYST_NAME] = ATOM_SELECTOR_NAME,
+			[MODIFIER_NAME] = ATOM_SELECTOR_NAME,
+		},
+		reaction = function(reaction)
+			return false
+		end,
+	},
+	[MOLECULE_VOIDER_NAME] = {
+		-- data fields
+		building_design = {"assembling-machine", "assembling-machine-3"},
+		item_order = "n",
 		-- data and control fields
 		reactants = {BASE_NAME},
 		products = {},
@@ -674,7 +746,7 @@ BUILDING_DEFINITIONS = {
 	[MOLECULE_PRINTER_NAME] = {
 		-- data fields
 		building_design = {"assembling-machine", "assembling-machine-3"},
-		item_order = "k",
+		item_order = "o",
 		unlocking_technology = "molecule-printer",
 		-- data and control fields
 		reactants = {},
