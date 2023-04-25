@@ -685,11 +685,7 @@ BUILDING_DEFINITIONS = {
 		reactants = {BASE_NAME, CATALYST_NAME, MODIFIER_NAME},
 		products = {RESULT_NAME},
 		-- control fields
-		selectors = {
-			[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME,
-			[CATALYST_NAME] = ATOM_SELECTOR_NAME,
-			[MODIFIER_NAME] = ATOM_SELECTOR_NAME,
-		},
+		selectors = {[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME},
 		reaction = function(reaction)
 			return false
 		end,
