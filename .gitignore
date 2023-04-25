@@ -1,5 +1,6 @@
 deploy.bat
 base-graphics-path.txt
+thumbnail.png
 graphics/*.png
 graphics/atoms/*
 graphics/bonds/*

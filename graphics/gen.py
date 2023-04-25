@@ -84,6 +84,7 @@ COMPLEX_BOND_COLOR = (0, 0, 0, 0)
 COMPLEX_BOND_LENGTH = 24
 ITEM_GROUP_SIZE = 128
 ITEM_GROUP_MIPS = 2
+ITEM_GROUP_MOLECULE = "O1-C2-N|1N1-1O-1H|1H"
 MOLECULE_ABSORBER_BACK_COLOR = (0, 0, 0, 0)
 MOLECULE_ABSORBER_DOT_COLOR = (255, 255, 255, 0)
 MOLECULE_ABSORBER_DOT_RADIUS_FRACTION = 3 / BASE_ICON_SIZE
@@ -685,7 +686,7 @@ def gen_specific_molecule(base_size, mips, molecule, include_outline = False):
 	return simple_overlay_image(image_back, image_front)
 
 def gen_item_group_icon(base_size, mips):
-	write_image(".", "item-group", gen_specific_molecule(base_size, mips, "O1-C2-N|1N1-1O-1H|1H"))
+	write_image(".", "item-group", gen_specific_molecule(base_size, mips, ITEM_GROUP_MOLECULE))
 	image_counter_print("Item group written")
 
 def gen_molecule_reaction_reactants_icon(base_size, mips):
@@ -745,6 +746,12 @@ def gen_periodic_table_icon():
 	#now write it
 	write_image(".", "periodic-table", image)
 	image_counter_print("Periodic table written")
+
+def gen_thumbnail():
+	image = numpy.zeros((144, 144, 4), numpy.uint8)
+	image[8:136, 8:136] = gen_specific_molecule(128, 1, ITEM_GROUP_MOLECULE)
+	write_image("..", "thumbnail", image)
+	image_counter_print("Thumbnail written")
 
 
 #Generate selector icons
@@ -1578,6 +1585,7 @@ gen_item_group_icon(ITEM_GROUP_SIZE, ITEM_GROUP_MIPS)
 gen_molecule_reaction_reactants_icon(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_molecule_absorber_icon(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_periodic_table_icon()
+gen_thumbnail()
 gen_all_selectors(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_building_overlays(TILE_SIZE)
 gen_all_recipe_icons(BASE_ICON_SIZE, BASE_ICON_MIPS)
