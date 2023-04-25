@@ -1508,6 +1508,24 @@ def gen_molecule_reaction_buildings_3_technology_image(base_size, mips):
 		simple_overlay_image_at(image, place_x + size, size // 2, splicer_image[0:size, source_x:source_x + size])
 	return image
 
+def gen_molecule_reaction_buildings_4a_technology_image(base_size, mips):
+	image = filled_mip_image(base_size, mips)
+	debonder_2_image = gen_molecule_debonder_2_image(base_size // 2, mips, False)
+	bonder_2_image = gen_molecule_bonder_2_image(base_size // 2, mips, False)
+	for (place_x, source_x, size) in iter_technology_mips(base_size, mips):
+		simple_overlay_image_at(image, place_x, size // 2, debonder_2_image[0:size, source_x:source_x + size])
+		simple_overlay_image_at(image, place_x + size, size // 2, bonder_2_image[0:size, source_x:source_x + size])
+	return image
+
+def gen_molecule_reaction_buildings_4b_technology_image(base_size, mips):
+	image = filled_mip_image(base_size, mips)
+	fissioner_2_image = gen_molecule_fissioner_2_image(base_size // 2, mips, False)
+	fusioner_2_image = gen_molecule_fusioner_2_image(base_size // 2, mips, False)
+	for (place_x, source_x, size) in iter_technology_mips(base_size, mips):
+		simple_overlay_image_at(image, place_x, size // 2, fissioner_2_image[0:size, source_x:source_x + size])
+		simple_overlay_image_at(image, place_x + size, size // 2, fusioner_2_image[0:size, source_x:source_x + size])
+	return image
+
 def gen_molecule_printer_technology_image(base_size, mips):
 	image = filled_mip_image(base_size, mips)
 	top_left_molecules_image = gen_specific_molecule(base_size // 2, mips, "Sr1-Sb|1As2-2Ge-Ag|Au")
@@ -1551,6 +1569,10 @@ def gen_all_technology_images(base_size, mips):
 	write_image(technologies_folder, "molecule-reaction-buildings-2", molecule_reaction_buildings_2_technology_image)
 	molecule_reaction_buildings_3_technology_image = gen_molecule_reaction_buildings_3_technology_image(base_size, mips)
 	write_image(technologies_folder, "molecule-reaction-buildings-3", molecule_reaction_buildings_3_technology_image)
+	molecule_reaction_buildings_4a_technology_image = gen_molecule_reaction_buildings_4a_technology_image(base_size, mips)
+	write_image(technologies_folder, "molecule-reaction-buildings-4a", molecule_reaction_buildings_4a_technology_image)
+	molecule_reaction_buildings_4b_technology_image = gen_molecule_reaction_buildings_4b_technology_image(base_size, mips)
+	write_image(technologies_folder, "molecule-reaction-buildings-4b", molecule_reaction_buildings_4b_technology_image)
 	write_image(technologies_folder, "molecule-printer", gen_molecule_printer_technology_image(base_size, mips))
 	image_counter_print("Technology images written")
 
