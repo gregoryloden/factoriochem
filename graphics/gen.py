@@ -104,40 +104,26 @@ TILE_SIZE = 32
 MOLECULIFIER_MOLECULE = "H--C|-He|N--O"
 DETECTOR_ARROW_COLOR = (128, 224, 255, 0)
 DETECTOR_SYMBOL_SIZE_FRACTION = 9 / TILE_SIZE
-MOLECULE_ROTATOR_NAME = "molecule-rotator"
 MOLECULE_ROTATOR_ICON_COLOR = (192, 192, 224, 0)
-MOLECULE_SORTER_NAME = "molecule-sorter"
 MOLECULE_SORTER_ARROW_COLORS = [(224, 224, 192, 0), None, (192, 224, 224, 0)]
 MOLECULE_SORTER_ARROW_THICKNESS_FRACTION = 4 / BASE_ICON_SIZE
 MOLECULE_SORTER_ARROW_LEFT_FRACTION = 32 / BASE_ICON_SIZE
 MOLECULE_SORTER_ARROW_RIGHT_FRACTION = 48 / BASE_ICON_SIZE
 MOLECULE_SORTER_ARROW_SIZE_FRACTION = 6 / BASE_ICON_SIZE
-MOLECULE_DEBONDER_NAME = "molecule-debonder"
 MOLECULE_DEBONDER_COLOR = (64, 64, 224, 0)
 MOLECULE_DEBONDER_CENTER_X_FRACTION = 24 / BASE_ICON_SIZE
 MOLECULE_DEBONDER_WIDTH_FRACTION = 16 / BASE_ICON_SIZE
 MOLECULE_DEBONDER_THICKNESS_FRACTION = 4 / BASE_ICON_SIZE
-MOLECULE_BONDER_NAME = "molecule-bonder"
 MOLECULE_BONDER_COLOR = (64, 160, 64, 0)
-MOLECULE_FISSIONER_NAME = "molecule-fissioner"
 MOLECULE_FISSIONER_THICKNESS_FRACTION = 4 / BASE_ICON_SIZE
 MOLECULE_FISSIONER_COLOR = (192, 192, 224, 0)
-MOLECULE_FUSIONER_NAME = "molecule-fusioner"
 MOLECULE_FUSIONER_COLOR = (224, 224, 192, 0)
-MOLECULE_SEVERER_NAME = "molecule-severer"
 MOLECULE_SEVERER_THICKNESS_FRACTION = 4 / BASE_ICON_SIZE
 MOLECULE_SEVERER_WIDTH_FRACTION = 0.5
-MOLECULE_SPLICER_NAME = "molecule-splicer"
 MOLECULE_SPLICER_ARROW_SIZE_FRACTION = 8 / BASE_ICON_SIZE
-MOLECULE_DEBONDER_2_NAME = MOLECULE_DEBONDER_NAME + "-2"
-MOLECULE_BONDER_2_NAME = MOLECULE_BONDER_NAME + "-2"
-MOLECULE_FISSIONER_2_NAME = MOLECULE_FISSIONER_NAME + "-2"
 MOLECULE_FISSIONER_2_LEFT_FRACTION = 7 / 16
-MOLECULE_FUSIONER_2_NAME = MOLECULE_FUSIONER_NAME + "-2"
-MOLECULE_VOIDER_NAME = "molecule-voider"
 MOLECULE_VOIDER_XY_FRACTION = 8 / BASE_ICON_SIZE
 MOLECULE_VOIDER_THICKNESS_FRACTION = 6 / BASE_ICON_SIZE
-MOLECULE_PRINTER_NAME = "molecule-printer"
 MOLECULE_PRINTER_TOP_CENTER_Y_FRACTION = 16 / BASE_ICON_SIZE
 with open(os.path.join("..", "base-graphics-path.txt"), "r") as file:
 	BASE_GRAPHICS_PATH = file.read()
@@ -1176,20 +1162,20 @@ def gen_molecule_printer_image(base_size, mips, include_outline):
 	return gen_composite_image(layers, image, include_outline)
 
 def iter_gen_all_building_recipe_icons(base_size, mips, include_outline):
-	yield (MOLECULE_ROTATOR_NAME, gen_molecule_rotator_image(base_size, mips, include_outline))
-	yield (MOLECULE_SORTER_NAME, gen_molecule_sorter_image(base_size, mips, include_outline))
-	yield (MOLECULE_DEBONDER_NAME, gen_molecule_debonder_image(base_size, mips, include_outline))
-	yield (MOLECULE_BONDER_NAME, gen_molecule_bonder_image(base_size, mips, include_outline))
-	yield (MOLECULE_FISSIONER_NAME, gen_molecule_fissioner_image(base_size, mips, include_outline))
-	yield (MOLECULE_FUSIONER_NAME, gen_molecule_fusioner_image(base_size, mips, include_outline))
-	yield (MOLECULE_SEVERER_NAME, gen_molecule_severer_image(base_size, mips, include_outline))
-	yield (MOLECULE_SPLICER_NAME, gen_molecule_splicer_image(base_size, mips, include_outline))
-	yield (MOLECULE_DEBONDER_2_NAME, gen_molecule_debonder_2_image(base_size, mips, include_outline))
-	yield (MOLECULE_BONDER_2_NAME, gen_molecule_bonder_2_image(base_size, mips, include_outline))
-	yield (MOLECULE_FISSIONER_2_NAME, gen_molecule_fissioner_2_image(base_size, mips, include_outline))
-	yield (MOLECULE_FUSIONER_2_NAME, gen_molecule_fusioner_2_image(base_size, mips, include_outline))
-	yield (MOLECULE_VOIDER_NAME, gen_molecule_voider_image(base_size, mips, include_outline))
-	yield (MOLECULE_PRINTER_NAME, gen_molecule_printer_image(base_size, mips, include_outline))
+	yield ("molecule-rotator", gen_molecule_rotator_image(base_size, mips, include_outline))
+	yield ("molecule-sorter", gen_molecule_sorter_image(base_size, mips, include_outline))
+	yield ("molecule-debonder", gen_molecule_debonder_image(base_size, mips, include_outline))
+	yield ("molecule-bonder", gen_molecule_bonder_image(base_size, mips, include_outline))
+	yield ("molecule-fissioner", gen_molecule_fissioner_image(base_size, mips, include_outline))
+	yield ("molecule-fusioner", gen_molecule_fusioner_image(base_size, mips, include_outline))
+	yield ("molecule-severer", gen_molecule_severer_image(base_size, mips, include_outline))
+	yield ("molecule-splicer", gen_molecule_splicer_image(base_size, mips, include_outline))
+	yield ("molecule-debonder-2", gen_molecule_debonder_2_image(base_size, mips, include_outline))
+	yield ("molecule-bonder-2", gen_molecule_bonder_2_image(base_size, mips, include_outline))
+	yield ("molecule-fissioner-2", gen_molecule_fissioner_2_image(base_size, mips, include_outline))
+	yield ("molecule-fusioner-2", gen_molecule_fusioner_2_image(base_size, mips, include_outline))
+	yield ("molecule-voider", gen_molecule_voider_image(base_size, mips, include_outline))
+	yield ("molecule-printer", gen_molecule_printer_image(base_size, mips, include_outline))
 
 def iter_gen_moleculify_recipe_icons(base_size, mips):
 	image_pairs = [
