@@ -57,6 +57,7 @@ local function add_filename_and_hr_version(layer, filename_base)
 	end
 	layer.filename = filename_base..".png"
 	hr_version.filename = filename_base.."-hr.png"
+	hr_version.scale = 0.5
 	layer.hr_version = hr_version
 end
 
