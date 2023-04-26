@@ -673,7 +673,42 @@ BUILDING_DEFINITIONS = {
 			[MODIFIER_NAME] = ATOM_SELECTOR_NAME,
 		},
 		reaction = function(reaction)
-			return false
+			local source, shape, height, width, center_y, center_x, direction = verify_base_atom_bond(reaction)
+			if not source then return false end
+
+			local bonds = get_bonds(source, direction)
+			if not bonds then return false end
+
+			-- remove a bond and make sure that the molecule is still connected
+			local target_x, target_y = get_target(center_x, center_y, direction)
+			local target = shape[target_y][target_x]
+			set_bonds(source, target, direction, bonds - 1)
+			local all_atoms = extract_connected_atoms(shape, target_x, target_y)
+			if has_any_atoms(shape) then return false end
+			for _, atom in ipairs(all_atoms) do shape[atom.y][atom.x] = atom end
+
+			-- fission both the source and the target
+			local source_byproduct = reaction.selectors[CATALYST_NAME]
+			local target_byproduct = reaction.selectors[MODIFIER_NAME]
+			if not source_byproduct or not target_byproduct then return false end
+
+			source_byproduct_atom = parse_molecule(source_byproduct)[1][1]
+			target_byproduct_atom = parse_molecule(target_byproduct)[1][1]
+			local new_source_atom =
+				ALL_ATOMS[ALL_ATOMS[source.symbol].number - ALL_ATOMS[source_byproduct_atom.symbol].number]
+			local new_target_atom =
+				ALL_ATOMS[ALL_ATOMS[target.symbol].number - ALL_ATOMS[target_byproduct_atom.symbol].number]
+			if not new_source_atom or not new_target_atom then return false end
+
+			source.symbol = new_source_atom.symbol
+			target.symbol = new_target_atom.symbol
+			if not verify_bond_count(source) or not verify_bond_count(target) then return false end
+
+			-- everything is valid, write the output
+			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
+			reaction.products[BYPRODUCT_NAME] = source_byproduct
+			reaction.products[REMAINDER_NAME] = target_byproduct
+			return true
 		end,
 	},
 	["molecule-bonder-2"] = {
