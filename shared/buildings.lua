@@ -148,17 +148,13 @@ local function place_atom_and_assign_bonds(center_atom, shape, center_x, center_
 	if center_down_atom then center_atom.down = center_down_atom.up end
 end
 
-local function verify_bond_count(atom)
-	return (atom.left or 0) + (atom.up or 0) + (atom.right or 0) + (atom.down or 0) <= ALL_ATOMS[atom.symbol].bonds
-end
-
 local function perform_fission(atom, byproduct)
 	-- we can assume that the byproduct is an atom because fission is always performed off of selectors
 	local byproduct_atom = parse_molecule(byproduct)[1][1]
 	local new_atom = ALL_ATOMS[ALL_ATOMS[atom.symbol].number - ALL_ATOMS[byproduct_atom.symbol].number]
 	if not new_atom then return false end
 	atom.symbol = new_atom.symbol
-	return verify_bond_count(atom), byproduct_atom
+	return true, byproduct_atom
 end
 
 local function normalize_shape(shape)
@@ -187,6 +183,10 @@ local function normalize_shape(shape)
 		new_shape[y] = new_shape_row
 	end
 	return new_shape, height, width
+end
+
+local function verify_bond_count(atom)
+	return (atom.left or 0) + (atom.up or 0) + (atom.right or 0) + (atom.down or 0) <= ALL_ATOMS[atom.symbol].bonds
 end
 
 
@@ -386,7 +386,9 @@ BUILDING_DEFINITIONS = {
 			end
 
 			-- modify source with fission if specified
-			if byproduct and not perform_fission(source, byproduct) then return false end
+			if byproduct and (not perform_fission(source, byproduct) or not verify_bond_count(source)) then
+				return false
+			end
 
 			-- we've finally done everything, reassemble the molecule(s) and deliver any fission results
 			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
@@ -565,8 +567,8 @@ BUILDING_DEFINITIONS = {
 			place_atom_and_assign_bonds(source, shape, center_x, center_y)
 			local valid_fission, source_fission_remainder = perform_fission(source, remainder_atom)
 			local byproduct = reaction.selectors[CATALYST_NAME]
-			if byproduct then valid_fission = perform_fission(source, byproduct) end
-			if not valid_fission then return false end
+			if byproduct then valid_fission = valid_fission and perform_fission(source, byproduct) end
+			if not valid_fission or not verify_bond_count(source) then return false end
 
 			-- assemble the remainder molecule
 			local remainder_shape = gen_grid(height)
@@ -675,9 +677,10 @@ BUILDING_DEFINITIONS = {
 
 			-- fission both the source and the target
 			local source_byproduct = reaction.selectors[CATALYST_NAME]
-			if not source_byproduct or not perform_fission(source, source_byproduct) then return false end
 			local target_byproduct = reaction.selectors[MODIFIER_NAME]
-			if not target_byproduct or not perform_fission(target, target_byproduct) then return false end
+			if not source_byproduct or not target_byproduct then return false end
+			if not perform_fission(source, source_byproduct) or not verify_bond_count(source) then return false end
+			if not perform_fission(target, target_byproduct) or not verify_bond_count(target) then return false end
 
 			-- everything is valid, write the output
 			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
