@@ -170,13 +170,13 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 			spec.type = "drop-down"
 			spec.items = building_definition.dropdowns[reactant_name]
 			spec.style = "factoriochem-dropdown"
-			spec.selected_index = selector_val
+			spec.selected_index = selector_val or 1
 			-- this selector doesn't select an item so stop here
 			return spec
 		elseif selector == CHECKBOX_SELECTOR_NAME then
 			spec.type = "checkbox"
 			spec.style = "factoriochem-area-checkbox"
-			spec.state = selector_val
+			spec.state = selector_val or false
 			-- this selector doesn't select an item so stop here
 			return spec
 		elseif selector == TEXT_SELECTOR_NAME then
