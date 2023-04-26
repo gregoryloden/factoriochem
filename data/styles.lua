@@ -1,4 +1,4 @@
-local gui_style = data.raw["gui-style"]["default"]
+local gui_style = data.raw["gui-style"].default
 gui_style["factoriochem-big-slot-button"] = {
 	type = "button_style",
 	parent = "slot_button",
@@ -23,7 +23,7 @@ gui_style["factoriochem-titlebar-drag-handle"] = {
 gui_style["factoriochem-inside-deep-frame-with-padding"] = {
 	type = "frame_style",
 	parent = "inside_deep_frame",
-	padding = 12,
+	padding = gui_style.inside_shallow_frame_with_padding.padding,
 }
 gui_style["factoriochem-tool-button-24"] = {
 	type = "button_style",
@@ -58,4 +58,9 @@ gui_style["factoriochem-periodic-table"] = {
 gui_style["factoriochem-small-label"] = {
 	type = "label_style",
 	font = "default-small",
+}
+gui_style["factoriochem-area-checkbox"] = {
+	type = "checkbox_style",
+	horizontally_stretchable = "on",
+	vertically_stretchable = "on",
 }

@@ -409,19 +409,20 @@ BUILDING_DEFINITIONS = {
 		-- control fields
 		selectors = {
 			[BASE_NAME] = ATOM_BOND_SELECTOR_NAME,
-			[CATALYST_NAME] = ATOM_SELECTOR_NAME,
+			[CATALYST_NAME] = CHECKBOX_SELECTOR_NAME,
 			[MODIFIER_NAME] = TARGET_SELECTOR_NAME,
 		},
 		reaction = function(reaction)
 			local source, shape, height, width, center_y, center_x, direction = verify_base_atom_bond(reaction)
 			if not source then return false end
 
-			-- add the catalyst if it is present and matches the selector
+			-- add the catalyst if it is present and specified by the selector
 			local catalyst = reaction.reactants[CATALYST_NAME]
-			if catalyst ~= reaction.selectors[CATALYST_NAME] then return false end
+			local use_catalyst = reaction.selectors[CATALYST_NAME]
+			if (catalyst ~= nil) ~= use_catalyst then return false end
 			if catalyst then
 				local atom_shape, atom_height, atom_width = parse_molecule(catalyst)
-				-- we already know this is an atom because it matches the atom selector
+				if atom_height ~= 1 or atom_width ~= 1 then return false end
 				fusion_atom = atom_shape[1][1]
 				new_atom = ALL_ATOMS[ALL_ATOMS[source.symbol].number + ALL_ATOMS[fusion_atom.symbol].number]
 				source.symbol = new_atom.symbol
@@ -608,7 +609,7 @@ BUILDING_DEFINITIONS = {
 		-- control fields
 		selectors = {
 			[BASE_NAME] = TARGET_SELECTOR_NAME,
-			[CATALYST_NAME] = ATOM_SELECTOR_NAME,
+			[CATALYST_NAME] = CHECKBOX_SELECTOR_NAME,
 			[MODIFIER_NAME] = TARGET_SELECTOR_NAME,
 		},
 		reaction = function(reaction)
@@ -634,11 +635,13 @@ BUILDING_DEFINITIONS = {
 			local result_atom = shape[center_y][center_x]
 			local result_atomic_number = ALL_ATOMS[source.symbol].number + ALL_ATOMS[result_atom.symbol].number
 
-			-- add the catalyst if it is present and matches the selector
+			-- add the catalyst if it is present and specified by the selector
 			local catalyst = reaction.reactants[CATALYST_NAME]
-			if catalyst ~= reaction.selectors[CATALYST_NAME] then return false end
+			local use_catalyst = reaction.selectors[CATALYST_NAME]
+			if (catalyst ~= nil) ~= use_catalyst then return false end
 			if catalyst then
 				local atom_shape, atom_height, atom_width = parse_molecule(catalyst)
+				if atom_height ~= 1 or atom_width ~= 1 then return false end
 				result_atomic_number = result_atomic_number + ALL_ATOMS[atom_shape[1][1].symbol].number
 			end
 
@@ -717,11 +720,7 @@ BUILDING_DEFINITIONS = {
 		reactants = {BASE_NAME, CATALYST_NAME, MODIFIER_NAME},
 		products = {RESULT_NAME},
 		-- control fields
-		selectors = {
-			[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME,
-			[CATALYST_NAME] = ATOM_SELECTOR_NAME,
-			[MODIFIER_NAME] = ATOM_SELECTOR_NAME,
-		},
+		selectors = {[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME, [MODIFIER_NAME] = CHECKBOX_SELECTOR_NAME},
 		reaction = function(reaction)
 			return false
 		end,

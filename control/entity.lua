@@ -122,7 +122,7 @@ local function build_molecule_reaction_building(entity, building_definition)
 			name = MOLECULE_REACTION_LOADER_NAME,
 			position = {x = entity.position.x + offset_x, y = entity.position.y + offset_y},
 			force = entity.force,
-			direction = loader_direction
+			direction = loader_direction,
 		})
 		if is_output then loader.rotate() end
 		loader.destructible = false
@@ -131,9 +131,8 @@ local function build_molecule_reaction_building(entity, building_definition)
 	for _, reactant in ipairs(building_definition.reactants) do build_sub_entities(reactant, false) end
 	for _, product in ipairs(building_definition.products) do build_sub_entities(product, true) end
 
-	local settings = entity.surface
-		.find_entities_filtered({ghost_name = MOLECULE_REACTION_SETTINGS_NAME, position = entity.position})
-		[1]
+	local settings_filter = {ghost_name = MOLECULE_REACTION_SETTINGS_NAME, position = entity.position}
+	local settings = entity.surface.find_entities_filtered(settings_filter)[1]
 	if settings then
 		_, settings = settings.silent_revive()
 		local settings_behavior = settings.get_control_behavior()
@@ -142,7 +141,11 @@ local function build_molecule_reaction_building(entity, building_definition)
 			if not selector then goto continue end
 			local signal = settings_behavior.get_signal(i)
 			if selector == DROPDOWN_SELECTOR_NAME then
-				building_data.reaction.selectors[reactant_name] = signal.count or 1
+				local index = 1
+				if signal.signal then index = signal.count end
+				building_data.reaction.selectors[reactant_name] = index
+			elseif selector == CHECKBOX_SELECTOR_NAME then
+				building_data.reaction.selectors[reactant_name] = signal.signal ~= nil
 			elseif entity.name == MOLECULE_PRINTER_NAME then
 				building_data.reaction.selectors[reactant_name] =
 					read_molecule_id_from_combinator(settings_behavior)
@@ -165,6 +168,8 @@ local function build_molecule_reaction_building(entity, building_definition)
 			local selector = building_definition.selectors[reactant_name]
 			if selector == DROPDOWN_SELECTOR_NAME then
 				building_data.reaction.selectors[reactant_name] = 1
+			elseif selector == CHECKBOX_SELECTOR_NAME then
+				building_data.reaction.selectors[reactant_name] = false
 			elseif selector == TEXT_SELECTOR_NAME then
 				building_data.reaction.selectors[reactant_name] = ""
 			end

@@ -147,6 +147,13 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 			name = name_prefix..reactant_name..SELECTOR_SUFFIX,
 			tooltip = {"factoriochem."..entity.name.."-"..reactant_name..SELECTOR_SUFFIX.."-tooltip"},
 		}
+		local selector_val
+		if name_prefix == REACTION_PREFIX then
+			selector_val =
+				global.molecule_reaction_building_data[entity.unit_number].reaction.selectors[reactant_name]
+		else
+			selector_val = demo_state.selectors[reactant_name]
+		end
 		if selector == ATOM_SELECTOR_NAME then
 			spec.elem_filters = {}
 			for _, subgroup in ipairs(GAME_ITEM_GROUP_PROTOTYPES[MOLECULES_GROUP_NAME].subgroups) do
@@ -163,23 +170,19 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 			spec.type = "drop-down"
 			spec.items = building_definition.dropdowns[reactant_name]
 			spec.style = "factoriochem-dropdown"
-			if name_prefix == REACTION_PREFIX then
-				local building_data = global.molecule_reaction_building_data[entity.unit_number]
-				spec.selected_index = building_data.reaction.selectors[reactant_name]
-			else
-				spec.selected_index = demo_state.selectors[reactant_name]
-			end
+			spec.selected_index = selector_val
+			-- this selector doesn't select an item so stop here
+			return spec
+		elseif selector == CHECKBOX_SELECTOR_NAME then
+			spec.type = "checkbox"
+			spec.style = "factoriochem-area-checkbox"
+			spec.state = selector_val
 			-- this selector doesn't select an item so stop here
 			return spec
 		elseif selector == TEXT_SELECTOR_NAME then
 			spec.type = "textfield"
 			spec.style = "factoriochem-textfield"
-			if name_prefix == REACTION_PREFIX then
-				local building_data = global.molecule_reaction_building_data[entity.unit_number]
-				spec.text = building_data.reaction.selectors[reactant_name]
-			else
-				spec.text = demo_state.selectors[reactant_name]
-			end
+			spec.text = selector_val
 			-- this selector doesn't select an item so stop here
 			return spec
 		else
@@ -187,11 +190,7 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 		end
 		spec.type = "choose-elem-button"
 		spec.elem_type = "item"
-		if name_prefix == REACTION_PREFIX then
-			spec.item = global.molecule_reaction_building_data[entity.unit_number].reaction.selectors[reactant_name]
-		else
-			spec.item = demo_state.selectors[reactant_name]
-		end
+		spec.item = selector_val
 		return spec
 	end
 	function build_indicator_spec(component_name)
@@ -546,6 +545,34 @@ local function on_gui_selection_state_changed(event)
 	end
 end
 
+local function on_gui_checked_state_changed(event)
+	local element = event.element
+	local building_data = global.current_gui_reaction_building_data[event.player_index]
+
+	local reaction_table_selector_reactant_name = REACTION_TABLE_SELECTOR_NAME_MAP[element.name]
+	if reaction_table_selector_reactant_name then
+		building_data.reaction.selectors[reaction_table_selector_reactant_name] = element.state
+		local reactant_i = indexof_reactant(reaction_table_selector_reactant_name)
+		local settings_behavior = building_data.settings.get_control_behavior()
+		if element.state then
+			settings_behavior.set_signal(
+				reactant_i, {signal = {type = "virtual", name = "signal-check"}, count = 1})
+		else
+			settings_behavior.set_signal(reactant_i, nil)
+		end
+		entity_assign_cache(building_data, BUILDING_DEFINITIONS[building_data.entity.name])
+		return
+	end
+
+	local reaction_demo_table_selector_reactant_name = REACTION_DEMO_TABLE_SELECTOR_NAME_MAP[element.name]
+	if reaction_demo_table_selector_reactant_name then
+		local demo_state = get_demo_state(building_data.entity.name)
+		demo_state.selectors[reaction_demo_table_selector_reactant_name] = element.state
+		demo_reaction(building_data, demo_state, element.parent)
+		return
+	end
+end
+
 local function on_gui_text_changed(event)
 	local element = event.element
 	local building_data = global.current_gui_reaction_building_data[event.player_index]
@@ -599,5 +626,6 @@ script.on_event(defines.events.on_gui_opened, on_gui_opened)
 script.on_event(defines.events.on_gui_closed, on_gui_closed)
 script.on_event(defines.events.on_gui_click, on_gui_click)
 script.on_event(defines.events.on_gui_elem_changed, on_gui_elem_changed)
+script.on_event(defines.events.on_gui_checked_state_changed, on_gui_checked_state_changed)
 script.on_event(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)
 script.on_event(defines.events.on_gui_text_changed, on_gui_text_changed)
