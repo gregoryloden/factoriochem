@@ -692,8 +692,8 @@ BUILDING_DEFINITIONS = {
 			local target_byproduct = reaction.selectors[MODIFIER_NAME]
 			if not source_byproduct or not target_byproduct then return false end
 
-			source_byproduct_atom = parse_molecule(source_byproduct)[1][1]
-			target_byproduct_atom = parse_molecule(target_byproduct)[1][1]
+			local source_byproduct_atom = parse_molecule(source_byproduct)[1][1]
+			local target_byproduct_atom = parse_molecule(target_byproduct)[1][1]
 			local new_source_atom =
 				ALL_ATOMS[ALL_ATOMS[source.symbol].number - ALL_ATOMS[source_byproduct_atom.symbol].number]
 			local new_target_atom =
@@ -722,7 +722,37 @@ BUILDING_DEFINITIONS = {
 		-- control fields
 		selectors = {[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME},
 		reaction = function(reaction)
-			return false
+			local source, shape, height, width, center_y, center_x, direction = verify_base_atom_bond(reaction)
+			if not source then return false end
+
+			local target_x, target_y = get_target(center_x, center_y, direction)
+			local target = shape[target_y][target_x]
+			if not target then return false end
+
+			-- set the bonds
+			local bonds = get_bonds(source, direction) or 0
+			set_bonds(source, target, direction, bonds + 1)
+
+			-- fusion both the source and the target
+			local source_catalyst = reaction.reactants[CATALYST_NAME]
+			local target_catalyst = reaction.reactants[MODIFIER_NAME]
+			if not source_catalyst or not target_catalyst then return false end
+
+			local source_catalyst_atom = parse_molecule(source_catalyst)[1][1]
+			local target_catalyst_atom = parse_molecule(target_catalyst)[1][1]
+			local new_source_atom =
+				ALL_ATOMS[ALL_ATOMS[source.symbol].number + ALL_ATOMS[source_catalyst_atom.symbol].number]
+			local new_target_atom =
+				ALL_ATOMS[ALL_ATOMS[target.symbol].number + ALL_ATOMS[target_catalyst_atom.symbol].number]
+			if not new_source_atom or not new_target_atom then return false end
+
+			source.symbol = new_source_atom.symbol
+			target.symbol = new_target_atom.symbol
+			if not verify_bond_count(source) or not verify_bond_count(target) then return false end
+
+			-- everything is valid, write the output
+			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
+			return true
 		end,
 	},
 	["molecule-fissioner-2"] = {
