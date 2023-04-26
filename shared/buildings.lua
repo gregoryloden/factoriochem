@@ -64,6 +64,7 @@ local function get_bonds(atom, direction)
 end
 
 local function set_bonds(source, target, direction, bonds)
+	if bonds == 0 then bonds = nil end
 	if direction == "E" then
 		source.right, target.left = bonds, bonds
 	elseif direction == "S" then
@@ -357,12 +358,12 @@ BUILDING_DEFINITIONS = {
 			if target_y < 1 or target_y > height then return false end
 			local target = shape[target_y][target_x]
 			if not target then return false end
+			set_bonds(source, target, direction, bonds - 1)
 
 			-- if we removed the last bond, check to see if it disconnected the molecule
 			local remainder_shape, remainder_width, remainder_height
 			if bonds == 1 then
-				set_bonds(source, target, direction, nil)
-				extracted_atoms = extract_connected_atoms(shape, target_x, target_y)
+				local extracted_atoms = extract_connected_atoms(shape, target_x, target_y)
 				if has_any_atoms(shape) then
 					-- generate a new molecule with the extracted atoms, then normalize both shapes
 					remainder_shape = gen_grid(height)
@@ -373,16 +374,13 @@ BUILDING_DEFINITIONS = {
 					-- no split, restore all the atoms to the original shape
 					for _, atom in ipairs(extracted_atoms) do shape[atom.y][atom.x] = atom end
 				end
-			-- we didn't remove the last bond, the atoms are still connected
-			else
-				set_bonds(source, target, direction, bonds - 1)
 			end
 
 			-- modify source with fission if specified
 			if byproduct then
-				local atom_shape, _, _ = parse_molecule(byproduct)
-				fission_atom = atom_shape[1][1]
-				new_atom = ALL_ATOMS[ALL_ATOMS[source.symbol].number - ALL_ATOMS[fission_atom.symbol].number]
+				local fission_atom = parse_molecule(byproduct)[1][1]
+				local new_atom =
+					ALL_ATOMS[ALL_ATOMS[source.symbol].number - ALL_ATOMS[fission_atom.symbol].number]
 				if not new_atom then return false end
 				source.symbol = new_atom.symbol
 				if not verify_bond_count(source) then return false end
@@ -423,8 +421,8 @@ BUILDING_DEFINITIONS = {
 			if catalyst then
 				local atom_shape, atom_height, atom_width = parse_molecule(catalyst)
 				if atom_height ~= 1 or atom_width ~= 1 then return false end
-				fusion_atom = atom_shape[1][1]
-				new_atom = ALL_ATOMS[ALL_ATOMS[source.symbol].number + ALL_ATOMS[fusion_atom.symbol].number]
+				local new_atom =
+					ALL_ATOMS[ALL_ATOMS[source.symbol].number + ALL_ATOMS[atom_shape[1][1].symbol].number]
 				source.symbol = new_atom.symbol
 			end
 
@@ -490,8 +488,7 @@ BUILDING_DEFINITIONS = {
 			local atom = ALL_ATOMS[shape[1][1].symbol]
 			local result_atom
 			if reaction.selectors[BASE_NAME] then
-				local result_shape, result_height, result_width = parse_molecule(reaction.selectors[BASE_NAME])
-				result_atom = ALL_ATOMS[result_shape[1][1].symbol]
+				result_atom = ALL_ATOMS[parse_molecule(reaction.selectors[BASE_NAME])[1][1].symbol]
 			else
 				result_atom = ALL_ATOMS[math.ceil(atom.number / 2)]
 			end
