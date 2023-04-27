@@ -440,22 +440,21 @@ BUILDING_DEFINITIONS = {
 		unlocking_technology = "molecule-reaction-buildings-2",
 		-- data and control fields
 		reactants = {BASE_NAME, CATALYST_NAME, MODIFIER_NAME},
-		products = {RESULT_NAME},
+		products = {RESULT_NAME, BYPRODUCT_NAME},
 		-- control fields
 		selectors = {
 			[BASE_NAME] = ATOM_BOND_SELECTOR_NAME,
-			[CATALYST_NAME] = CHECKBOX_SELECTOR_NAME,
+			[CATALYST_NAME] = MUTATION_SELECTOR_NAME,
 			[MODIFIER_NAME] = TARGET_SELECTOR_NAME,
 		},
 		reaction = function(reaction)
 			local source, shape, height, width, center_y, center_x, direction = verify_base_atom_bond(reaction)
 			if not source then return false end
 
-			-- add the catalyst if it is present and specified by the selector
+			-- modify source with fission or fusion if specified
+			local mutation = reaction.selectors[CATALYST_NAME]
 			local catalyst = reaction.reactants[CATALYST_NAME]
-			local use_catalyst = reaction.selectors[CATALYST_NAME]
-			if (catalyst ~= nil) ~= use_catalyst then return false end
-			if catalyst and not perform_fusion(source, catalyst) then return false end
+			if not maybe_perform_mutation(source, mutation, catalyst) then return false end
 
 			local target_x, target_y = get_target(center_x, center_y, direction)
 			local target
@@ -492,6 +491,7 @@ BUILDING_DEFINITIONS = {
 
 			-- we've finally done everything, reassemble the molecule
 			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
+			maybe_set_byproduct(reaction.products, BYPRODUCT_NAME, mutation)
 			return true
 		end,
 	},
