@@ -256,6 +256,22 @@ local science_ingredients = {
 		{ATOM_ITEM_PREFIX.."Ti", 1},
 		{ATOM_ITEM_PREFIX.."Si", 1},
 	},
+	["production-science-pack"] = {
+		{MOLECULE_ITEM_PREFIX.."N1-O1-N|2C2-C2-2C", 1},
+		-- this is the molecule from the item group/thumbnail
+		{MOLECULE_ITEM_PREFIX.."O1-C2-N|1N1-1O-1H|1H", 1},
+		{MOLECULE_ITEM_PREFIX.."O1-N1-O|1O1-1N1-1O", 1},
+		{MOLECULE_ITEM_PREFIX.."P|3Si|1Cl", 1},
+		{MOLECULE_ITEM_PREFIX.."C2-C2-C|2C--2C|2C2-C2-2C", 1},
+		{ATOM_ITEM_PREFIX.."Pb", 1},
+	},
+	["utility-science-pack"] = {
+		{MOLECULE_ITEM_PREFIX.."Ga3-In", 1},
+		{MOLECULE_ITEM_PREFIX.."Sr2-Se", 1},
+		{MOLECULE_ITEM_PREFIX.."Na1-Mg1-Cl", 1},
+		{MOLECULE_ITEM_PREFIX.."Rb|1I", 1},
+		{MOLECULE_ITEM_PREFIX.."H1-B1-F|-1Li", 1},
+	},
 }
 for science, ingredients in pairs(science_ingredients) do
 	local recipe = data.raw.recipe[science]
