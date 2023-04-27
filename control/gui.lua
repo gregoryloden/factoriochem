@@ -126,6 +126,9 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 			tooltip = {"factoriochem."..entity.name.."-"..component_name.."-tooltip"},
 			style = "factoriochem-big-slot-button",
 		}
+		if building_definition.selectors[component_name] == MUTATION_SELECTOR_NAME then
+			table.insert(spec.tooltip, {"factoriochem.molecule-"..component_name.."-mutation-tooltip"})
+		end
 		if name_prefix == REACTION_PREFIX then
 			spec.tooltip = {"factoriochem.reaction-table-component-tooltip", spec.tooltip}
 		elseif name_prefix == REACTION_DEMO_PREFIX then
@@ -159,6 +162,8 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 			if selector == MUTATION_SELECTOR_NAME then
 				table.insert(
 					spec.elem_filters, {filter = "subgroup", subgroup = PERFORM_FUSION_SELECTOR_SUBGROUP})
+				table.insert(
+					spec.tooltip, {"factoriochem.molecule-"..reactant_name.."-selector-mutation-tooltip"})
 			end
 			for _, subgroup in ipairs(GAME_ITEM_GROUP_PROTOTYPES[MOLECULES_GROUP_NAME].subgroups) do
 				if string.find(subgroup.name, ATOM_SUBGROUP_PREFIX_MATCH) then
