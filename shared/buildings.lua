@@ -761,7 +761,32 @@ BUILDING_DEFINITIONS = {
 		-- control fields
 		selectors = {[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME, [MODIFIER_NAME] = CHECKBOX_SELECTOR_NAME},
 		reaction = function(reaction)
-			return false
+			local source, shape, height, width, center_y, center_x, direction = verify_base_atom_bond(reaction)
+			if not source then return false end
+
+			local source_catalyst = reaction.reactants[CATALYST_NAME]
+			if not source_catalyst then return false end
+			if not perform_fusion(source, source_catalyst) or not verify_bond_count(source) then return false end
+
+			local target_catalyst = reaction.reactants[MODIFIER_NAME]
+			if target_catalyst then
+				-- make sure it was specified
+				if not reaction.selectors[MODIFIER_NAME] then return false end
+
+				local target_x, target_y = get_target(center_x, center_y, direction)
+				local target = shape[target_y][target_x]
+				if not target then return false end
+				if not perform_fusion(target, target_catalyst) or not verify_bond_count(target) then
+					return false
+				end
+			else
+				-- make sure it wasn't specified
+				if reaction.selectors[MODIFIER_NAME] then return false end
+			end
+
+			-- everything is valid, write the output
+			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
+			return true
 		end,
 	},
 	[MOLECULE_VOIDER_NAME] = {
