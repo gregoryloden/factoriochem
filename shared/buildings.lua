@@ -110,6 +110,27 @@ local function has_any_atoms(shape)
 	return false
 end
 
+local function perform_fission(atom, byproduct)
+	-- we can assume that the byproduct is an atom because fission is always performed off of selectors
+	local byproduct_atom = parse_molecule(byproduct)[1][1]
+	local new_atom = ALL_ATOMS[ALL_ATOMS[atom.symbol].number - ALL_ATOMS[byproduct_atom.symbol].number]
+	if not new_atom then return false end
+	atom.symbol = new_atom.symbol
+	return true, byproduct_atom
+end
+
+local function perform_fusion(atom, catalyst, catalyst_atom)
+	if catalyst then
+		local catalyst_shape, catalyst_height, catalyst_width = parse_molecule(catalyst)
+		if catalyst_height ~= 1 or catalyst_width ~= 1 then return false end
+		catalyst_atom = catalyst_shape[1][1]
+	end
+	local new_atom = ALL_ATOMS[ALL_ATOMS[atom.symbol].number + ALL_ATOMS[catalyst_atom.symbol].number]
+	if not new_atom then return false end
+	atom.symbol = new_atom.symbol
+	return true
+end
+
 local function merge_with_modifier(shape, target_x, target_y, modifier, modifier_target)
 	local modifier_shape, modifier_height, modifier_width = parse_molecule(modifier)
 	local modifier_y_scale, modifier_x_scale, modifier_y, modifier_x = parse_target(modifier_target)
@@ -146,15 +167,6 @@ local function place_atom_and_assign_bonds(center_atom, shape, center_x, center_
 	if center_left_atom then center_atom.left = center_left_atom.right end
 	if center_right_atom then center_atom.right = center_right_atom.left end
 	if center_down_atom then center_atom.down = center_down_atom.up end
-end
-
-local function perform_fission(atom, byproduct)
-	-- we can assume that the byproduct is an atom because fission is always performed off of selectors
-	local byproduct_atom = parse_molecule(byproduct)[1][1]
-	local new_atom = ALL_ATOMS[ALL_ATOMS[atom.symbol].number - ALL_ATOMS[byproduct_atom.symbol].number]
-	if not new_atom then return false end
-	atom.symbol = new_atom.symbol
-	return true, byproduct_atom
 end
 
 local function normalize_shape(shape)
@@ -422,27 +434,19 @@ BUILDING_DEFINITIONS = {
 			local catalyst = reaction.reactants[CATALYST_NAME]
 			local use_catalyst = reaction.selectors[CATALYST_NAME]
 			if (catalyst ~= nil) ~= use_catalyst then return false end
-			if catalyst then
-				local atom_shape, atom_height, atom_width = parse_molecule(catalyst)
-				if atom_height ~= 1 or atom_width ~= 1 then return false end
-				local new_atom =
-					ALL_ATOMS[ALL_ATOMS[source.symbol].number + ALL_ATOMS[atom_shape[1][1].symbol].number]
-				source.symbol = new_atom.symbol
-			end
+			if catalyst and not perform_fusion(source, catalyst) then return false end
 
 			local target_x, target_y = get_target(center_x, center_y, direction)
 			local target
 			if target_y >= 1 and target_y <= height then target = shape[target_y][target_x] end
 
-			-- if a modifier molecule was specified, join it with the base molecule
+			-- if there is a modifier molecule, join it with the base molecule
+			local modifier = reaction.reactants[MODIFIER_NAME]
 			local modifier_target = reaction.selectors[MODIFIER_NAME]
-			if modifier_target then
-				-- make sure there is not already a target atom at the position
-				if target then return false end
-
-				-- make sure we have a valid target atom to join
-				local modifier = reaction.reactants[MODIFIER_NAME]
-				if not modifier then return false end
+			if modifier then
+				-- make sure there is not already a target atom at the position and that there is a target atom
+				--	specified on the modifier molecule
+				if target or not modifier_target then return false end
 
 				-- merge it into the base molecule
 				if not merge_with_modifier(shape, target_x, target_y, modifier, modifier_target) then
@@ -453,13 +457,11 @@ BUILDING_DEFINITIONS = {
 				-- normalize the shape, and make sure that it fits within the grid
 				shape, height, width = normalize_shape(shape)
 				if not shape then return false end
-			-- if there is no modifier specified, we just have to add a bond to the molecule
+			-- if there is no modifier molecule, we just have to add a bond to the molecule
 			else
-				-- make sure there is a target atom at the position
-				if not target then return false end
-
-				-- not allowed to have a modifier molecule without specifying a target for it
-				if reaction.reactants[MODIFIER_NAME] then return false end
+				-- make sure there is a target atom at the position and that there is no modifier molecule
+				--	target specified
+				if not target or modifier_target then return false end
 			end
 
 			-- add bonds between the source and the target
@@ -522,15 +524,10 @@ BUILDING_DEFINITIONS = {
 			local first_shape, first_height, first_width = parse_molecule(first)
 			if first_height ~= 1 or first_width ~= 1 then return false end
 
-			local second_shape, second_height, second_width = parse_molecule(second)
-			if second_height ~= 1 or second_width ~= 1 then return false end
+			local atom = first_shape[1][1]
+			if not perform_fusion(atom, second) then return false end
 
-			local first_atom = ALL_ATOMS[first_shape[1][1].symbol]
-			local second_atom = ALL_ATOMS[second_shape[1][1].symbol]
-			local result_atom = ALL_ATOMS[first_atom.number + second_atom.number]
-			if not result_atom then return false end
-
-			reaction.products[RESULT_NAME] = ATOM_ITEM_PREFIX..result_atom.symbol
+			reaction.products[RESULT_NAME] = ATOM_ITEM_PREFIX..atom.symbol
 			return true
 		end,
 	},
@@ -617,27 +614,19 @@ BUILDING_DEFINITIONS = {
 			if not modifier or not modifier_target then return false end
 			if not merge_with_modifier(shape, center_x, center_y, modifier, modifier_target) then return false end
 
-			local result_atom = shape[center_y][center_x]
-			local result_atomic_number = ALL_ATOMS[source.symbol].number + ALL_ATOMS[result_atom.symbol].number
+			-- place an atom with the combined atomic number
+			local splice_atom = {symbol = source.symbol}
+			if not perform_fusion(splice_atom, nil, shape[center_y][center_x]) then return false end
+			place_atom_and_assign_bonds(splice_atom, shape, center_x, center_y)
 
 			-- add the catalyst if it is present and specified by the selector
 			local catalyst = reaction.reactants[CATALYST_NAME]
 			local use_catalyst = reaction.selectors[CATALYST_NAME]
 			if (catalyst ~= nil) ~= use_catalyst then return false end
-			if catalyst then
-				local atom_shape, atom_height, atom_width = parse_molecule(catalyst)
-				if atom_height ~= 1 or atom_width ~= 1 then return false end
-				result_atomic_number = result_atomic_number + ALL_ATOMS[atom_shape[1][1].symbol].number
-			end
+			if catalyst and not perform_fusion(splice_atom, catalyst) then return false end
 
-			-- update the combined atom
-			local result_atom_atom = ALL_ATOMS[result_atomic_number]
-			if not result_atom_atom then return false end
-			result_atom = {symbol = result_atom_atom.symbol}
-			place_atom_and_assign_bonds(result_atom, shape, center_x, center_y)
-			if not verify_bond_count(result_atom) then return false end
-
-			-- make sure it's valid
+			-- make sure everything is valid
+			if not verify_bond_count(splice_atom) then return false end
 			shape, height, width = normalize_shape(shape)
 			if not shape then return false end
 
@@ -715,18 +704,8 @@ BUILDING_DEFINITIONS = {
 			local source_catalyst = reaction.reactants[CATALYST_NAME]
 			local target_catalyst = reaction.reactants[MODIFIER_NAME]
 			if not source_catalyst or not target_catalyst then return false end
-
-			local source_catalyst_atom = parse_molecule(source_catalyst)[1][1]
-			local target_catalyst_atom = parse_molecule(target_catalyst)[1][1]
-			local new_source_atom =
-				ALL_ATOMS[ALL_ATOMS[source.symbol].number + ALL_ATOMS[source_catalyst_atom.symbol].number]
-			local new_target_atom =
-				ALL_ATOMS[ALL_ATOMS[target.symbol].number + ALL_ATOMS[target_catalyst_atom.symbol].number]
-			if not new_source_atom or not new_target_atom then return false end
-
-			source.symbol = new_source_atom.symbol
-			target.symbol = new_target_atom.symbol
-			if not verify_bond_count(source) or not verify_bond_count(target) then return false end
+			if not perform_fusion(source, source_catalyst) or not verify_bond_count(source) then return false end
+			if not perform_fusion(target, target_catalyst) or not verify_bond_count(target) then return false end
 
 			-- everything is valid, write the output
 			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
