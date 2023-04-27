@@ -97,6 +97,8 @@ ROTATION_SELECTOR_RADIUS_FRACTION = 24 / BASE_ICON_SIZE
 ROTATION_SELECTOR_THICKNESS_FRACTION = 4 / BASE_ICON_SIZE
 ROTATION_SELECTOR_ARROW_SIZE_FRACTION = 6 / BASE_ICON_SIZE
 ROTATION_SELECTOR_DOT_RADIUS_FRACTION = 4 / BASE_ICON_SIZE
+PERFORM_FUSION_SELECTOR_WIDTH_FRACTION = 5 / 8
+PERFORM_FUSION_SELECTOR_THICKNESS_FRACTION = 8 / BASE_ICON_SIZE
 TARGET_SELECTOR_DEFAULT_COLOR = (128, 128, 128, 0)
 TARGET_SELECTOR_HIGHLIGHT_COLOR = (128, 224, 255, 0)
 ATOM_BOND_SELECTOR_INNER_ARROW_SIZE_FRACTION = 18 / BASE_ICON_SIZE
@@ -849,12 +851,26 @@ def iter_gen_target_and_atom_bond_selectors(base_size, mips):
 				yield from iter_gen_single_target_and_atom_bond_selectors(
 					base_size, mips, y_scale, x_scale, highlight_i)
 
+def gen_perform_fusion_selector(base_size, mips):
+	half_size = base_size / 2
+	half_width = PERFORM_FUSION_SELECTOR_WIDTH_FRACTION * base_size / 2
+	thickness = int(PERFORM_FUSION_SELECTOR_THICKNESS_FRACTION * base_size)
+	top_left = half_size - half_width
+	bottom_right = half_size + half_width
+	return gen_composite_image([
+		("layer", {"size": base_size, "mips": mips, "color": MOLECULE_FUSIONER_COLOR}),
+		("line", {"start": (top_left, half_size), "end": (bottom_right, half_size), "thickness": thickness}),
+		("layer", {"size": base_size, "color": MOLECULE_FUSIONER_COLOR}),
+		("line", {"start": (half_size, top_left), "end": (half_size, bottom_right), "thickness": thickness}),
+	])
+
 def gen_all_selectors(base_size, mips):
 	selectors_folder = "selectors"
 	if not os.path.exists(selectors_folder):
 		os.mkdir(selectors_folder)
 	write_images(selectors_folder, iter_gen_rotation_selectors(base_size, mips))
 	write_images(selectors_folder, iter_gen_target_and_atom_bond_selectors(base_size, mips))
+	write_image(selectors_folder, "perform-fusion", gen_perform_fusion_selector(base_size, mips))
 	image_counter_print("Selectors written")
 
 
