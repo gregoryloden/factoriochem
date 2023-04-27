@@ -111,9 +111,15 @@ local function has_any_atoms(shape)
 end
 
 local function perform_fission(atom, byproduct)
-	-- we can assume that the byproduct is an atom because fission is always performed off of selectors
-	local byproduct_atom = parse_molecule(byproduct)[1][1]
-	local new_atom = ALL_ATOMS[ALL_ATOMS[atom.symbol].number - ALL_ATOMS[byproduct_atom.symbol].number]
+	local atom_number = ALL_ATOMS[atom.symbol].number
+	local byproduct_atom
+	if byproduct then
+		-- we can assume that the byproduct is an atom because fission is always performed off of selectors
+		byproduct_atom = parse_molecule(byproduct)[1][1]
+	else
+		byproduct_atom = {symbol = ALL_ATOMS[math.ceil(atom_number / 2)].symbol}
+	end
+	local new_atom = ALL_ATOMS[atom_number - ALL_ATOMS[byproduct_atom.symbol].number]
 	if not new_atom then return false end
 	atom.symbol = new_atom.symbol
 	return true, byproduct_atom
@@ -491,15 +497,9 @@ BUILDING_DEFINITIONS = {
 			local shape, height, width = parse_molecule(molecule)
 			if height ~= 1 or width ~= 1 then return false end
 
-			local atom = ALL_ATOMS[shape[1][1].symbol]
-			local result_atom
-			if reaction.selectors[BASE_NAME] then
-				result_atom = ALL_ATOMS[parse_molecule(reaction.selectors[BASE_NAME])[1][1].symbol]
-			else
-				result_atom = ALL_ATOMS[math.ceil(atom.number / 2)]
-			end
-			local remainder_atom = ALL_ATOMS[atom.number - result_atom.number]
-			if not remainder_atom then return false end
+			local remainder_atom = shape[1][1]
+			local valid_fission, result_atom = perform_fission(remainder_atom, reaction.selectors[BASE_NAME])
+			if not valid_fission then return false end
 
 			reaction.products[RESULT_NAME] = ATOM_ITEM_PREFIX..result_atom.symbol
 			reaction.products[REMAINDER_NAME] = ATOM_ITEM_PREFIX..remainder_atom.symbol
