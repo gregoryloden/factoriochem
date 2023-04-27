@@ -380,9 +380,7 @@ BUILDING_DEFINITIONS = {
 
 			-- at this point, the reaction is valid to start looking at, but might end up not being valid depending
 			--	on bonds or atomic numbers
-			local byproduct = reaction.selectors[CATALYST_NAME]
 			local target_x, target_y = get_target(center_x, center_y, direction)
-			if target_y < 1 or target_y > height then return false end
 			local target = shape[target_y][target_x]
 			if not target then return false end
 			set_bonds(source, target, direction, bonds - 1)
@@ -404,6 +402,7 @@ BUILDING_DEFINITIONS = {
 			end
 
 			-- modify source with fission if specified
+			local byproduct = reaction.selectors[CATALYST_NAME]
 			if byproduct and (not perform_fission(source, byproduct) or not verify_bond_count(source)) then
 				return false
 			end
