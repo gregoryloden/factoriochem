@@ -137,6 +137,17 @@ local function perform_fusion(atom, catalyst, catalyst_atom)
 	return true
 end
 
+local function maybe_perform_mutation(atom, mutation, catalyst)
+	if catalyst ~= nil then
+		return mutation == PERFORM_FUSION_SELECTOR_SUBGROUP and perform_fusion(atom, catalyst)
+	-- mutation is optional, so it's valid if there is no catalyst and no mutation
+	elseif not mutation then
+		return true
+	else
+		return mutation ~= PERFORM_FUSION_SELECTOR_SUBGROUP and perform_fission(atom, mutation)
+	end
+end
+
 local function merge_with_modifier(shape, target_x, target_y, modifier, modifier_target)
 	local modifier_shape, modifier_height, modifier_width = parse_molecule(modifier)
 	local modifier_y_scale, modifier_x_scale, modifier_y, modifier_x = parse_target(modifier_target)
@@ -205,6 +216,10 @@ end
 
 local function verify_bond_count(atom)
 	return (atom.left or 0) + (atom.up or 0) + (atom.right or 0) + (atom.down or 0) <= ALL_ATOMS[atom.symbol].bonds
+end
+
+local function maybe_set_byproduct(products, product_name, byproduct)
+	if byproduct and byproduct ~= PERFORM_FUSION_SELECTOR_SUBGROUP then products[product_name] = byproduct end
 end
 
 
@@ -367,10 +382,10 @@ BUILDING_DEFINITIONS = {
 		item_order = "d",
 		unlocking_technology = "molecule-reaction-buildings-2",
 		-- data and control fields
-		reactants = {BASE_NAME},
+		reactants = {BASE_NAME, CATALYST_NAME},
 		products = {RESULT_NAME, BYPRODUCT_NAME, REMAINDER_NAME},
 		-- control fields
-		selectors = {[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME, [CATALYST_NAME] = ATOM_SELECTOR_NAME},
+		selectors = {[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME, [CATALYST_NAME] = MUTATION_SELECTOR_NAME},
 		reaction = function(reaction)
 			local source, shape, height, width, center_y, center_x, direction = verify_base_atom_bond(reaction)
 			if not source then return false end
@@ -401,9 +416,10 @@ BUILDING_DEFINITIONS = {
 				end
 			end
 
-			-- modify source with fission if specified
-			local byproduct = reaction.selectors[CATALYST_NAME]
-			if byproduct and (not perform_fission(source, byproduct) or not verify_bond_count(source)) then
+			-- modify source with fission or fusion if specified
+			local mutation = reaction.selectors[CATALYST_NAME]
+			local catalyst = reaction.reactants[CATALYST_NAME]
+			if not maybe_perform_mutation(source, mutation, catalyst) or not verify_bond_count(source) then
 				return false
 			end
 
@@ -413,7 +429,7 @@ BUILDING_DEFINITIONS = {
 				reaction.products[REMAINDER_NAME] =
 					assemble_molecule(remainder_shape, remainder_height, remainder_width)
 			end
-			reaction.products[BYPRODUCT_NAME] = byproduct
+			maybe_set_byproduct(reaction.products, BYPRODUCT_NAME, mutation)
 			return true
 		end,
 	},
