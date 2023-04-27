@@ -87,3 +87,23 @@ for y_scale = 1, 3 do
 		end
 	end
 end
+
+
+-- Perform-fusion
+data:extend({
+	{
+		type = "item-subgroup",
+		name = PERFORM_FUSION_SELECTOR_SUBGROUP,
+		group = "signals",
+		order = "j",
+	},
+	{
+		type = "item",
+		name = PERFORM_FUSION_SELECTOR_SUBGROUP,
+		subgroup = PERFORM_FUSION_SELECTOR_SUBGROUP,
+		icon = SELECTOR_ICON_ROOT..PERFORM_FUSION_SELECTOR_NAME..".png",
+		icon_size = ITEM_ICON_SIZE,
+		icon_mipmaps = ITEM_ICON_MIPMAPS,
+		stack_size = 1,
+	},
+})
