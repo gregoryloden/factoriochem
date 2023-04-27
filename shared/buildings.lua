@@ -546,7 +546,7 @@ BUILDING_DEFINITIONS = {
 		},
 		reaction = function(reaction)
 			-- check that the base reaction is valid
-			local source, shape, height, width, center_y, center_x, direction = verify_base_atom_bond(reaction)
+			local source, shape, height, _, center_y, center_x, direction = verify_base_atom_bond(reaction)
 			if not source then return false end
 
 			local remainder_atom = reaction.selectors[MODIFIER_NAME]
@@ -726,7 +726,28 @@ BUILDING_DEFINITIONS = {
 			[MODIFIER_NAME] = ATOM_SELECTOR_NAME,
 		},
 		reaction = function(reaction)
-			return false
+			local source, shape, height, width, center_y, center_x, direction = verify_base_atom_bond(reaction)
+			if not source then return false end
+
+			local source_byproduct = reaction.selectors[CATALYST_NAME]
+			if not source_byproduct then return false end
+			if not perform_fission(source, source_byproduct) or not verify_bond_count(source) then return false end
+
+			local target_byproduct = reaction.selectors[MODIFIER_NAME]
+			if target_byproduct then
+				local target_x, target_y = get_target(center_x, center_y, direction)
+				local target = shape[target_y][target_x]
+				if not target then return false end
+				if not perform_fission(target, target_byproduct) or not verify_bond_count(target) then
+					return false
+				end
+			end
+
+			-- everything is valid, write the output
+			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
+			reaction.products[BYPRODUCT_NAME] = source_byproduct
+			reaction.products[REMAINDER_NAME] = target_byproduct
+			return true
 		end,
 	},
 	["molecule-fusioner-2"] = {
