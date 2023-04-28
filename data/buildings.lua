@@ -206,7 +206,7 @@ local reaction_settings = {
 	type = "constant-combinator",
 	name = MOLECULE_REACTION_SETTINGS_NAME,
 	placeable_by = {item = MOLECULE_REACTION_SETTINGS_NAME, count = 1},
-	flags = {"hidden", "player-creation", "hide-alt-info", "not-deconstructable"},
+	flags = {"hidden", "player-creation", "hide-alt-info"},
 	collision_box = table.deepcopy(BASE_BUILDING_PROTOTYPE.collision_box),
 	selection_box = table.deepcopy(BASE_BUILDING_PROTOTYPE.selection_box),
 	collision_mask = {},

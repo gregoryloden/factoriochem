@@ -581,6 +581,13 @@ local function on_entity_settings_pasted(event)
 	end
 end
 
+local function on_marked_for_deconstruction(event)
+	local entity = event.entity
+	if entity.name == MOLECULE_REACTION_SETTINGS_NAME then
+		entity.cancel_deconstruction(entity.force, event.player_index)
+	end
+end
+
 
 -- Global event handling
 function entity_on_init()
@@ -646,3 +653,4 @@ script.on_event(defines.events.on_robot_built_entity, on_built_entity)
 script.on_event(defines.events.on_player_mined_entity, on_mined_entity)
 script.on_event(defines.events.on_robot_mined_entity, on_mined_entity)
 script.on_event(defines.events.on_entity_settings_pasted, on_entity_settings_pasted)
+script.on_event(defines.events.on_marked_for_deconstruction, on_marked_for_deconstruction)
