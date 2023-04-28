@@ -404,6 +404,16 @@ BUILDING_DEFINITIONS = {
 			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
 			return true
 		end,
+		examples = {{
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-H|1H"},
+			selectors = {[CATALYST_NAME] = ROTATION_SELECTOR_SUBGROUP.."-3"},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."H|1N1-H|1O1-H"},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-3220E",
+				[CATALYST_NAME] = ROTATION_SELECTOR_SUBGROUP.."-2",
+			},
+		}},
 	},
 	["molecule-debonder"] = {
 		-- data fields
