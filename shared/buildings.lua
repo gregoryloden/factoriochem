@@ -600,6 +600,16 @@ BUILDING_DEFINITIONS = {
 			reaction.products[REMAINDER_NAME] = ATOM_ITEM_PREFIX..remainder_atom.symbol
 			return true
 		end,
+		examples = {{
+			reactants = {[BASE_NAME] = ATOM_ITEM_PREFIX.."Ne"},
+			selectors = {[BASE_NAME] = ATOM_ITEM_PREFIX.."H"},
+		}, {
+			reactants = {[BASE_NAME] = ATOM_ITEM_PREFIX.."He"},
+			selectors = {},
+		}, {
+			reactants = {[BASE_NAME] = ATOM_ITEM_PREFIX.."F"},
+			selectors = {},
+		}},
 	},
 	["molecule-fusioner"] = {
 		-- data fields
@@ -625,6 +635,13 @@ BUILDING_DEFINITIONS = {
 			reaction.products[RESULT_NAME] = ATOM_ITEM_PREFIX..atom.symbol
 			return true
 		end,
+		examples = {{
+			reactants = {[BASE_NAME] = ATOM_ITEM_PREFIX.."Li", [MODIFIER_NAME] = ATOM_ITEM_PREFIX.."H"},
+			selectors = {},
+		}, {
+			reactants = {[BASE_NAME] = ATOM_ITEM_PREFIX.."Be", [MODIFIER_NAME] = ATOM_ITEM_PREFIX.."C"},
+			selectors = {},
+		}},
 	},
 	["molecule-severer"] = {
 		-- data fields
