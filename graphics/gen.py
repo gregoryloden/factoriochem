@@ -1078,20 +1078,24 @@ def gen_molecule_debonder_2_image(base_size, mips, include_outline):
 	top = base_size / 4
 	middle = base_size / 2
 	bottom = base_size * 3 / 4
-	left = base_size / 4 - width / 2
-	right = base_size / 4 + width / 2
+	center = base_size / 4
+	left = center - width / 2
+	right = center + width / 2
 	thickness = int(MOLECULE_DEBONDER_THICKNESS_FRACTION * base_size)
 	layers = [
 		("layer", {"size": base_size, "mips": mips, "color": MOLECULE_DEBONDER_COLOR}),
 		("line", {"start": (left, middle), "end": (right, middle), "thickness": thickness}),
 		("layer", {"size": base_size, "color": MOLECULE_FISSIONER_COLOR}),
 		("line", {"start": (left, top), "end": (right, top), "thickness": thickness}),
+		("layer", {"size": base_size, "color": MOLECULE_FUSIONER_COLOR}),
 		("line", {"start": (left, bottom), "end": (right, bottom), "thickness": thickness}),
+		("layer", {"size": base_size, "color": MOLECULE_FUSIONER_COLOR}),
+		("line", {"start": (center, bottom - width / 2), "end": (center, bottom + width / 2), "thickness": thickness}),
 	]
 	return gen_composite_image(layers, image, include_outline)
 
 def gen_molecule_bonder_2_image(base_size, mips, include_outline):
-	image = gen_specific_molecule(base_size, mips, "H1-C|H1-3C", include_outline)
+	image = gen_specific_molecule(base_size, mips, "H1-C|Li1-3C", include_outline)
 	width = MOLECULE_DEBONDER_WIDTH_FRACTION * base_size
 	top = base_size / 4
 	middle = base_size / 2
@@ -1103,12 +1107,12 @@ def gen_molecule_bonder_2_image(base_size, mips, include_outline):
 	layers = [
 		("layer", {"size": base_size, "mips": mips, "color": MOLECULE_FUSIONER_COLOR}),
 		("line", {"start": (center, top - width / 2), "end": (center, top + width / 2), "thickness": thickness}),
-		("line", {"start": (center, bottom - width / 2), "end": (center, bottom + width / 2), "thickness": thickness}),
-		("layer", {"size": base_size, "color": MOLECULE_BONDER_COLOR}),
-		("line", {"start": (center, middle - width / 2), "end": (center, middle + width / 2), "thickness": thickness}),
 		("layer", {"size": base_size, "color": MOLECULE_FUSIONER_COLOR}),
 		("line", {"start": (left, top), "end": (right, top), "thickness": thickness}),
+		("layer", {"size": base_size, "color": MOLECULE_FISSIONER_COLOR}),
 		("line", {"start": (left, bottom), "end": (right, bottom), "thickness": thickness}),
+		("layer", {"size": base_size, "color": MOLECULE_BONDER_COLOR}),
+		("line", {"start": (center, middle - width / 2), "end": (center, middle + width / 2), "thickness": thickness}),
 		("layer", {"size": base_size, "color": MOLECULE_BONDER_COLOR}),
 		("line", {"start": (left, middle), "end": (right, middle), "thickness": thickness}),
 	]
