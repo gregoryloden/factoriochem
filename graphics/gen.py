@@ -124,7 +124,9 @@ MOLECULE_FUSIONER_COLOR = (224, 224, 192, 0)
 MOLECULE_SEVERER_THICKNESS_FRACTION = 4 / BASE_ICON_SIZE
 MOLECULE_SEVERER_WIDTH_FRACTION = 0.5
 MOLECULE_SPLICER_ARROW_SIZE_FRACTION = 8 / BASE_ICON_SIZE
-MOLECULE_FISSIONER_2_LEFT_FRACTION = 7 / 16
+MOLECULE_MUTATOR_2_LEFT_FRACTION = 26 / BASE_ICON_SIZE
+MOLECULE_MUTATOR_2_RIGHT_FRACTION = 35 / BASE_ICON_SIZE
+MOLECULE_MUTATOR_2_ARROW_SIZE_FRACTION = 5 / BASE_ICON_SIZE
 MOLECULE_VOIDER_XY_FRACTION = 8 / BASE_ICON_SIZE
 MOLECULE_VOIDER_THICKNESS_FRACTION = 6 / BASE_ICON_SIZE
 MOLECULE_PRINTER_TOP_CENTER_Y_FRACTION = 16 / BASE_ICON_SIZE
@@ -1118,11 +1120,31 @@ def gen_molecule_bonder_2_image(base_size, mips, include_outline):
 	]
 	return gen_composite_image(layers, image, include_outline)
 
+def gen_molecule_mutator_2_image(base_size, mips, include_outline):
+	image = gen_specific_molecule(base_size, mips, "He--H|P--1H|3P--O", include_outline)
+	thickness = int(MOLECULE_FISSIONER_THICKNESS_FRACTION * base_size)
+	left = MOLECULE_MUTATOR_2_LEFT_FRACTION * base_size
+	right = MOLECULE_MUTATOR_2_RIGHT_FRACTION * base_size
+	arrow_size = MOLECULE_MUTATOR_2_ARROW_SIZE_FRACTION * base_size
+	top = base_size / 6
+	bottom = base_size - top
+	layers = [
+		("layer", {"size": base_size, "mips": mips, "color": MOLECULE_FUSIONER_COLOR}),
+		("line", {"start": (left, top), "end": (right, top), "thickness": thickness}),
+		("layer", {"size": base_size, "color": MOLECULE_FUSIONER_COLOR}),
+		("arrow", (right, top, -arrow_size, 0)),
+		("layer", {"size": base_size, "color": MOLECULE_FISSIONER_COLOR}),
+		("line", {"start": (left, bottom), "end": (right, bottom), "thickness": thickness}),
+		("layer", {"size": base_size, "color": MOLECULE_FISSIONER_COLOR}),
+		("arrow", (right, bottom, -arrow_size, 0)),
+	]
+	return gen_composite_image(layers, image, include_outline)
+
 def gen_molecule_fissioner_2_image(base_size, mips, include_outline):
 	image = gen_specific_molecule(base_size, mips, "P--|3P", include_outline)
 	simple_overlay_image(image, gen_specific_molecule(base_size, mips, "--O||--O", include_outline))
 	thickness = int(MOLECULE_FISSIONER_THICKNESS_FRACTION * base_size)
-	left = MOLECULE_FISSIONER_2_LEFT_FRACTION * base_size
+	left = MOLECULE_MUTATOR_2_LEFT_FRACTION * base_size
 	right = base_size - left
 	top_left = base_size / 3
 	top_right = base_size / 6
@@ -1139,7 +1161,7 @@ def gen_molecule_fusioner_2_image(base_size, mips, include_outline):
 	image = gen_specific_molecule(base_size, mips, "--H|--1H", include_outline)
 	simple_overlay_image(image, gen_specific_molecule(base_size, mips, "He--||He", include_outline))
 	thickness = int(MOLECULE_FISSIONER_THICKNESS_FRACTION * base_size)
-	left = MOLECULE_FISSIONER_2_LEFT_FRACTION * base_size
+	left = MOLECULE_MUTATOR_2_LEFT_FRACTION * base_size
 	right = base_size - left
 	top_left = base_size / 6
 	top_right = base_size / 3
@@ -1199,8 +1221,7 @@ def iter_gen_all_building_recipe_icons(base_size, mips, include_outline):
 	yield ("molecule-splicer", gen_molecule_splicer_image(base_size, mips, include_outline))
 	yield ("molecule-debonder-2", gen_molecule_debonder_2_image(base_size, mips, include_outline))
 	yield ("molecule-bonder-2", gen_molecule_bonder_2_image(base_size, mips, include_outline))
-	yield ("molecule-fissioner-2", gen_molecule_fissioner_2_image(base_size, mips, include_outline))
-	yield ("molecule-fusioner-2", gen_molecule_fusioner_2_image(base_size, mips, include_outline))
+	yield ("molecule-mutator-2", gen_molecule_mutator_2_image(base_size, mips, include_outline))
 	yield ("molecule-voider", gen_molecule_voider_image(base_size, mips, include_outline))
 	yield ("molecule-printer", gen_molecule_printer_image(base_size, mips, include_outline))
 

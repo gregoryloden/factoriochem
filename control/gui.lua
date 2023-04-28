@@ -285,9 +285,6 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 				caption = {"factoriochem.molecule-reaction-examples"},
 				tooltip = BUILDING_EXAMPLES_TEXT[entity.name],
 			}
-			if not examples_label.tooltip then
-				examples_label.tooltip = {"factoriochem."..entity.name.."-examples"}
-			end
 			table.insert(spec.children, {type = "empty-widget"})
 			table.insert(spec.children, {type = "empty-widget"})
 			table.insert(spec.children, {type = "empty-widget"})
@@ -646,7 +643,6 @@ end
 function gui_on_first_tick()
 	-- build the example text for every building by performing actual reactions on the examples
 	for name, definition in pairs(BUILDING_DEFINITIONS) do
-		if not definition.examples then goto skip_examples end
 		local examples_text
 		local examples = definition.examples
 		for i, example in ipairs(examples) do
@@ -674,7 +670,6 @@ function gui_on_first_tick()
 			end
 		end
 		BUILDING_EXAMPLES_TEXT[name] = examples_text
-		::skip_examples::
 	end
 end
 

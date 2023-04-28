@@ -946,83 +946,96 @@ BUILDING_DEFINITIONS = {
 			},
 		}},
 	},
-	["molecule-fissioner-2"] = {
+	["molecule-mutator-2"] = {
 		-- data fields
 		building_design = {"assembling-machine", "assembling-machine-3"},
 		item_order = "l",
 		unlocking_technology = "molecule-reaction-buildings-4b",
 		-- data and control fields
-		reactants = {BASE_NAME},
+		reactants = {BASE_NAME, CATALYST_NAME, MODIFIER_NAME},
 		products = {RESULT_NAME, BYPRODUCT_NAME, REMAINDER_NAME},
 		-- control fields
 		selectors = {
 			[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME,
-			[CATALYST_NAME] = ATOM_SELECTOR_NAME,
-			[MODIFIER_NAME] = ATOM_SELECTOR_NAME,
+			[CATALYST_NAME] = MUTATION_SELECTOR_NAME,
+			[MODIFIER_NAME] = MUTATION_SELECTOR_NAME,
 		},
 		reaction = function(reaction)
 			local source, shape, height, width, center_y, center_x, direction = verify_base_atom_bond(reaction)
 			if not source then return false end
 
-			local source_byproduct = reaction.selectors[CATALYST_NAME]
-			if not source_byproduct then return false end
-			if not perform_fission(source, source_byproduct) or not verify_bond_count(source) then return false end
-
-			local target_byproduct = reaction.selectors[MODIFIER_NAME]
-			if target_byproduct then
-				local target_x, target_y = get_target(center_x, center_y, direction)
-				local target = shape[target_y][target_x]
-				if not target then return false end
-				if not perform_fission(target, target_byproduct) or not verify_bond_count(target) then
-					return false
-				end
-			end
-
-			-- everything is valid, write the output
-			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
-			reaction.products[BYPRODUCT_NAME] = source_byproduct
-			reaction.products[REMAINDER_NAME] = target_byproduct
-			return true
-		end,
-	},
-	["molecule-fusioner-2"] = {
-		-- data fields
-		building_design = {"assembling-machine", "assembling-machine-3"},
-		item_order = "m",
-		unlocking_technology = "molecule-reaction-buildings-4b",
-		-- data and control fields
-		reactants = {BASE_NAME, CATALYST_NAME, MODIFIER_NAME},
-		products = {RESULT_NAME},
-		-- control fields
-		selectors = {[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME, [MODIFIER_NAME] = CHECKBOX_SELECTOR_NAME},
-		reaction = function(reaction)
-			local source, shape, height, width, center_y, center_x, direction = verify_base_atom_bond(reaction)
-			if not source then return false end
+			local source_mutation = reaction.selectors[CATALYST_NAME]
+			if not source_mutation then return false end
 
 			local source_catalyst = reaction.reactants[CATALYST_NAME]
-			if not source_catalyst then return false end
-			if not perform_fusion(source, source_catalyst) or not verify_bond_count(source) then return false end
+			if not maybe_perform_mutation(source, source_mutation, source_catalyst) then return false end
+			if not verify_bond_count(source) then return false end
 
-			local target_catalyst = reaction.reactants[MODIFIER_NAME]
-			if target_catalyst then
-				-- make sure it was specified
-				if not reaction.selectors[MODIFIER_NAME] then return false end
-
+			local target_mutation = reaction.selectors[MODIFIER_NAME]
+			if target_mutation then
 				local target_x, target_y = get_target(center_x, center_y, direction)
 				local target = shape[target_y][target_x]
 				if not target then return false end
-				if not perform_fusion(target, target_catalyst) or not verify_bond_count(target) then
-					return false
-				end
-			else
-				-- make sure it wasn't specified
-				if reaction.selectors[MODIFIER_NAME] then return false end
+
+				local target_catalyst = reaction.reactants[MODIFIER_NAME]
+				if not maybe_perform_mutation(target, target_mutation, target_catalyst) then return false end
+				if not verify_bond_count(target) then return false end
 			end
 
 			-- everything is valid, write the output
 			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
+			maybe_set_byproduct(reaction.products, BYPRODUCT_NAME, source_mutation)
+			maybe_set_byproduct(reaction.products, REMAINDER_NAME, target_mutation)
 			return true
 		end,
+		examples = {{
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."N2-O|1H"},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2200E",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."He",
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."Be",
+			},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."F1-F"},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-1201W",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."C",
+			},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."F|1H", [MODIFIER_NAME] = ATOM_ITEM_PREFIX.."He"},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2100S",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."O",
+				[MODIFIER_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
+			},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."H|1Li", [CATALYST_NAME] = ATOM_ITEM_PREFIX.."O"},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2100S",
+				[CATALYST_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."He",
+			},
+		}, {
+			reactants = {
+				[BASE_NAME] = MOLECULE_ITEM_PREFIX.."F1-Li",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."C",
+			},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-1201W",
+				[CATALYST_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
+			},
+		}, {
+			reactants = {
+				[BASE_NAME] = MOLECULE_ITEM_PREFIX.."B2-Be|1H",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."He",
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."Be",
+			},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2200E",
+				[CATALYST_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
+				[MODIFIER_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
+			},
+		}},
 	},
 	[MOLECULE_VOIDER_NAME] = {
 		-- data fields
