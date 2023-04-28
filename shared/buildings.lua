@@ -691,6 +691,20 @@ BUILDING_DEFINITIONS = {
 			if byproduct then reaction.products[BYPRODUCT_NAME] = byproduct end
 			return true
 		end,
+		examples = {{
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-H|1H"},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2200E",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."He",
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."Li",
+			},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."H|1Be|1H"},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-3110S",
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."H",
+			},
+		}},
 	},
 	["molecule-splicer"] = {
 		-- data fields
@@ -950,6 +964,19 @@ BUILDING_DEFINITIONS = {
 		reaction = function(reaction)
 			return reaction.reactants[BASE_NAME] ~= nil
 		end,
+		examples = {{
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-H|1H"},
+			selectors = {},
+		}, {
+			reactants = {[BASE_NAME] = ATOM_ITEM_PREFIX.."O"},
+			selectors = {},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_REACTION_REACTANTS_NAME},
+			selectors = {},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ABSORBER_NAME},
+			selectors = {},
+		}},
 	},
 	[MOLECULE_PRINTER_NAME] = {
 		-- data fields
