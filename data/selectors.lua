@@ -12,8 +12,9 @@ data:extend({{
 for val, suffix in ipairs({"l", "f", "r"}) do
 	data:extend({{
 		type = "item",
-		name = ROTATION_SELECTOR_SUBGROUP.."-"..val,
+		name = ROTATION_SELECTOR_SUBGROUP.."-"..suffix,
 		subgroup = ROTATION_SELECTOR_SUBGROUP,
+		order = tostring(val),
 		icon = SELECTOR_ICON_ROOT..ROTATION_SELECTOR_NAME.."-"..suffix..".png",
 		icon_size = ITEM_ICON_SIZE,
 		icon_mipmaps = ITEM_ICON_MIPMAPS,

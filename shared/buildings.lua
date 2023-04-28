@@ -1,19 +1,13 @@
 -- Constants
 local ROTATE = {
-	-- left
-	function(center_x, center_y, x, y) return center_x - center_y + y, center_y + center_x - x end,
-	-- flip
-	function(center_x, center_y, x, y) return center_x + center_x - x, center_y + center_y - y end,
-	-- right
-	function(center_x, center_y, x, y) return center_x + center_y - y, center_y - center_x + x end,
+	l = function(center_x, center_y, x, y) return center_x - center_y + y, center_y + center_x - x end,
+	f = function(center_x, center_y, x, y) return center_x + center_x - x, center_y + center_y - y end,
+	r = function(center_x, center_y, x, y) return center_x + center_y - y, center_y - center_x + x end,
 }
 local ROTATE_ATOM = {
-	-- left
-	function(atom) atom.left, atom.up, atom.right, atom.down = atom.up, atom.right, atom.down, atom.left end,
-	-- flip
-	function(atom) atom.left, atom.up, atom.right, atom.down = atom.right, atom.down, atom.left, atom.up end,
-	-- right
-	function(atom) atom.left, atom.up, atom.right, atom.down = atom.down, atom.left, atom.up, atom.right end,
+	l = function(atom) atom.left, atom.up, atom.right, atom.down = atom.up, atom.right, atom.down, atom.left end,
+	f = function(atom) atom.left, atom.up, atom.right, atom.down = atom.right, atom.down, atom.left, atom.up end,
+	r = function(atom) atom.left, atom.up, atom.right, atom.down = atom.down, atom.left, atom.up, atom.right end,
 }
 
 
@@ -322,7 +316,7 @@ BUILDING_DEFINITIONS = {
 			if not molecule or not rotation then return false end
 
 			local shape, height, width = parse_molecule(molecule)
-			rotation = tonumber(string.sub(rotation, -1))
+			rotation = string.sub(rotation, -1)
 			local rotate = ROTATE[rotation]
 			local rotate_atom = ROTATE_ATOM[rotation]
 
@@ -338,9 +332,9 @@ BUILDING_DEFINITIONS = {
 				-- build the shape of the new grid
 				local center_x = (width + 1) / 2
 				local center_y = (height + 1) / 2
-				if rotation == 1 then
+				if rotation == "l" then
 					width, height, center_y = height, width, center_x
-				elseif rotation == 3 then
+				elseif rotation == "r" then
 					width, height, center_x = height, width, center_y
 				end
 				local new_shape = gen_grid(height)
@@ -406,12 +400,12 @@ BUILDING_DEFINITIONS = {
 		end,
 		examples = {{
 			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-H|1H"},
-			selectors = {[CATALYST_NAME] = ROTATION_SELECTOR_SUBGROUP.."-3"},
+			selectors = {[CATALYST_NAME] = ROTATION_SELECTOR_SUBGROUP.."-r"},
 		}, {
 			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."H|1N1-H|1O1-H"},
 			selectors = {
 				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-3220E",
-				[CATALYST_NAME] = ROTATION_SELECTOR_SUBGROUP.."-2",
+				[CATALYST_NAME] = ROTATION_SELECTOR_SUBGROUP.."-f",
 			},
 		}},
 	},
