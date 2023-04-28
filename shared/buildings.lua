@@ -829,6 +829,42 @@ BUILDING_DEFINITIONS = {
 			maybe_set_byproduct(reaction.products, REMAINDER_NAME, target_mutation)
 			return true
 		end,
+		examples = {{
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."N3-B"},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-1200E",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."Li",
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."H",
+			},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."N3-B", [CATALYST_NAME] = ATOM_ITEM_PREFIX.."H"},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-1200E",
+				[CATALYST_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."H",
+			},
+		}, {
+			reactants = {
+				[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-O|1O1-1O",
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."H",
+			},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2211N",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."B",
+				[MODIFIER_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
+			},
+		}, {
+			reactants = {
+				[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-O|1O1-1O",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."H",
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."H",
+			},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2211N",
+				[CATALYST_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
+				[MODIFIER_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
+			},
+		}},
 	},
 	["molecule-bonder-2"] = {
 		-- data fields
@@ -873,6 +909,42 @@ BUILDING_DEFINITIONS = {
 			maybe_set_byproduct(reaction.products, REMAINDER_NAME, target_mutation)
 			return true
 		end,
+		examples = {{
+			reactants = {
+				[BASE_NAME] = MOLECULE_ITEM_PREFIX.."Be2-Be",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."Li",
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."H",
+			},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-1200E",
+				[CATALYST_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
+				[MODIFIER_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
+			},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O2-Be", [MODIFIER_NAME] = ATOM_ITEM_PREFIX.."H"},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-1200E",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."H",
+				[MODIFIER_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
+			},
+		}, {
+			reactants = {
+				[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-F|1O1-Li",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."B",
+			},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2211N",
+				[CATALYST_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."H",
+			},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-F|1O1-F"},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2211N",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."H",
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."H",
+			},
+		}},
 	},
 	["molecule-fissioner-2"] = {
 		-- data fields
