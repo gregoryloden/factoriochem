@@ -656,13 +656,13 @@ BUILDING_DEFINITIONS = {
 		item_order = "j",
 		unlocking_technology = "molecule-reaction-buildings-4a",
 		-- data and control fields
-		reactants = {BASE_NAME},
+		reactants = {BASE_NAME, CATALYST_NAME, MODIFIER_NAME},
 		products = {RESULT_NAME, BYPRODUCT_NAME, REMAINDER_NAME},
 		-- control fields
 		selectors = {
 			[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME,
-			[CATALYST_NAME] = ATOM_SELECTOR_NAME,
-			[MODIFIER_NAME] = ATOM_SELECTOR_NAME,
+			[CATALYST_NAME] = MUTATION_SELECTOR_NAME,
+			[MODIFIER_NAME] = MUTATION_SELECTOR_NAME,
 		},
 		reaction = function(reaction)
 			local source, shape, height, width, center_y, center_x, direction = verify_base_atom_bond(reaction)
@@ -679,17 +679,21 @@ BUILDING_DEFINITIONS = {
 			if has_any_atoms(shape) then return false end
 			for _, atom in ipairs(all_atoms) do shape[atom.y][atom.x] = atom end
 
-			-- fission both the source and the target
-			local source_byproduct = reaction.selectors[CATALYST_NAME]
-			local target_byproduct = reaction.selectors[MODIFIER_NAME]
-			if not source_byproduct or not target_byproduct then return false end
-			if not perform_fission(source, source_byproduct) or not verify_bond_count(source) then return false end
-			if not perform_fission(target, target_byproduct) or not verify_bond_count(target) then return false end
+			-- fission/fusion both the source and the target
+			local source_mutation = reaction.selectors[CATALYST_NAME]
+			local target_mutation = reaction.selectors[MODIFIER_NAME]
+			if not source_mutation or not target_mutation then return false end
+
+			local source_catalyst = reaction.reactants[CATALYST_NAME]
+			local target_catalyst = reaction.reactants[MODIFIER_NAME]
+			if not maybe_perform_mutation(source, source_mutation, source_catalyst) then return false end
+			if not maybe_perform_mutation(target, target_mutation, target_catalyst) then return false end
+			if not verify_bond_count(source) or not verify_bond_count(target) then return false end
 
 			-- everything is valid, write the output
 			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
-			reaction.products[BYPRODUCT_NAME] = source_byproduct
-			reaction.products[REMAINDER_NAME] = target_byproduct
+			maybe_set_byproduct(reaction.products, BYPRODUCT_NAME, source_mutation)
+			maybe_set_byproduct(reaction.products, REMAINDER_NAME, target_mutation)
 			return true
 		end,
 	},
@@ -700,9 +704,13 @@ BUILDING_DEFINITIONS = {
 		unlocking_technology = "molecule-reaction-buildings-4a",
 		-- data and control fields
 		reactants = {BASE_NAME, CATALYST_NAME, MODIFIER_NAME},
-		products = {RESULT_NAME},
+		products = {RESULT_NAME, BYPRODUCT_NAME, REMAINDER_NAME},
 		-- control fields
-		selectors = {[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME},
+		selectors = {
+			[BASE_NAME] = ATOM_BOND_INNER_SELECTOR_NAME,
+			[CATALYST_NAME] = MUTATION_SELECTOR_NAME,
+			[MODIFIER_NAME] = MUTATION_SELECTOR_NAME,
+		},
 		reaction = function(reaction)
 			local source, shape, height, width, center_y, center_x, direction = verify_base_atom_bond(reaction)
 			if not source then return false end
@@ -715,15 +723,21 @@ BUILDING_DEFINITIONS = {
 			local bonds = get_bonds(source, direction) or 0
 			set_bonds(source, target, direction, bonds + 1)
 
-			-- fusion both the source and the target
+			-- fission/fusion both the source and the target
+			local source_mutation = reaction.selectors[CATALYST_NAME]
+			local target_mutation = reaction.selectors[MODIFIER_NAME]
+			if not source_mutation or not target_mutation then return false end
+
 			local source_catalyst = reaction.reactants[CATALYST_NAME]
 			local target_catalyst = reaction.reactants[MODIFIER_NAME]
-			if not source_catalyst or not target_catalyst then return false end
-			if not perform_fusion(source, source_catalyst) or not verify_bond_count(source) then return false end
-			if not perform_fusion(target, target_catalyst) or not verify_bond_count(target) then return false end
+			if not maybe_perform_mutation(source, source_mutation, source_catalyst) then return false end
+			if not maybe_perform_mutation(target, target_mutation, target_catalyst) then return false end
+			if not verify_bond_count(source) or not verify_bond_count(target) then return false end
 
 			-- everything is valid, write the output
 			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
+			maybe_set_byproduct(reaction.products, BYPRODUCT_NAME, source_mutation)
+			maybe_set_byproduct(reaction.products, REMAINDER_NAME, target_mutation)
 			return true
 		end,
 	},
