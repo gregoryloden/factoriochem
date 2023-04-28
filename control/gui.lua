@@ -17,7 +17,35 @@ for _, reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
 	REACTION_DEMO_TABLE_SELECTOR_NAME_MAP[REACTION_DEMO_PREFIX..reactant_name..SELECTOR_SUFFIX] = reactant_name
 end
 local ATOM_SUBGROUP_PREFIX_MATCH = "^"..ATOMS_SUBGROUP_PREFIX
+local BUILDING_EXAMPLES_TEXT = {}
 local PERIODIC_TABLE_DEMO_NAME = PERIODIC_TABLE_NAME.."-demo"
+
+
+-- Setup
+local function build_single_example_text_row(name, definition, example, reactant_name, product_name)
+	local reactant_indicator, reactant, selector_val = "   ", "       ", "       "
+	local reaction_spacing, product, product_indicator = "      ", "       ", ""
+	if definition.has_component[reactant_name] then reactant_indicator = "[img=molecule-indicator-"..reactant_name.."]" end
+	if example.reactants[reactant_name] then reactant = "[item="..example.reactants[reactant_name].."]" end
+	if example.selectors[reactant_name] then
+		if definition.selectors[reactant_name] == DROPDOWN_SELECTOR_NAME then
+			selector_val = "  "..definition.dropdowns[reactant_name][example.selectors[reactant_name]]
+		elseif definition.selectors[reactant_name] == CHECKBOX_SELECTOR_NAME then
+			if example.selectors[reactant_name] then selector_val = "[virtual-signal=signal-check]" end
+		elseif definition.selectors[reactant_name] == TEXT_SELECTOR_NAME then
+			reactant_indicator = example.selectors[reactant_name]
+			reactant = ""
+			selector_val = ""
+			reaction_spacing = ""
+		else
+			selector_val = "[item="..example.selectors[reactant_name].."]"
+		end
+	end
+	if example.products[product_name] then product = "[item="..example.products[product_name].."]" end
+	if definition.has_component[product_name] then product_indicator = "[img=molecule-indicator-"..product_name.."]" end
+	local row_builder = {reactant_indicator, reactant, selector_val, reaction_spacing, product, product_indicator}
+	return string.gsub(table.concat(row_builder, " "), "%s+$", "")
+end
 
 
 -- Utilities
@@ -255,8 +283,11 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 			local examples_label = {
 				type = "label",
 				caption = {"factoriochem.molecule-reaction-examples"},
-				tooltip = {"factoriochem."..entity.name.."-examples"},
+				tooltip = BUILDING_EXAMPLES_TEXT[entity.name],
 			}
+			if not examples_label.tooltip then
+				examples_label.tooltip = {"factoriochem."..entity.name.."-examples"}
+			end
 			table.insert(spec.children, {type = "empty-widget"})
 			table.insert(spec.children, {type = "empty-widget"})
 			table.insert(spec.children, {type = "empty-widget"})
@@ -610,6 +641,41 @@ end
 function gui_on_init()
 	global.current_gui_reaction_building_data = {}
 	global.gui_demo_items = {}
+end
+
+function gui_on_first_tick()
+	-- build the example text for every building by performing actual reactions on the examples
+	for name, definition in pairs(BUILDING_DEFINITIONS) do
+		if not definition.examples then goto skip_examples end
+		local examples_text
+		local examples = definition.examples
+		for i, example in ipairs(examples) do
+			example.products = {}
+			if not definition.reaction(example) then error("Invalid reaction for "..name.." example "..i) end
+			local example_builder = {}
+			for i, reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
+				local product_name = MOLECULE_REACTION_PRODUCT_NAMES[i]
+				local row_text = ""
+				if example.selectors[reactant_name]
+						or definition.has_component[reactant_name]
+						or definition.has_component[product_name] then
+					row_text = build_single_example_text_row(
+						name, definition, example, reactant_name, product_name)
+				end
+				table.insert(example_builder, row_text)
+			end
+			while example_builder[#example_builder] == "" do example_builder[#example_builder] = nil end
+			local example_text = table.concat(example_builder, "\n")
+			if examples_text then
+				examples_text =
+					{"factoriochem.molecule-reaction-example-continuation", examples_text, example_text}
+			else
+				examples_text = {"factoriochem.molecule-reaction-example-header", example_text}
+			end
+		end
+		BUILDING_EXAMPLES_TEXT[name] = examples_text
+		::skip_examples::
+	end
 end
 
 function gui_on_tick(event)

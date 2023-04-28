@@ -31,6 +31,7 @@ local function on_first_tick(event)
 	GAME_ITEM_PROTOTYPES = game.item_prototypes
 	GAME_ITEM_GROUP_PROTOTYPES = game.item_group_prototypes
 	entity_on_first_tick()
+	gui_on_first_tick()
 
 	-- defer to the regular tick handler and re-register the event listener with it
 	on_tick(event)

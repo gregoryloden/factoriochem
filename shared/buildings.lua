@@ -277,6 +277,35 @@ BUILDING_DEFINITIONS = {
 			end
 			return true
 		end,
+		examples = {{
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-H|1H"},
+			selectors = {
+				[BASE_NAME] = TARGET_SELECTOR_SUBGROUP.."-2200",
+				[CATALYST_NAME] = 1,
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."O",
+			},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-H|1H"},
+			selectors = {
+				[BASE_NAME] = TARGET_SELECTOR_SUBGROUP.."-2200",
+				[CATALYST_NAME] = 4,
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."N",
+			},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-H|1H"},
+			selectors = {
+				[BASE_NAME] = TARGET_SELECTOR_SUBGROUP.."-2211",
+				[CATALYST_NAME] = 1,
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."O",
+			},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-H|1H"},
+			selectors = {
+				[BASE_NAME] = TARGET_SELECTOR_SUBGROUP.."-2300",
+				[CATALYST_NAME] = 1,
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."O",
+			},
+		}},
 	},
 	["molecule-rotator"] = {
 		-- data fields
@@ -649,6 +678,28 @@ BUILDING_DEFINITIONS = {
 			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
 			return true
 		end,
+		examples = {{
+			reactants = {
+				[BASE_NAME] = MOLECULE_ITEM_PREFIX.."Li|1H",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."He",
+				[MODIFIER_NAME] = MOLECULE_ITEM_PREFIX.."Li1-H",
+			},
+			selectors = {
+				[BASE_NAME] = TARGET_SELECTOR_SUBGROUP.."-2100",
+				[CATALYST_NAME] = true,
+				[MODIFIER_NAME] = TARGET_SELECTOR_SUBGROUP.."-1200",
+			},
+		}, {
+			reactants = {
+				[BASE_NAME] = MOLECULE_ITEM_PREFIX.."Li|1H",
+				[MODIFIER_NAME] = MOLECULE_ITEM_PREFIX.."H|1H",
+			},
+			selectors = {
+				[BASE_NAME] = TARGET_SELECTOR_SUBGROUP.."-2100",
+				[CATALYST_NAME] = false,
+				[MODIFIER_NAME] = TARGET_SELECTOR_SUBGROUP.."-2110",
+			},
+		}},
 	},
 	["molecule-debonder-2"] = {
 		-- data fields
@@ -883,6 +934,16 @@ BUILDING_DEFINITIONS = {
 			reaction.products[RESULT_NAME] = assemble_molecule(shape, height, width)
 			return true
 		end,
+		examples = {{
+			reactants = {},
+			selectors = {[BASE_NAME] = "Ne                 "},
+		}, {
+			reactants = {},
+			selectors = {[BASE_NAME] = "O1-H|1H     "},
+		}, {
+			reactants = {},
+			selectors = {[BASE_NAME] = "--H|H1-N1-1O|H1-1N1-H"},
+		}},
 	},
 }
 for _, building_definition in pairs(BUILDING_DEFINITIONS) do
