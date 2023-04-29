@@ -1,0 +1,3 @@
+Achievements
+- "FactorioChem - Pure simplicity" - Launch a rocket without ever creating a complex molecule
+- "FactorioChem - Only one step at a time" - Launch a rocket without using fission or fusion in any Debonder, Bonder, Severer, or Splicer buildings
