@@ -13,4 +13,4 @@
 	- Require power: new buildings need 100kW (after solving issue of reduced power recipe workload)
 - GUI to show you all of your demo'd and cached machine reactions
 - Double Rotator building - "atom-bond" on base, "atom-bond" on catalyst, specifies an atom to move pointing at its bond to move, second atom-bond specifies its new orientation relative to the first selector
-- Split reaction buildings into a separate mod
+- Split reaction buildings into a separate "Dynamic Recipe Assemblers" mod
