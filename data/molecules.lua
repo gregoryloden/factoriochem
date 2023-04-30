@@ -645,10 +645,12 @@ end
 
 -- debug
 local debug = false
---debug = true
+-- debug = true
 if debug then
 	local total_atoms = 0
-	for _, _ in pairs(ALL_ATOMS) do total_atoms = total_atoms + 1 end
+	for k, atom in pairs(ALL_ATOMS) do
+		if atom.symbol == k then total_atoms = total_atoms + 1 end
+	end
 	data:extend({
 		{
 			type = "item-subgroup",
