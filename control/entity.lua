@@ -476,11 +476,21 @@ local function update_detector(detector_data)
 				cache = {}
 				DETECTOR_CACHE[signal.signal.name] = cache
 				local item_prototype = GAME_ITEM_PROTOTYPES[signal.signal.name]
-				if not item_prototype or item_prototype.group.name ~= MOLECULES_GROUP_NAME then
+				if not item_prototype
+						or item_prototype.group.name ~= MOLECULES_GROUP_NAME
+						or item_prototype.subgroup.name == MOLECULE_ITEMS_SUBGROUP_NAME then
 					goto continue_signals
 				end
-				cache.shape, cache.height, cache.width = parse_molecule(signal.signal.name)
-				cache.shape_signal = {type = "item", name = get_complex_molecule_item_name(cache.shape)}
+				if COMPLEX_SHAPES[signal.signal.name] then
+					-- Complex molecules can't pass their contents through the circuit network, but we can
+					--	at least send their shapes through. Without width and height, they will fail to
+					--	match with any targets.
+					cache.shape = true
+					cache.shape_signal = {type = "item", name = signal.signal.name}
+				else
+					cache.shape, cache.height, cache.width = parse_molecule(signal.signal.name)
+					cache.shape_signal = {type = "item", name = get_complex_molecule_item_name(cache.shape)}
+				end
 			end
 			if not cache.shape then goto continue_signals end
 			local count = signal.count
