@@ -30,7 +30,7 @@ Every molecule reaction building contains a GUI that looks similar to this:
 
 Inputs on the left, outputs on the right, and up to 3 settings in the middle.
 
-When a building is idle, it checks its inputs and selectors to see if they produce a valid reaction. If so, the inputs are consumed and the assembly building begins a "craft" of its fixed recipe; once the recipe is complete, the building places the results in the output inventories. Should a building be mined in the middle of a reaction, the ingredients of the unfinished reaction are returned to the miner just like regular assembling machines.
+When a building is idle, it continually checks its inputs and settings to see if they produce a valid reaction. If so, the inputs are consumed and the assembly building begins a "craft" of its fixed recipe; once the recipe is complete, the building places the results in the output inventories. Should a building be mined in the middle of a reaction, the ingredients of the unfinished reaction are returned to the miner just like regular assembling machines.
 
 The lower half of each building's GUI is a demo area where you can test out reactions with different settings. Some example reactions are provided for each building type.
 
