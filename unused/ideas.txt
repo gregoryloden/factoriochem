@@ -6,7 +6,6 @@
 	- Molecules, atoms, and bonds
 	- Fission / Fusion
 - Mod settings
-	- Compatibility mode that doesn't modify sciences
 	- Have sciences take complex molecules; those molecules will actually generate as simple molecules
 	- Disable simple molecules for faster loading
 	- Free buildings: all new buildings can be crafted for free

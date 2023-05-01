@@ -8,7 +8,9 @@ local DEMOLECULIFY_PREFIX = "demoleculify-"
 -- Global utilities
 function recipe_set_unlocking_technology(recipe, unlocking_technology)
 	if not unlocking_technology then return false end
-	table.insert(data.raw.technology[unlocking_technology].effects, {type = "unlock-recipe", recipe = recipe.name})
+	unlocking_technology = data.raw.technology[unlocking_technology]
+	if not unlocking_technology then return true end
+	table.insert(unlocking_technology.effects, {type = "unlock-recipe", recipe = recipe.name})
 	recipe.enabled = false
 	return true
 end
@@ -222,6 +224,9 @@ data:extend({
 		result = MOLECULE_ABSORBER_NAME,
 	},
 })
+
+
+if settings.startup["factoriochem-compatibility-mode"].value then return end
 
 
 -- Science recipes

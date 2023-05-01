@@ -1,3 +1,6 @@
+if settings.startup["factoriochem-compatibility-mode"].value then return end
+
+
 -- Constants
 local TECHNOLOGY_ICON_ROOT = GRAPHICS_ROOT.."technologies/"
 local TECHNOLOGY_ICON_SIZE = 128

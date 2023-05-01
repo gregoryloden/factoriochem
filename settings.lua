@@ -6,7 +6,7 @@ data:extend({
 		default_value = 10,
 		minimum_value = 1,
 		maximum_value = 60,
-		order = "a"
+		order = "a",
 	},
 	{
 		type = "int-setting",
@@ -15,13 +15,20 @@ data:extend({
 		default_value = 1,
 		minimum_value = 1,
 		maximum_value = 60,
-		order = "b"
+		order = "b",
 	},
 	{
 		type = "bool-setting",
 		name = "factoriochem-allow-complex-molecules",
 		setting_type = "runtime-global",
 		default_value = true,
-		order = "c"
+		order = "c",
+	},
+	{
+		type = "bool-setting",
+		name = "factoriochem-compatibility-mode",
+		setting_type = "startup",
+		default_value = false,
+		order = "d",
 	},
 })

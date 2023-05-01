@@ -82,6 +82,6 @@ Note that the demo section does not support complex molecules as inputs, but can
 
 ----
 
-Likely not compatible with mods that modify sciences or heavily modify the technology tree, but likely compatible with most other mods.
+Likely not compatible with mods that modify sciences or heavily modify the technology tree (by default; you can enable a setting to prevent changes to technologies or science recipes), but likely compatible with most other mods.
 
 I don't currently have anything I'm planning on adding but definitely leave a suggestion if there's something you'd like to see.
