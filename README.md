@@ -8,6 +8,8 @@ What if Factorio items had physical shape and occupied physical space?
 
 This mod explores the idea of manipulating molecules like SpaceChem by Zachtronics Industries. In this mod, you'll rotate, bond, fission, and splice molecules and more to obtain the right ingredients to produce science.
 
+![Science assembling machines](https://raw.githubusercontent.com/gregoryloden/factoriochem/main/overview/science.png)
+
 The thing is, there are a lot of possible molecules. Molecules have shape, and depending on how you configure your assembly buildings to position them, the resulting reactions will cause totally different results. Solve open-ended puzzles around manufacturing molecules to obtain the progressively more complicated sets of molecules you need for science.
 
 Aside from space science, science recipes exclusively require molecule ingredients, and only require molecule reaction buildings and previous science packs as technology prerequisites.
