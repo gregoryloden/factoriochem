@@ -20,13 +20,13 @@ There are too many possible molecule conversions to make a recipe for each one, 
 
 Molecule reaction buildings look something like this:
 
-[todo image]
+![A molecule reaction building](https://raw.githubusercontent.com/gregoryloden/factoriochem/main/overview/building.png)
 
 To handle the dynamic nature of transforming molecules, molecule reaction buildings use a separate set of inventories to hold each part of its reaction. Every building consumes up to 3 inputs and produces up to 3 outputs. Each input and output has its own inventory in a specific position per building, and is moved into or out of the building via loaders (technically you can also use inserters).
 
 Every molecule reaction building contains a GUI that looks similar to this:
 
-[todo image]
+![The molecule reaction building GUI](https://raw.githubusercontent.com/gregoryloden/factoriochem/main/overview/gui.png)
 
 Inputs on the left, outputs on the right, and up to 3 settings in the middle.
 
