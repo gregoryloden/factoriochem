@@ -112,19 +112,13 @@ local function get_demo_state(entity_name)
 end
 
 local function demo_reaction(building_data, demo_state, reaction_demo_table)
-	for product_name, _ in pairs(demo_state.products) do
-		demo_state.products[product_name] = nil
-	end
+	for product_name, _ in pairs(demo_state.products) do demo_state.products[product_name] = nil end
 	local building_definition = BUILDING_DEFINITIONS[building_data.entity.name]
 	local valid_reaction = true
 	for _, reactant in pairs(demo_state.reactants) do
-		if GAME_ITEM_PROTOTYPES[reactant].group.name ~= MOLECULES_GROUP_NAME then
-			valid_reaction = false
-			break
-		end
-	end
-	for reactant_name, _ in pairs(building_definition.selectors) do
-		if not demo_state.selectors[reactant_name] then
+		local item_prototype = GAME_ITEM_PROTOTYPES[reactant]
+		if item_prototype.group.name ~= MOLECULES_GROUP_NAME
+				or item_prototype.subgroup.name == MOLECULE_ITEMS_SUBGROUP_NAME then
 			valid_reaction = false
 			break
 		end
