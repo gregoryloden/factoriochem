@@ -76,6 +76,8 @@ Complex molecules do not have the same restrictions as simple molecules, and
 
 However, they are mostly visually indistinguishable from each other. To see what's in a complex molecule, you'll have to inspect it in your inventory. There are 68,574,768,928,886,778 possible complex molecules, minus the 59,584 simple molecules. There are 150 different shapes for complex molecules, and each shape gets its own item.
 
+![A sample of molecules showing the contents of a complex molecule](https://raw.githubusercontent.com/gregoryloden/factoriochem/main/overview/complex.png)
+
 All sciences only use simple molecule ingredients and can be obtained without ever creating complex molecules, but you can always create complex molecules anyways and most molecules are easier to create using complex molecules as intermediates.
 
 Bond, Debond, Splice, and Sever buildings allow optional fission or fusion on atoms within molecules - this is necessary to ensure that there is always a way to create simple molecules without ever creating complex molecules.
