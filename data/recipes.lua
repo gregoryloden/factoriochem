@@ -3,6 +3,7 @@ local MOLECULIFY_SUBGROUP_NAME = "moleculify"
 local MOLECULIFY_PREFIX = "moleculify-"
 local DEMOLECULIFY_SUBGROUP_NAME = "demoleculify"
 local DEMOLECULIFY_PREFIX = "demoleculify-"
+local SCIENCE_RESULT_COUNT = 3
 
 
 -- Global utilities
@@ -281,10 +282,8 @@ local science_ingredients = {
 for science, ingredients in pairs(science_ingredients) do
 	local recipe = data.raw.recipe[science]
 	recipe.ingredients = ingredients
-	if recipe.result_count then
-		recipe.energy_required = recipe.energy_required / recipe.result_count
-		recipe.result_count = nil
-	end
+	if recipe.result_count then recipe.energy_required = recipe.energy_required / recipe.result_count end
+	recipe.result_count = SCIENCE_RESULT_COUNT
 	local total_atomic_number = 0
 	for _, ingredient in ipairs(ingredients) do
 		local shape = parse_molecule(ingredient[1])
