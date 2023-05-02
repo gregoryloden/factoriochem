@@ -3,8 +3,6 @@
   "version": "1.0.0",
   "title": "FactorioChem",
   "author": "GNeutrality",
-  "contact": "",
-  "homepage": "",
   "factorio_version": "1.1",
   "dependencies": ["base >= 1.1"],
   "description": "FactorioChem Proof-of-Concept - SpaceChem in Factorio. SpaceChem by Zachtronics Industries.\n\nDesign and shape molecules in 2D space within the confines of a single item slot."
