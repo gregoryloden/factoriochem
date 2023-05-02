@@ -89,3 +89,14 @@ Note that the demo section does not support complex molecules as inputs, but can
 Likely not compatible with mods that modify sciences or heavily modify the technology tree (by default; you can enable a setting to prevent changes to technologies or science recipes), but likely compatible with most other mods.
 
 I don't currently have anything I'm planning on adding but definitely leave a suggestion if there's something you'd like to see.
+
+# Gallery
+![Molecule buildings sorting water](https://raw.githubusercontent.com/gregoryloden/factoriochem/main/overview/gallery1.png)
+
+![Molecule reaction building GUI](https://raw.githubusercontent.com/gregoryloden/factoriochem/main/overview/gallery2.png)
+
+![Molecule reaction building examples](https://raw.githubusercontent.com/gregoryloden/factoriochem/main/overview/gallery3.png)
+
+![Blueprint to convert 12 water per second to Neon](https://raw.githubusercontent.com/gregoryloden/factoriochem/main/overview/gallery4.png)
+
+![A mess of belts and buildings making science molecules](https://raw.githubusercontent.com/gregoryloden/factoriochem/main/overview/gallery5.png)
