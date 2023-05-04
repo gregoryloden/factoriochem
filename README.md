@@ -3,6 +3,9 @@ FactorioChem Proof-of-Concept - SpaceChem in Factorio. Factorio by Wube. SpaceCh
 
 Design and shape molecules in 2D space within the confines of a single item slot.
 
+https://mods.factorio.com/mod/FactorioChem  
+https://forums.factorio.com/viewtopic.php?f=190&t=106078
+
 # Description
 What if Factorio items had physical shape and occupied physical space?
 
