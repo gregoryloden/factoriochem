@@ -19,6 +19,7 @@ end
 local ATOM_SUBGROUP_PREFIX_MATCH = "^"..ATOMS_SUBGROUP_PREFIX
 local BUILDING_EXAMPLES_TEXT = {}
 local PERIODIC_TABLE_DEMO_NAME = PERIODIC_TABLE_NAME.."-demo"
+local GUI_READY = false
 
 
 -- Setup
@@ -455,6 +456,9 @@ end
 
 -- Event handling
 local function on_gui_opened(event)
+	-- don't do anything GUI related until initialization has run
+	if not GUI_READY then return end
+
 	local entity = event.entity
 	if not entity then return end
 	local player = game.get_player(event.player_index)
@@ -665,6 +669,7 @@ function gui_on_first_tick()
 		end
 		BUILDING_EXAMPLES_TEXT[name] = examples_text
 	end
+	GUI_READY = true
 end
 
 function gui_on_tick(event)

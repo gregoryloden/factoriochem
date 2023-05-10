@@ -210,14 +210,18 @@ local function remove_building_data(entity_number, building_datas)
 	return building_data
 end
 
-local function delete_molecule_reaction_building(entity, event_buffer)
-	local building_data = remove_building_data(entity.unit_number, global.molecule_reaction_building_data)
-	building_data.settings.mine()
+local function delete_molecule_reaction_building(id, event_buffer)
+	local building_data = remove_building_data(id, global.molecule_reaction_building_data)
+	if building_data.settings.valid then building_data.settings.mine() end
 	-- 33 slots should be enough to hold the contents of 6 loaders + 6 single-slot chests + 3 reactants/products, but do 60
 	--	to be safe
 	local transfer_inventory = game.create_inventory(60)
-	for _, chest in pairs(building_data.chests) do chest.mine({inventory = transfer_inventory}) end
-	for _, loader in pairs(building_data.loaders) do loader.mine({inventory = transfer_inventory}) end
+	for _, chest in pairs(building_data.chests) do
+		if chest.valid then chest.mine({inventory = transfer_inventory}) end
+	end
+	for _, loader in pairs(building_data.loaders) do
+		if loader.valid then loader.mine({inventory = transfer_inventory}) end
+	end
 	-- the presence of products indicates an unresolved reaction, which means we have items to return to the player
 	local unfinished_reaction_components = building_data.reaction.products
 	if next(unfinished_reaction_components) then
@@ -237,28 +241,42 @@ local function delete_molecule_reaction_building(entity, event_buffer)
 			end
 		end
 	end
-	for stack_i = 1, #transfer_inventory do
-		local stack = transfer_inventory[stack_i]
-		if stack.count > 0 then event_buffer.insert(stack) end
+	if event_buffer then
+		for stack_i = 1, #transfer_inventory do
+			local stack = transfer_inventory[stack_i]
+			if stack.count > 0 then event_buffer.insert(stack) end
+		end
+		event_buffer.remove({name = MOLECULE_REACTION_REACTANTS_NAME, count = 2})
 	end
 	transfer_inventory.destroy()
-	event_buffer.remove({name = MOLECULE_REACTION_REACTANTS_NAME, count = 2})
 end
 
-local function delete_molecule_detector(entity)
-	local building_data = remove_building_data(entity.unit_number, global.molecule_detector_data)
+local function delete_molecule_detector(id)
+	local building_data = remove_building_data(id, global.molecule_detector_data)
 	building_data.output.mine()
 end
 
 
 -- Updates
-local function update_buildings(building_datas, tick, update_building)
+local function update_buildings(building_datas, tick, update_building, delete_building)
 	local update_entities = building_datas.update_groups[math.fmod(tick, building_datas.ticks_per_update)]
 	-- temporarily remove the count so that we don't iterate it
 	local update_entities_n = update_entities.n
 	update_entities.n = nil
-	for _, building_data in pairs(update_entities) do update_building(building_data) end
+	local to_delete = nil
+	for id, building_data in pairs(update_entities) do
+		local entity = building_data.entity
+		if entity.valid then
+			update_building(entity, building_data)
+		else
+			if not to_delete then to_delete = {} end
+			table.insert(to_delete, id)
+		end
+	end
 	update_entities.n = update_entities_n
+	if to_delete then
+		for _, id in ipairs(to_delete) do delete_building(id) end
+	end
 end
 
 local function parse_complex_molecule(grid, complex_shape)
@@ -325,9 +343,8 @@ local function start_reaction(reaction, chest_stacks, machine_inputs)
 	machine_inputs.insert({name = MOLECULE_REACTION_REACTANTS_NAME, count = 1})
 end
 
-local function update_reaction_building(building_data)
+local function update_reaction_building(entity, building_data)
 	-- make sure the next reaction is ready
-	local entity = building_data.entity
 	local machine_inputs = entity.get_inventory(defines.inventory.assembling_machine_input)
 	if next(machine_inputs.get_contents()) then return end
 	if entity.crafting_progress > 0 and entity.crafting_progress < REACTION_PROGRESS_COMPLETE_THRESHOLD then return end
@@ -434,9 +451,9 @@ local function update_reaction_building(building_data)
 	end
 end
 
-local function update_detector(detector_data)
+local function update_detector(entity, detector_data)
 	-- collect all target signals
-	local input = detector_data.entity.get_control_behavior()
+	local input = entity.get_control_behavior()
 	local targets = detector_data.targets
 	local target_i = 1
 	for _, parameter in ipairs(input.parameters) do
@@ -550,7 +567,9 @@ local function reset_building_caches()
 	-- temporarily remove values so that we don't iterate them
 	building_datas.update_groups, building_datas.ticks_per_update = nil, nil
 	for _, building_data in pairs(building_datas) do
-		entity_assign_cache(building_data, BUILDING_DEFINITIONS[building_data.entity.name])
+		if building_data.entity.valid then
+			entity_assign_cache(building_data, BUILDING_DEFINITIONS[building_data.entity.name])
+		end
 	end
 	building_datas.update_groups, building_datas.ticks_per_update = update_groups, ticks_per_update
 end
@@ -576,9 +595,9 @@ end
 local function on_mined_entity(event)
 	local entity = event.entity
 	if BUILDING_DEFINITIONS[entity.name] then
-		delete_molecule_reaction_building(entity, event.buffer)
+		delete_molecule_reaction_building(entity.unit_number, event.buffer)
 	elseif entity.name == MOLECULE_DETECTOR_NAME then
-		delete_molecule_detector(entity)
+		delete_molecule_detector(entity.unit_number)
 	end
 end
 
@@ -638,8 +657,9 @@ end
 
 function entity_on_tick(event)
 	local tick = event.tick
-	update_buildings(global.molecule_reaction_building_data, tick, update_reaction_building)
-	update_buildings(global.molecule_detector_data, tick, update_detector)
+	update_buildings(
+		global.molecule_reaction_building_data, tick, update_reaction_building, delete_molecule_reaction_building)
+	update_buildings(global.molecule_detector_data, tick, update_detector, delete_molecule_detector)
 end
 
 function entity_on_settings_changed(event)

@@ -1,5 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.1
+Date: 2023-05-10
+  Bugfixes:
+    - Fix updates on invalid entities in the map editor
+    - Don't try to do GUI stuff before the first tick in the map editor
+---------------------------------------------------------------------------------------------------
 Version: 1.0.0
-Date: ????-??-??
+Date: 2023-05-01
   Info:
     - Initial version
