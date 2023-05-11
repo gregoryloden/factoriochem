@@ -508,15 +508,15 @@ local function on_gui_click(event)
 	if reaction_demo_table_reactant_name then
 		local demo_state = get_demo_state(building_data.entity.name)
 		local chest_stack = building_data.chest_stacks[reaction_demo_table_reactant_name]
-		local reaction_reactant = chest_stack.valid_for_read and chest_stack.name
+		local reactant_stack
+		if chest_stack.valid_for_read then reactant_stack = chest_stack end
+		if player.cursor_stack and player.cursor_stack.valid_for_read then reactant_stack = player.cursor_stack end
 		if event.button == defines.mouse_button_type.right then
 			demo_reaction_with_reactant(building_data, demo_state, element, reaction_demo_table_reactant_name, nil)
-		elseif player.cursor_stack and player.cursor_stack.valid_for_read then
+		elseif reactant_stack then
+			local reactant = reactant_stack.name
 			demo_reaction_with_reactant(
-				building_data, demo_state, element, reaction_demo_table_reactant_name, player.cursor_stack.name)
-		elseif reaction_reactant then
-			demo_reaction_with_reactant(
-				building_data, demo_state, element, reaction_demo_table_reactant_name, reaction_reactant)
+				building_data, demo_state, element, reaction_demo_table_reactant_name, reactant)
 		end
 		return
 	end
