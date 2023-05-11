@@ -24,8 +24,8 @@ local GUI_READY = false
 
 -- Setup
 local function build_single_example_text_row(name, definition, example, reactant_name, product_name)
-	local reactant_indicator, reactant, selector_val = "   ", "       ", "       "
-	local reaction_spacing, product, product_indicator = "      ", "       ", ""
+	local reactant_indicator, reactant, selector_val = "[img=empty-1x2]", "[img=empty-1x1]", "[img=empty-1x1]"
+	local reaction_spacing, product, product_indicator = "      ", "[img=empty-1x1]", ""
 	if definition.has_component[reactant_name] then reactant_indicator = "[img=molecule-indicator-"..reactant_name.."]" end
 	if example.reactants[reactant_name] then reactant = "[item="..example.reactants[reactant_name].."]" end
 	if example.selectors[reactant_name] then
@@ -45,7 +45,15 @@ local function build_single_example_text_row(name, definition, example, reactant
 	if example.products[product_name] then product = "[item="..example.products[product_name].."]" end
 	if definition.has_component[product_name] then product_indicator = "[img=molecule-indicator-"..product_name.."]" end
 	local row_builder = {reactant_indicator, reactant, selector_val, reaction_spacing, product, product_indicator}
-	return string.gsub(table.concat(row_builder, " "), "%s+$", "")
+	local row = table.concat(row_builder, " ")
+	local row_len = #row
+	repeat
+		local old_row_len = row_len
+		row = string.gsub(row, "%s+$", "")
+		row = string.gsub(row, "%[img=empty-[^%]]+%]$", "")
+		row_len = #row
+	until row_len == old_row_len
+	return row
 end
 
 

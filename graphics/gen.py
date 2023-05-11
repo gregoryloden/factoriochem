@@ -757,6 +757,10 @@ def gen_thumbnail():
 	write_image("..", "thumbnail", image)
 	image_counter_print("Thumbnail written")
 
+def gen_empty_image():
+	write_image(".", "empty", numpy.zeros((2, 1, 4), numpy.uint8))
+	image_counter_print("Empty image written")
+
 
 #Generate selector icons
 def get_rotation_selector_arc_values(base_size):
@@ -1627,6 +1631,7 @@ gen_molecule_reaction_reactants_icon(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_molecule_absorber_icon(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_periodic_table_icon()
 gen_thumbnail()
+gen_empty_image()
 gen_all_selectors(BASE_ICON_SIZE, BASE_ICON_MIPS)
 gen_building_overlays(TILE_SIZE)
 gen_all_recipe_icons(BASE_ICON_SIZE, BASE_ICON_MIPS)

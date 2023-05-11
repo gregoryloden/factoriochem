@@ -16,6 +16,18 @@ require("data/buildings")
 require("data/styles")
 
 
+-- Empty sprites
+for _, size in ipairs({{1, 1}, {1, 2}}) do
+	data:extend({{
+		type = "sprite",
+		name = "empty-"..size[1].."x"..size[2],
+		filename = GRAPHICS_ROOT.."empty.png",
+		width = size[1],
+		height = size[2],
+	}})
+end
+
+
 -- Periodic table prototypes
 local periodic_table = {type = "shortcut", name = PERIODIC_TABLE_NAME, action = "lua"}
 for _, disabled_prefix in ipairs({"", "disabled_"}) do
