@@ -118,8 +118,9 @@ local function demo_reaction(building_data, demo_state, reaction_demo_table)
 	local valid_reaction = true
 	for _, reactant in pairs(demo_state.reactants) do
 		local item_prototype = GAME_ITEM_PROTOTYPES[reactant]
-		if item_prototype.group.name ~= MOLECULES_GROUP_NAME
-				or item_prototype.subgroup.name == MOLECULE_ITEMS_SUBGROUP_NAME then
+		if item_prototype and
+				(item_prototype.group.name ~= MOLECULES_GROUP_NAME
+					or item_prototype.subgroup.name == MOLECULE_ITEMS_SUBGROUP_NAME) then
 			valid_reaction = false
 			break
 		end
@@ -131,7 +132,10 @@ local function demo_reaction(building_data, demo_state, reaction_demo_table)
 	end
 end
 
-local function demo_reaction_with_reactant(building_data, demo_state, element, reactant_name, reactant)
+local function demo_reaction_with_reactant(building_data, demo_state, element, reactant_name, reactant_stack)
+	local reactant = reactant_stack and reactant_stack.name
+	local complex_shape = reactant and COMPLEX_SHAPES[reactant]
+	if complex_shape then reactant = parse_complex_molecule(reactant_stack.grid, complex_shape) end
 	demo_state.reactants[reactant_name] = reactant
 	update_reaction_table_sprite(element, nil, reactant)
 	demo_reaction(building_data, demo_state, element.parent)
@@ -514,9 +518,8 @@ local function on_gui_click(event)
 		if event.button == defines.mouse_button_type.right then
 			demo_reaction_with_reactant(building_data, demo_state, element, reaction_demo_table_reactant_name, nil)
 		elseif reactant_stack then
-			local reactant = reactant_stack.name
 			demo_reaction_with_reactant(
-				building_data, demo_state, element, reaction_demo_table_reactant_name, reactant)
+				building_data, demo_state, element, reaction_demo_table_reactant_name, reactant_stack)
 		end
 		return
 	end
