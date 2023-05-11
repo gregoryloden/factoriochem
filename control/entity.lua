@@ -570,6 +570,12 @@ local function reset_building_caches()
 		if building_data.entity.valid then
 			entity_assign_cache(building_data, BUILDING_DEFINITIONS[building_data.entity.name])
 		end
+		-- also regenerate any complex contents for the products, where needed
+		for _, product in pairs(building_data.reaction.products) do
+			if not GAME_ITEM_PROTOTYPES[product] and not COMPLEX_CONTENTS[product] then
+				COMPLEX_CONTENTS[product] = build_complex_contents(product)
+			end
+		end
 	end
 	building_datas.update_groups, building_datas.ticks_per_update = update_groups, ticks_per_update
 end
