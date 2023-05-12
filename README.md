@@ -84,8 +84,6 @@ All sciences only use simple molecule ingredients and can be obtained without ev
 
 Bond, Debond, Splice, and Sever buildings allow optional fission or fusion on atoms within molecules - this is necessary to ensure that there is always a way to create simple molecules without ever creating complex molecules.
 
-Note that the demo section does not support complex molecules as inputs, but can display complex molecules as outputs.
-
 ----
 
 Likely not compatible with mods that modify sciences or heavily modify the technology tree (by default; you can enable a setting to prevent changes to technologies or science recipes), but likely compatible with most other mods.

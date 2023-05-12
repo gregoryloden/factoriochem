@@ -18,15 +18,20 @@ for _, reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
 end
 local ATOM_SUBGROUP_PREFIX_MATCH = "^"..ATOMS_SUBGROUP_PREFIX
 local BUILDING_EXAMPLES_TEXT = {}
+local EMPTY_SPRITE_1X1_TEXT = "[img=empty-1x1]"
 local PERIODIC_TABLE_DEMO_NAME = PERIODIC_TABLE_NAME.."-demo"
+local MOLECULE_CONTENTS_CACHE = {}
+local MOLECULE_CONTENTS_STRING = "factoriochem.molecule-contents"
 local GUI_READY = false
 
 
 -- Setup
 local function build_single_example_text_row(name, definition, example, reactant_name, product_name)
-	local reactant_indicator, reactant, selector_val = "[img=empty-1x2]", "[img=empty-1x1]", "[img=empty-1x1]"
-	local reaction_spacing, product, product_indicator = "      ", "[img=empty-1x1]", ""
-	if definition.has_component[reactant_name] then reactant_indicator = "[img=molecule-indicator-"..reactant_name.."]" end
+	local reactant_indicator, reactant, selector_val = "[img=empty-1x2]", EMPTY_SPRITE_1X1_TEXT, EMPTY_SPRITE_1X1_TEXT
+	local reaction_spacing, product, product_indicator = "      ", EMPTY_SPRITE_1X1_TEXT, ""
+	if definition.has_component[reactant_name] then
+		reactant_indicator = "[img="..MOLECULE_INDICATOR_PREFIX..reactant_name.."]"
+	end
 	if example.reactants[reactant_name] then reactant = "[item="..example.reactants[reactant_name].."]" end
 	if example.selectors[reactant_name] then
 		if definition.selectors[reactant_name] == DROPDOWN_SELECTOR_NAME then
@@ -43,7 +48,9 @@ local function build_single_example_text_row(name, definition, example, reactant
 		end
 	end
 	if example.products[product_name] then product = "[item="..example.products[product_name].."]" end
-	if definition.has_component[product_name] then product_indicator = "[img=molecule-indicator-"..product_name.."]" end
+	if definition.has_component[product_name] then
+		product_indicator = "[img="..MOLECULE_INDICATOR_PREFIX..product_name.."]"
+	end
 	local row_builder = {reactant_indicator, reactant, selector_val, reaction_spacing, product, product_indicator}
 	local row = table.concat(row_builder, " ")
 	local row_len = #row
@@ -76,17 +83,79 @@ local function gui_add_recursive(gui, element_spec)
 	return element
 end
 
+local function build_molecule_contents_text(molecule)
+	local shape, height, width = parse_molecule(molecule)
+	local builder = {}
+	for atom_y = 1, height do
+		local shape_row = shape[atom_y]
+		local row_builder = {}
+		local up_builder
+		if atom_y > 1 then up_builder = {} end
+		local last_x = -1
+		local last_up_x = -1
+		for atom_x = 1, width do
+			local atom = shape_row[atom_x]
+			if not atom then goto continue end
+			local x = (atom_x - 1) * 2
+			local y = (atom_y - 1) * 2
+			last_x = last_x + 1
+			while last_x < x do
+				table.insert(row_builder, EMPTY_SPRITE_1X1_TEXT)
+				last_x = last_x + 1
+			end
+			table.insert(row_builder, "[item="..ATOM_ITEM_PREFIX..atom.symbol.."]")
+			if atom.right then
+				table.insert(row_builder, "[img=equipment."..MOLECULE_BONDS_PREFIX.."H"..atom.right.."]")
+				last_x = last_x + 1
+			end
+			if atom.up then
+				last_up_x = last_up_x + 1
+				while last_up_x < x do
+					table.insert(up_builder, EMPTY_SPRITE_1X1_TEXT)
+					last_up_x = last_up_x + 1
+				end
+				table.insert(up_builder, "[img=equipment."..MOLECULE_BONDS_PREFIX.."V"..atom.up.."]")
+			end
+			::continue::
+		end
+		if up_builder then table.insert(builder, table.concat(up_builder)) end
+		table.insert(builder, table.concat(row_builder))
+	end
+	return table.concat(builder, "\n")
+end
+
 local function update_reaction_table_sprite(element, chest_stack, component)
+	local complex_molecule
 	if chest_stack and chest_stack.valid_for_read then
-		element.sprite = "item/"..chest_stack.name
+		component = chest_stack.name
+		element.sprite = "item/"..component
+		local complex_shape = COMPLEX_SHAPES[component]
+		if complex_shape then complex_molecule = parse_complex_molecule(chest_stack.grid, complex_shape) end
 	elseif component then
 		if GAME_ITEM_PROTOTYPES[component] then
 			element.sprite = "item/"..component
 		else
+			complex_molecule = component
 			element.sprite = "item/"..get_complex_molecule_item_name(parse_molecule(component))
 		end
 	else
 		element.sprite = nil
+	end
+	local tooltip = element.tooltip
+	if complex_molecule then
+		local molecule_contents_text = MOLECULE_CONTENTS_CACHE[complex_molecule]
+		if not molecule_contents_text then
+			molecule_contents_text = build_molecule_contents_text(complex_molecule)
+			MOLECULE_CONTENTS_CACHE[complex_molecule] = molecule_contents_text
+		end
+		if tooltip[1] ~= MOLECULE_CONTENTS_STRING then
+			tooltip = {MOLECULE_CONTENTS_STRING, molecule_contents_text, tooltip}
+		else
+			tooltip[2] = molecule_contents_text
+		end
+		element.tooltip = tooltip
+	elseif tooltip[1] == MOLECULE_CONTENTS_STRING then
+		element.tooltip = tooltip[3]
 	end
 end
 
