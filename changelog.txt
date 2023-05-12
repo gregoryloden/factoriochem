@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.2
+Date: 2023-05-12
+  Minor Features:
+    - Allow complex molecules in demo inputs
+    - Show complex contents in reaction GUI tooltips
+  Bugfixes:
+    - Fix reloading saves with reactions that use complex molecules
+---------------------------------------------------------------------------------------------------
 Version: 1.0.1
 Date: 2023-05-10
   Bugfixes:
