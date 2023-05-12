@@ -105,7 +105,7 @@ local function build_molecule_contents_text(molecule)
 			end
 			table.insert(row_builder, "[item="..ATOM_ITEM_PREFIX..atom.symbol.."]")
 			if atom.right then
-				table.insert(row_builder, "[img=equipment."..MOLECULE_BONDS_PREFIX.."H"..atom.right.."]")
+				table.insert(row_builder, "[img="..MOLECULE_BONDS_PREFIX.."H"..atom.right.."]")
 				last_x = last_x + 1
 			end
 			if atom.up then
@@ -114,7 +114,7 @@ local function build_molecule_contents_text(molecule)
 					table.insert(up_builder, EMPTY_SPRITE_1X1_TEXT)
 					last_up_x = last_up_x + 1
 				end
-				table.insert(up_builder, "[img=equipment."..MOLECULE_BONDS_PREFIX.."V"..atom.up.."]")
+				table.insert(up_builder, "[img="..MOLECULE_BONDS_PREFIX.."V"..atom.up.."]")
 			end
 			::continue::
 		end

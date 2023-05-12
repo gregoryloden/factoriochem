@@ -80,7 +80,8 @@ BOND_LENGTH_FRACTIONS = [0, 12 / BASE_ICON_SIZE, 12 / BASE_ICON_SIZE, 18 / BASE_
 BOND_THICKNESS_FRACTION = 6 / BASE_ICON_SIZE
 BOND_SPACING_FRACTION = 18 / BASE_ICON_SIZE
 EQUIPMENT_GRID_SIZE = 32
-COMPLEX_BOND_COLOR = (0, 0, 0, 0)
+COMPLEX_BOND_D_COLOR = (0, 0, 0, 0)
+COMPLEX_BOND_L_COLOR = (128, 128, 128, 0)
 COMPLEX_BOND_LENGTH = 24
 ITEM_GROUP_SIZE = 128
 ITEM_GROUP_MIPS = 2
@@ -626,22 +627,30 @@ def gen_all_bond_images(base_size, mips):
 	complex_bond_thickness = int(BOND_THICKNESS_FRACTION * EQUIPMENT_GRID_SIZE)
 	for complex_bonds in range(1, 4):
 		complex_bond_xy_min = (EQUIPMENT_GRID_SIZE - (complex_bonds - 1) * complex_bond_spacing) / 2
-		vertical_complex_bond_image = \
-			numpy.full((EQUIPMENT_GRID_SIZE, EQUIPMENT_GRID_SIZE, 4), COMPLEX_BOND_COLOR, numpy.uint8)
-		horizontal_complex_bond_image = \
-			numpy.full((EQUIPMENT_GRID_SIZE, EQUIPMENT_GRID_SIZE, 4), COMPLEX_BOND_COLOR, numpy.uint8)
+		horizontal_complex_bond_d_image = \
+			numpy.full((EQUIPMENT_GRID_SIZE, EQUIPMENT_GRID_SIZE, 4), COMPLEX_BOND_D_COLOR, numpy.uint8)
+		vertical_complex_bond_d_image = \
+			numpy.full((EQUIPMENT_GRID_SIZE, EQUIPMENT_GRID_SIZE, 4), COMPLEX_BOND_D_COLOR, numpy.uint8)
+		horizontal_complex_bond_l_image = \
+			numpy.full((EQUIPMENT_GRID_SIZE, EQUIPMENT_GRID_SIZE, 4), COMPLEX_BOND_L_COLOR, numpy.uint8)
+		vertical_complex_bond_l_image = \
+			numpy.full((EQUIPMENT_GRID_SIZE, EQUIPMENT_GRID_SIZE, 4), COMPLEX_BOND_L_COLOR, numpy.uint8)
 		for complex_bond in range(complex_bonds):
 			complex_bond_yx = complex_bond_xy_min + complex_bond_spacing * complex_bond
 			draw_start = draw_coords_from(complex_bond_xy_start, complex_bond_yx)
 			draw_end = draw_coords_from(complex_bond_xy_end, complex_bond_yx)
 			def draw_complex_bond(mask):
 				cv2.line(mask, draw_start, draw_end, 255, complex_bond_thickness, cv2.LINE_AA, PRECISION_BITS)
-			draw_alpha_on(horizontal_complex_bond_image, draw_complex_bond)
+			draw_alpha_on(horizontal_complex_bond_d_image, draw_complex_bond)
+			draw_alpha_on(horizontal_complex_bond_l_image, draw_complex_bond)
 			draw_start = draw_coords_from(complex_bond_yx, complex_bond_xy_start)
 			draw_end = draw_coords_from(complex_bond_yx, complex_bond_xy_end)
-			draw_alpha_on(vertical_complex_bond_image, draw_complex_bond)
-		write_image(bonds_folder, f"H{complex_bonds}", horizontal_complex_bond_image)
-		write_image(bonds_folder, f"V{complex_bonds}", vertical_complex_bond_image)
+			draw_alpha_on(vertical_complex_bond_d_image, draw_complex_bond)
+			draw_alpha_on(vertical_complex_bond_l_image, draw_complex_bond)
+		write_image(bonds_folder, f"H{complex_bonds}d", horizontal_complex_bond_d_image)
+		write_image(bonds_folder, f"V{complex_bonds}d", vertical_complex_bond_d_image)
+		write_image(bonds_folder, f"H{complex_bonds}l", horizontal_complex_bond_l_image)
+		write_image(bonds_folder, f"V{complex_bonds}l", vertical_complex_bond_l_image)
 	image_counter_print("Bond images written")
 
 

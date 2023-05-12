@@ -624,21 +624,30 @@ for y_scale = 1, MAX_GRID_HEIGHT do
 end
 for _, direction in ipairs({"H", "V"}) do
 	for bonds = 1, MAX_SINGLE_BONDS do
-		data:extend({{
-			type = "battery-equipment",
-			name = MOLECULE_BONDS_PREFIX..direction..bonds,
-			categories = {COMPLEX_MOLECULE_PARTS_NAME},
-			localised_name = {"factoriochem.complex-bonds-"..direction, bonds},
-			sprite = {
-				filename = BOND_ICON_ROOT..direction..bonds..".png",
-				size = EQUIPMENT_GRID_SIZE,
-				flags = {"icon"},
+		data:extend({
+			{
+				type = "battery-equipment",
+				name = MOLECULE_BONDS_PREFIX..direction..bonds,
+				categories = {COMPLEX_MOLECULE_PARTS_NAME},
+				localised_name = {"factoriochem.complex-bonds-"..direction, bonds},
+				sprite = {
+					filename = BOND_ICON_ROOT..direction..bonds.."d.png",
+					size = EQUIPMENT_GRID_SIZE,
+					flags = {"icon"},
+				},
+				shape = {width = 1, height = 1, type = "full"},
+				energy_source = {type = "void", usage_priority = "tertiary"},
+				-- never used, but we have to specify something valid
+				take_result = MOLECULE_ABSORBER_NAME,
 			},
-			shape = {width = 1, height = 1, type = "full"},
-			energy_source = {type = "void", usage_priority = "tertiary"},
-			-- never used, but we have to specify something valid
-			take_result = MOLECULE_ABSORBER_NAME,
-		}})
+			-- also add a standalone sprite for molecule contents text
+			{
+				type = "sprite",
+				name = MOLECULE_BONDS_PREFIX..direction..bonds,
+				filename = BOND_ICON_ROOT..direction..bonds.."l.png",
+				size = EQUIPMENT_GRID_SIZE,
+			},
+		})
 	end
 end
 
