@@ -552,6 +552,26 @@ local function toggle_periodic_table_gui(player)
 end
 
 
+-- Molecule builder GUI construction
+local function toggle_molecule_builder_gui(player)
+	local gui = player.gui
+	if gui.screen[MOLECULE_BUILDER_NAME] then
+		gui.screen[MOLECULE_BUILDER_NAME].destroy()
+		return
+	end
+
+	local inner_gui_spec = {
+		type = "frame",
+		style = "factoriochem-inside-deep-frame-with-padding",
+	}
+	local gui_spec =
+		build_title_bar_gui_spec(MOLECULE_BUILDER_NAME, {"factoriochem."..MOLECULE_BUILDER_NAME}, inner_gui_spec)
+	local molecule_builder_gui = gui_add_recursive(gui.screen, gui_spec)
+	molecule_builder_gui.force_auto_center()
+	molecule_builder_gui.titlebar.drag_target = molecule_builder_gui
+end
+
+
 -- Event handling
 local function on_gui_opened(event)
 	-- don't do anything GUI related until initialization has run
@@ -619,6 +639,8 @@ local function on_gui_click(event)
 	end
 
 	if element.name == PERIODIC_TABLE_DEMO_NAME then toggle_periodic_table_gui(player) end
+
+	if element.name == MOLECULE_BUILDER_DEMO_NAME then toggle_molecule_builder_gui(player) end
 end
 
 local function on_gui_elem_changed(event)
