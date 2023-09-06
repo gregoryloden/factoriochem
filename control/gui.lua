@@ -318,11 +318,13 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 			children = {{
 				type = "sprite-button",
 				name = PERIODIC_TABLE_DEMO_NAME,
+				tooltip = {"shortcut-name."..PERIODIC_TABLE_NAME},
 				sprite = PERIODIC_TABLE_NAME.."-24",
 				style = "factoriochem-tool-button-24",
 			}, {
 				type = "sprite-button",
 				name = MOLECULE_BUILDER_DEMO_NAME,
+				tooltip = {"factoriochem."..MOLECULE_BUILDER_NAME},
 				sprite = MOLECULE_BUILDER_NAME.."-24",
 				style = "factoriochem-tool-button-24",
 			}}
