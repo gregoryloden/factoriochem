@@ -64,3 +64,4 @@ COMPARISON_SELECTOR_VALUES = {"=", "<", ">", "≤", "≥", "≠"}
 CHECKBOX_SELECTOR_NAME = "checkbox"
 TEXT_SELECTOR_NAME = "text"
 PERIODIC_TABLE_NAME = "periodic-table"
+MOLECULE_BUILDER_NAME = "molecule-builder"

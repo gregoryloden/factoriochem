@@ -91,8 +91,9 @@ MOLECULE_ABSORBER_DOT_COLOR = (255, 255, 255, 0)
 MOLECULE_ABSORBER_DOT_RADIUS_FRACTION = 3 / BASE_ICON_SIZE
 MOLECULE_ABSORBER_CORNER_DISTANCE = 16 / BASE_ICON_SIZE
 MOLECULE_ABSORBER_CORNER_RADIUS_FRACTION = 10 / BASE_ICON_SIZE
-PERIODIC_TABLE_DARK_COLOR = (0, 0, 0, 0)
-PERIODIC_TABLE_LIGHT_COLOR = (224, 224, 224, 0)
+BUTTON_ICON_DARK_COLOR = (0, 0, 0, 0)
+BUTTON_ICON_LIGHT_COLOR = (224, 224, 224, 0)
+MOLECULE_BUILDER_RADIUS_FRACTION = 3 / 24
 ROTATION_SELECTOR_COLOR = (224, 224, 192, 0)
 ROTATION_SELECTOR_RADIUS_FRACTION = 24 / BASE_ICON_SIZE
 ROTATION_SELECTOR_THICKNESS_FRACTION = 4 / BASE_ICON_SIZE
@@ -745,8 +746,8 @@ def gen_periodic_table_icon():
 	big_alpha[width - height:width + height, :] = resize(alpha, width * 2, height * 2, multi_color_alpha_weighting=False)
 
 	#create an image with 3 rows: a dark 24, a light 24, and a dark 32
-	image = numpy.full((24 + 24 + 32, 32 + 16, 4), PERIODIC_TABLE_DARK_COLOR, numpy.uint8)
-	image[24:24 * 2, :24 + 12] = PERIODIC_TABLE_LIGHT_COLOR
+	image = numpy.full((24 + 24 + 32, 32 + 16, 4), BUTTON_ICON_DARK_COLOR, numpy.uint8)
+	image[24:24 * 2, :24 + 12] = BUTTON_ICON_LIGHT_COLOR
 
 	#insert all 6 mip images
 	for (y, size) in [(0, 24), (24, 24), (48, 32)]:
@@ -759,6 +760,30 @@ def gen_periodic_table_icon():
 	#now write it
 	write_image(".", "periodic-table", image)
 	image_counter_print("Periodic table written")
+
+def gen_molecule_builder_icon():
+	size = 24
+	dot_radius = MOLECULE_BUILDER_RADIUS_FRACTION * size
+	layers = [("layer", {"size": size, "color": BUTTON_ICON_DARK_COLOR})]
+	for y in range(MAX_GRID_HEIGHT):
+		y = (y + 0.5) / MAX_GRID_HEIGHT * size
+		for x in range(MAX_GRID_WIDTH):
+			x = (x + 0.5) / MAX_GRID_WIDTH * size
+			layers.append(("circle", {"center": (x, y), "radius": dot_radius}))
+	layers.append(("layer", {"size": size, "color": BUTTON_ICON_DARK_COLOR}))
+	v_lines_top = 0.5 / MAX_GRID_HEIGHT * size
+	v_lines_bottom = size - v_lines_top
+	for x in range(MAX_GRID_WIDTH):
+		x = (x + 0.5) / MAX_GRID_WIDTH * size
+		layers.append(("line", {"start": (x, v_lines_top), "end": (x, v_lines_bottom), "thickness": 1}))
+	layers.append(("layer", {"size": size, "color": BUTTON_ICON_DARK_COLOR}))
+	h_lines_left = 0.5 / MAX_GRID_WIDTH * size
+	h_lines_right = size - h_lines_left
+	for y in range(MAX_GRID_HEIGHT):
+		y = (y + 0.5) / MAX_GRID_HEIGHT * size
+		layers.append(("line", {"start": (h_lines_left, y), "end": (h_lines_right, y), "thickness": 1}))
+	write_image(".", "molecule-builder", gen_composite_image(layers))
+	image_counter_print("Molecule builder written")
 
 def gen_thumbnail():
 	image = numpy.zeros((144, 144, 4), numpy.uint8)
@@ -1639,6 +1664,7 @@ gen_item_group_icon(ITEM_GROUP_SIZE, ITEM_GROUP_MIPS)
 gen_molecule_reaction_reactants_icon(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_molecule_absorber_icon(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_periodic_table_icon()
+gen_molecule_builder_icon()
 gen_thumbnail()
 gen_empty_image()
 gen_all_selectors(BASE_ICON_SIZE, BASE_ICON_MIPS)

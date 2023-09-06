@@ -20,6 +20,7 @@ local ATOM_SUBGROUP_PREFIX_MATCH = "^"..ATOMS_SUBGROUP_PREFIX
 local BUILDING_EXAMPLES_TEXT = {}
 local EMPTY_SPRITE_1X1_TEXT = "[img=empty-1x1]"
 local PERIODIC_TABLE_DEMO_NAME = PERIODIC_TABLE_NAME.."-demo"
+local MOLECULE_BUILDER_DEMO_NAME = MOLECULE_BUILDER_NAME.."-demo"
 local MOLECULE_CONTENTS_CACHE = {}
 local MOLECULE_CONTENTS_STRING = "factoriochem.molecule-contents"
 local GUI_READY = false
@@ -313,10 +314,18 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 	function build_periodic_table_button_spec(name_prefix)
 		if name_prefix ~= REACTION_DEMO_PREFIX then return {type = "empty-widget"} end
 		return {
-			type = "sprite-button",
-			name = PERIODIC_TABLE_DEMO_NAME,
-			sprite = PERIODIC_TABLE_NAME.."-24",
-			style = "factoriochem-tool-button-24",
+			type = "flow",
+			children = {{
+				type = "sprite-button",
+				name = PERIODIC_TABLE_DEMO_NAME,
+				sprite = PERIODIC_TABLE_NAME.."-24",
+				style = "factoriochem-tool-button-24",
+			}, {
+				type = "sprite-button",
+				name = MOLECULE_BUILDER_DEMO_NAME,
+				sprite = MOLECULE_BUILDER_NAME.."-24",
+				style = "factoriochem-tool-button-24",
+			}}
 		}
 	end
 	function build_reaction_table_spec(name_prefix)

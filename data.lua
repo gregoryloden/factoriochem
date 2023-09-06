@@ -50,3 +50,13 @@ local periodic_table_24 = table.deepcopy(periodic_table.small_icon)
 periodic_table_24.type = "sprite"
 periodic_table_24.name = PERIODIC_TABLE_NAME.."-24"
 data:extend({periodic_table, periodic_table_24})
+
+
+-- Molecule builder sprite
+data:extend({{
+	type = "sprite",
+	name = MOLECULE_BUILDER_NAME.."-24",
+	filename = GRAPHICS_ROOT..MOLECULE_BUILDER_NAME..".png",
+	size = 24,
+	flags = {"gui-icon"},
+}})
