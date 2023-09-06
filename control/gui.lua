@@ -720,6 +720,14 @@ local function on_gui_text_changed(event)
 	end
 end
 
+script.on_event(defines.events.on_gui_opened, on_gui_opened)
+script.on_event(defines.events.on_gui_closed, on_gui_closed)
+script.on_event(defines.events.on_gui_click, on_gui_click)
+script.on_event(defines.events.on_gui_elem_changed, on_gui_elem_changed)
+script.on_event(defines.events.on_gui_checked_state_changed, on_gui_checked_state_changed)
+script.on_event(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)
+script.on_event(defines.events.on_gui_text_changed, on_gui_text_changed)
+
 
 -- Global event handling
 function gui_on_init()
@@ -779,11 +787,3 @@ function gui_on_lua_shortcut(event)
 	local player = game.get_player(event.player_index)
 	if event.prototype_name == PERIODIC_TABLE_NAME then toggle_periodic_table_gui(player) end
 end
-
-script.on_event(defines.events.on_gui_opened, on_gui_opened)
-script.on_event(defines.events.on_gui_closed, on_gui_closed)
-script.on_event(defines.events.on_gui_click, on_gui_click)
-script.on_event(defines.events.on_gui_elem_changed, on_gui_elem_changed)
-script.on_event(defines.events.on_gui_checked_state_changed, on_gui_checked_state_changed)
-script.on_event(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)
-script.on_event(defines.events.on_gui_text_changed, on_gui_text_changed)

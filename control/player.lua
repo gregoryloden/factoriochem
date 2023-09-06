@@ -14,6 +14,9 @@ local function init_player_in_freeplay(event)
 	end
 end
 
+script.on_event(defines.events.on_player_created, init_player)
+script.on_event(defines.events.on_cutscene_cancelled, init_player_in_freeplay)
+
 
 -- Global event handling
 function player_on_tick(event)
@@ -37,6 +40,3 @@ end
 function player_on_settings_changed(event)
 	MOLECULE_ABSORBER_TICKS_PER_UPDATE = settings.global["factoriochem-building-ticks-per-update"].value
 end
-
-script.on_event(defines.events.on_player_created, init_player)
-script.on_event(defines.events.on_cutscene_cancelled, init_player_in_freeplay)
