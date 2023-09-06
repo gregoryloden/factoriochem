@@ -19,8 +19,8 @@ end
 local ATOM_SUBGROUP_PREFIX_MATCH = "^"..ATOMS_SUBGROUP_PREFIX
 local BUILDING_EXAMPLES_TEXT = {}
 local EMPTY_SPRITE_1X1_TEXT = "[img=empty-1x1]"
-local PERIODIC_TABLE_DEMO_NAME = PERIODIC_TABLE_NAME.."-demo"
-local MOLECULE_BUILDER_DEMO_NAME = MOLECULE_BUILDER_NAME.."-demo"
+local PERIODIC_TABLE_DEMO_NAME = "periodic-table-demo"
+local MOLECULE_BUILDER_DEMO_NAME = "molecule-builder-demo"
 local MOLECULE_CONTENTS_CACHE = {}
 local MOLECULE_CONTENTS_STRING = "factoriochem.molecule-contents"
 local GUI_READY = false
