@@ -8,7 +8,6 @@ local LOGISTIC_WIRE_TYPES = {defines.wire_type.red, defines.wire_type.green}
 local DETECTOR_ATOMIC_NUMBER_SIGNAL_ID = {type = "virtual", name = "signal-A"}
 local DETECTOR_CACHE = {}
 local DETECTOR_TARGET_CACHE = {}
-local CACHE_RELOAD_TICK_INTERVAL = 30 * 60 * 60 -- 30 minutes
 local ALLOW_COMPLEX_MOLECULES = nil
 
 
