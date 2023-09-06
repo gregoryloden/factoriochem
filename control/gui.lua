@@ -219,6 +219,38 @@ local function demo_reaction_with_reactant(building_data, demo_state, element, r
 	demo_reaction(building_data, demo_state, element.parent)
 end
 
+local function build_title_bar_gui_spec(name, title, content)
+	return {
+		type = "frame",
+		name = name,
+		direction = "vertical",
+		children = {
+			{
+				type = "flow",
+				name = "titlebar",
+				children = {{
+					type = "label",
+					caption = title,
+					style = "frame_title",
+					ignored_by_interaction = true,
+				}, {
+					type = "empty-widget",
+					style = "factoriochem-titlebar-drag-handle",
+					ignored_by_interaction = true,
+				}, {
+					type = "sprite-button",
+					name = "close",
+					style = "frame_action_button",
+					sprite = "utility/close_white",
+					hovered_sprite = "utility/close_black",
+					clicked_sprite = "utility/close_black",
+				}},
+			},
+			content,
+		},
+	}
+end
+
 
 -- Molecule reaction building GUI construction
 local function build_molecule_reaction_gui(entity, gui, building_definition)
@@ -498,44 +530,18 @@ local function toggle_periodic_table_gui(player)
 		end
 		return children
 	end
-	local gui_spec = {
-		-- outer
+	local inner_gui_spec = {
 		type = "frame",
-		name = PERIODIC_TABLE_NAME,
-		direction = "vertical",
+		style = "factoriochem-inside-deep-frame-with-padding",
 		children = {{
-			type = "flow",
-			name = "titlebar",
-			children = {{
-				type = "label",
-				caption = {"shortcut-name."..PERIODIC_TABLE_NAME},
-				style = "frame_title",
-				ignored_by_interaction = true,
-			}, {
-				type = "empty-widget",
-				style = "factoriochem-titlebar-drag-handle",
-				ignored_by_interaction = true,
-			}, {
-				type = "sprite-button",
-				name = "close",
-				style = "frame_action_button",
-				sprite = "utility/close_white",
-				hovered_sprite = "utility/close_black",
-				clicked_sprite = "utility/close_black",
-			}},
-		}, {
-			-- elements
-			type = "frame",
-			style = "factoriochem-inside-deep-frame-with-padding",
-			children = {{
-				type = "table",
-				name = PERIODIC_TABLE_NAME.."-table",
-				column_count = 19,
-				style = "factoriochem-periodic-table",
-				children = build_element_table_children(),
-			}},
+			type = "table",
+			name = PERIODIC_TABLE_NAME.."-table",
+			column_count = 19,
+			style = "factoriochem-periodic-table",
+			children = build_element_table_children(),
 		}},
 	}
+	local gui_spec = build_title_bar_gui_spec(PERIODIC_TABLE_NAME, {"shortcut-name."..PERIODIC_TABLE_NAME}, inner_gui_spec)
 	local periodic_table_gui = gui_add_recursive(gui.screen, gui_spec)
 	periodic_table_gui.force_auto_center()
 	periodic_table_gui.titlebar.drag_target = periodic_table_gui
