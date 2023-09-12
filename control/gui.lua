@@ -21,6 +21,21 @@ local BUILDING_EXAMPLES_TEXT = {}
 local EMPTY_SPRITE_1X1_TEXT = "[img=empty-1x1]"
 local PERIODIC_TABLE_DEMO_NAME = "periodic-table-demo"
 local MOLECULE_BUILDER_DEMO_NAME = "molecule-builder-demo"
+local MOLECULE_BUILDER_SCIENCES_NAME = "molecule-builder-sciences"
+local MOLECULE_BUILDER_INGREDIENTS_NAME = "molecule-builder-ingredients"
+local MOLECULE_BUILDER_MAIN_NAME = "molecule-builder-main"
+local SCIENCES = {
+	"automation-science-pack",
+	"logistic-science-pack",
+	"military-science-pack",
+	"chemical-science-pack",
+	"production-science-pack",
+	"utility-science-pack",
+}
+local MOLECULE_BUILDER_SCIENCES_NAME_MAP = {}
+for _, science in ipairs(SCIENCES) do
+	MOLECULE_BUILDER_SCIENCES_NAME_MAP[MOLECULE_BUILDER_SCIENCES_NAME.."-"..science] = science
+end
 local MOLECULE_CONTENTS_CACHE = {}
 local MOLECULE_CONTENTS_STRING = "factoriochem.molecule-contents"
 local GUI_READY = false
@@ -560,9 +575,36 @@ local function toggle_molecule_builder_gui(player)
 		return
 	end
 
+	function build_science_buttons()
+		local buttons = {}
+		for _, science in ipairs(SCIENCES) do
+			local spec = {
+				type = "sprite-button",
+				name = MOLECULE_BUILDER_SCIENCES_NAME.."-"..science,
+				sprite = "item/"..science,
+			}
+			table.insert(buttons, spec)
+		end
+		return buttons
+	end
 	local inner_gui_spec = {
 		type = "frame",
-		style = "factoriochem-inside-deep-frame-with-padding",
+		name = "outer",
+		style = "inside_shallow_frame_with_padding",
+		children = {{
+			type = "flow",
+			name = MOLECULE_BUILDER_SCIENCES_NAME,
+			direction = "vertical",
+			children = build_science_buttons(),
+		}, {
+			type = "flow",
+			name = MOLECULE_BUILDER_INGREDIENTS_NAME,
+			direction = "vertical",
+		}, {
+			type = "frame",
+			name = MOLECULE_BUILDER_MAIN_NAME,
+			style = "factoriochem-deep-frame-in-shallow-frame-with-padding",
+		}},
 	}
 	local gui_spec =
 		build_title_bar_gui_spec(MOLECULE_BUILDER_NAME, {"factoriochem."..MOLECULE_BUILDER_NAME}, inner_gui_spec)

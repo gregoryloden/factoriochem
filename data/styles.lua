@@ -25,6 +25,11 @@ gui_style["factoriochem-inside-deep-frame-with-padding"] = {
 	parent = "inside_deep_frame",
 	padding = gui_style.inside_shallow_frame_with_padding.padding,
 }
+gui_style["factoriochem-deep-frame-in-shallow-frame-with-padding"] = {
+	type = "frame_style",
+	parent = "deep_frame_in_shallow_frame",
+	padding = gui_style.inside_shallow_frame_with_padding.padding,
+}
 gui_style["factoriochem-tool-button-24"] = {
 	type = "button_style",
 	parent = "tool_button",
