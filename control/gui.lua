@@ -637,11 +637,13 @@ local function on_gui_opened(event)
 	if not entity then return end
 	local player = game.get_player(event.player_index)
 
+	-- open the GUI for a molecule reaction building
 	local building_definition = BUILDING_DEFINITIONS[entity.name]
 	if building_definition then
 		build_molecule_reaction_gui(entity, player.gui, building_definition)
 		global.current_gui_reaction_building_data[player.index] =
 			global.molecule_reaction_building_data[entity.unit_number]
+	-- prevent the GUI from opening for a molecule detector
 	elseif entity.name == MOLECULE_DETECTOR_OUTPUT_NAME then
 		player.opened = nil
 	end
@@ -662,6 +664,7 @@ local function on_gui_click(event)
 		return
 	end
 
+	-- transfer a stack between the player's cursor and one of the chests if applicable
 	local reaction_table_component_name = REACTION_TABLE_COMPONENT_NAME_MAP[element.name]
 	if reaction_table_component_name then
 		local chest_stack = building_data.chest_stacks[reaction_table_component_name]
@@ -678,6 +681,7 @@ local function on_gui_click(event)
 		return
 	end
 
+	-- set or clear one of the demo reactant slots if applicable
 	local reaction_demo_table_reactant_name = REACTION_DEMO_TABLE_REACTANT_NAME_MAP[element.name]
 	if reaction_demo_table_reactant_name then
 		local demo_state = get_demo_state(building_data.entity.name)
@@ -694,10 +698,13 @@ local function on_gui_click(event)
 		return
 	end
 
+	-- open the periodic table
 	if element.name == PERIODIC_TABLE_DEMO_NAME then toggle_periodic_table_gui(player) end
 
+	-- open the molecule builder
 	if element.name == MOLECULE_BUILDER_DEMO_NAME then toggle_molecule_builder_gui(player.gui) end
 
+	-- show the ingredients of a science in the molecule builder
 	local molecule_builder_science_name = MOLECULE_BUILDER_SCIENCES_NAME_MAP[element.name]
 	if molecule_builder_science_name then set_molecule_builder_ingredients(player.gui, molecule_builder_science_name) end
 end
@@ -706,6 +713,7 @@ local function on_gui_elem_changed(event)
 	local element = event.element
 	local building_data = global.current_gui_reaction_building_data[event.player_index]
 
+	-- update the selector from a choose-elem-button, and save the setting
 	local reaction_table_selector_reactant_name = REACTION_TABLE_SELECTOR_NAME_MAP[element.name]
 	if reaction_table_selector_reactant_name then
 		building_data.reaction.selectors[reaction_table_selector_reactant_name] = element.elem_value
@@ -721,6 +729,7 @@ local function on_gui_elem_changed(event)
 		return
 	end
 
+	-- update the selector from a choose-elem-button in the demo area
 	local reaction_demo_table_selector_reactant_name = REACTION_DEMO_TABLE_SELECTOR_NAME_MAP[element.name]
 	if reaction_demo_table_selector_reactant_name then
 		local demo_state = get_demo_state(building_data.entity.name)
@@ -734,6 +743,7 @@ local function on_gui_selection_state_changed(event)
 	local element = event.element
 	local building_data = global.current_gui_reaction_building_data[event.player_index]
 
+	-- update the selector from a drop-down, and save the setting
 	local reaction_table_selector_reactant_name = REACTION_TABLE_SELECTOR_NAME_MAP[element.name]
 	if reaction_table_selector_reactant_name then
 		building_data.reaction.selectors[reaction_table_selector_reactant_name] = element.selected_index
@@ -749,6 +759,7 @@ local function on_gui_selection_state_changed(event)
 		return
 	end
 
+	-- update the selector from a drop-down in the demo area
 	local reaction_demo_table_selector_reactant_name = REACTION_DEMO_TABLE_SELECTOR_NAME_MAP[element.name]
 	if reaction_demo_table_selector_reactant_name then
 		local demo_state = get_demo_state(building_data.entity.name)
@@ -762,6 +773,7 @@ local function on_gui_checked_state_changed(event)
 	local element = event.element
 	local building_data = global.current_gui_reaction_building_data[event.player_index]
 
+	-- update the selector from a checkbox, and save the setting
 	local reaction_table_selector_reactant_name = REACTION_TABLE_SELECTOR_NAME_MAP[element.name]
 	if reaction_table_selector_reactant_name then
 		building_data.reaction.selectors[reaction_table_selector_reactant_name] = element.state
@@ -777,6 +789,7 @@ local function on_gui_checked_state_changed(event)
 		return
 	end
 
+	-- update the selector from a checkbox in the demo area
 	local reaction_demo_table_selector_reactant_name = REACTION_DEMO_TABLE_SELECTOR_NAME_MAP[element.name]
 	if reaction_demo_table_selector_reactant_name then
 		local demo_state = get_demo_state(building_data.entity.name)
@@ -790,6 +803,7 @@ local function on_gui_text_changed(event)
 	local element = event.element
 	local building_data = global.current_gui_reaction_building_data[event.player_index]
 
+	-- update the selector from a textfield, and save the setting
 	local reaction_table_selector_reactant_name = REACTION_TABLE_SELECTOR_NAME_MAP[element.name]
 	if reaction_table_selector_reactant_name then
 		building_data.reaction.selectors[reaction_table_selector_reactant_name] = element.text
@@ -800,6 +814,7 @@ local function on_gui_text_changed(event)
 		return
 	end
 
+	-- update the selector from a textfield in the demo area
 	local reaction_demo_table_selector_reactant_name = REACTION_DEMO_TABLE_SELECTOR_NAME_MAP[element.name]
 	if reaction_demo_table_selector_reactant_name then
 		local demo_state = get_demo_state(building_data.entity.name)
