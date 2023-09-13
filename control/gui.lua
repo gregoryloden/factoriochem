@@ -600,13 +600,25 @@ local function toggle_molecule_builder_gui(gui)
 		return buttons
 	end
 	function build_molecule_builder_table_children()
+		local atom_filters = {}
+		for _, subgroup in ipairs(GAME_ITEM_GROUP_PROTOTYPES[MOLECULES_GROUP_NAME].subgroups) do
+			if string.find(subgroup.name, ATOM_SUBGROUP_PREFIX_MATCH) then
+				table.insert(atom_filters, {filter = "subgroup", subgroup = subgroup.name})
+			end
+		end
 		local cells = {}
 		for y = 1, MAX_GRID_HEIGHT * 2 - 1 do
 			for x = 1, MAX_GRID_WIDTH * 2 - 1 do
 				local is_row = (y + 1) % 2 == 0
 				local is_col = (x + 1) % 2 == 0
 				if is_row and is_col then
-					table.insert(cells, {type = "sprite-button", style = "factoriochem-big-slot-button"})
+					local spec = {
+						type = "choose-elem-button",
+						style = "factoriochem-big-slot-button",
+						elem_type = "item",
+						elem_filters = atom_filters,
+					}
+					table.insert(cells, spec)
 				elseif is_row then
 					table.insert(cells, {type = "sprite-button"})
 				elseif is_col then
