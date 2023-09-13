@@ -24,6 +24,8 @@ local MOLECULE_BUILDER_DEMO_NAME = "molecule-builder-demo"
 local MOLECULE_BUILDER_SCIENCES_NAME = "molecule-builder-sciences"
 local MOLECULE_BUILDER_INGREDIENTS_NAME = "molecule-builder-ingredients"
 local MOLECULE_BUILDER_MAIN_NAME = "molecule-builder-main"
+local MOLECULE_BUILDER_TABLE_FRAME_NAME = "molecule-builder-table-frame"
+local MOLECULE_BUILDER_TABLE_NAME = "molecule-builder-table"
 local SCIENCES = {
 	"automation-science-pack",
 	"logistic-science-pack",
@@ -646,16 +648,24 @@ local function toggle_molecule_builder_gui(gui)
 			name = MOLECULE_BUILDER_INGREDIENTS_NAME,
 			direction = "vertical",
 		}, {
-			type = "frame",
+			type = "flow",
 			name = MOLECULE_BUILDER_MAIN_NAME,
-			style = "factoriochem-deep-frame-in-shallow-frame-with-padding",
+			style = "factoriochem-centered-vertical-flow",
+			direction = "vertical",
 			children = {{
-				type = "table",
-				name = MOLECULE_BUILDER_NAME.."-table",
-				style = "factoriochem-molecule-builder-table",
-				column_count = MAX_GRID_WIDTH * 2 - 1,
-				children = build_molecule_builder_table_children(),
-			}},
+				type = "frame",
+				name = MOLECULE_BUILDER_TABLE_FRAME_NAME,
+				style = "factoriochem-deep-frame-in-shallow-frame-with-padding",
+				children = {{
+					type = "table",
+					name = MOLECULE_BUILDER_TABLE_NAME,
+					style = "factoriochem-molecule-builder-table",
+					column_count = MAX_GRID_WIDTH * 2 - 1,
+					children = build_molecule_builder_table_children(),
+				}},
+			}, {
+				type = "sprite-button",
+			}}
 		}},
 	}
 	local gui_spec =

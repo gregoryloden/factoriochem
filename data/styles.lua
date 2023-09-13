@@ -79,3 +79,7 @@ gui_style["factoriochem-area-checkbox"] = {
 	horizontally_stretchable = "on",
 	vertically_stretchable = "on",
 }
+gui_style["factoriochem-centered-vertical-flow"] = {
+	type = "vertical_flow_style",
+	horizontal_align = "center",
+}
