@@ -599,6 +599,25 @@ local function toggle_molecule_builder_gui(gui)
 		end
 		return buttons
 	end
+	function build_molecule_builder_table_children()
+		local cells = {}
+		for y = 1, MAX_GRID_HEIGHT * 2 - 1 do
+			for x = 1, MAX_GRID_WIDTH * 2 - 1 do
+				local is_row = (y + 1) % 2 == 0
+				local is_col = (x + 1) % 2 == 0
+				if is_row and is_col then
+					table.insert(cells, {type = "sprite-button", style = "factoriochem-big-slot-button"})
+				elseif is_row then
+					table.insert(cells, {type = "sprite-button"})
+				elseif is_col then
+					table.insert(cells, {type = "sprite-button"})
+				else
+					table.insert(cells, {type = "empty-widget"})
+				end
+			end
+		end
+		return cells
+	end
 	local inner_gui_spec = {
 		type = "frame",
 		name = "outer",
@@ -616,6 +635,13 @@ local function toggle_molecule_builder_gui(gui)
 			type = "frame",
 			name = MOLECULE_BUILDER_MAIN_NAME,
 			style = "factoriochem-deep-frame-in-shallow-frame-with-padding",
+			children = {{
+				type = "table",
+				name = MOLECULE_BUILDER_NAME.."-table",
+				style = "factoriochem-molecule-builder-table",
+				column_count = MAX_GRID_WIDTH * 2 - 1,
+				children = build_molecule_builder_table_children(),
+			}},
 		}},
 	}
 	local gui_spec =

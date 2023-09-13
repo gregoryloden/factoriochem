@@ -60,6 +60,16 @@ gui_style["factoriochem-periodic-table"] = {
 		{column = 19, alignment = "top-center"},
 	},
 }
+gui_style["factoriochem-molecule-builder-table"] = {
+	type = "table_style",
+	column_alignments = {
+		{column = 1, alignment = "middle-center"},
+		{column = 2, alignment = "middle-center"},
+		{column = 3, alignment = "middle-center"},
+		{column = 4, alignment = "middle-center"},
+		{column = 5, alignment = "middle-center"},
+	},
+}
 gui_style["factoriochem-small-label"] = {
 	type = "label_style",
 	font = "default-small",
