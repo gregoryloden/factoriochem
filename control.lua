@@ -3,6 +3,7 @@ require("shared/molecules")
 require("shared/buildings")
 GAME_ITEM_PROTOTYPES = nil
 GAME_ITEM_GROUP_PROTOTYPES = nil
+GAME_RECIPE_PROTOTYPES = nil
 
 require("control/molecules")
 require("control/entity")
@@ -35,6 +36,7 @@ local function on_first_tick(event)
 	-- intialization
 	GAME_ITEM_PROTOTYPES = game.item_prototypes
 	GAME_ITEM_GROUP_PROTOTYPES = game.item_group_prototypes
+	GAME_RECIPE_PROTOTYPES = game.recipe_prototypes
 	molecules_on_first_tick()
 	entity_on_first_tick()
 	gui_on_first_tick()
