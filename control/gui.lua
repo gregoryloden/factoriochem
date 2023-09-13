@@ -568,8 +568,20 @@ end
 
 
 -- Molecule builder GUI construction
-local function toggle_molecule_builder_gui(player)
-	local gui = player.gui
+local function set_molecule_builder_ingredients(gui, molecule_builder_science_name)
+	local recipe = GAME_RECIPE_PROTOTYPES[molecule_builder_science_name]
+	local ingredients_gui = gui.screen[MOLECULE_BUILDER_NAME].outer[MOLECULE_BUILDER_INGREDIENTS_NAME]
+	for _, child in pairs(ingredients_gui.children) do child.destroy() end
+	for _, ingredient in pairs(recipe.ingredients) do
+		ingredients_gui.add({
+			type = "sprite-button",
+			name = MOLECULE_BUILDER_INGREDIENTS_NAME.."-"..ingredient.name,
+			sprite = "item/"..ingredient.name,
+		})
+	end
+end
+
+local function toggle_molecule_builder_gui(gui)
 	if gui.screen[MOLECULE_BUILDER_NAME] then
 		gui.screen[MOLECULE_BUILDER_NAME].destroy()
 		return
@@ -611,6 +623,8 @@ local function toggle_molecule_builder_gui(player)
 	local molecule_builder_gui = gui_add_recursive(gui.screen, gui_spec)
 	molecule_builder_gui.force_auto_center()
 	molecule_builder_gui.titlebar.drag_target = molecule_builder_gui
+
+	set_molecule_builder_ingredients(gui, SCIENCES[1])
 end
 
 
@@ -682,7 +696,10 @@ local function on_gui_click(event)
 
 	if element.name == PERIODIC_TABLE_DEMO_NAME then toggle_periodic_table_gui(player) end
 
-	if element.name == MOLECULE_BUILDER_DEMO_NAME then toggle_molecule_builder_gui(player) end
+	if element.name == MOLECULE_BUILDER_DEMO_NAME then toggle_molecule_builder_gui(player.gui) end
+
+	local molecule_builder_science_name = MOLECULE_BUILDER_SCIENCES_NAME_MAP[element.name]
+	if molecule_builder_science_name then set_molecule_builder_ingredients(player.gui, molecule_builder_science_name) end
 end
 
 local function on_gui_elem_changed(event)
