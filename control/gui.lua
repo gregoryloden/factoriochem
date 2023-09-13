@@ -600,29 +600,31 @@ local function toggle_molecule_builder_gui(gui)
 		return buttons
 	end
 	function build_molecule_builder_table_children()
+		-- cache atom and bond filters
 		local atom_filters = {}
 		for _, subgroup in ipairs(GAME_ITEM_GROUP_PROTOTYPES[MOLECULES_GROUP_NAME].subgroups) do
 			if string.find(subgroup.name, ATOM_SUBGROUP_PREFIX_MATCH) then
 				table.insert(atom_filters, {filter = "subgroup", subgroup = subgroup.name})
 			end
 		end
+		local h_bond_filters = {{filter = "subgroup", subgroup = MOLECULE_BUILDER_BONDS_SUBGROUP_PREFIX.."H"}}
+		local v_bond_filters = {{filter = "subgroup", subgroup = MOLECULE_BUILDER_BONDS_SUBGROUP_PREFIX.."V"}}
 		local cells = {}
 		for y = 1, MAX_GRID_HEIGHT * 2 - 1 do
 			for x = 1, MAX_GRID_WIDTH * 2 - 1 do
 				local is_row = (y + 1) % 2 == 0
 				local is_col = (x + 1) % 2 == 0
-				if is_row and is_col then
-					local spec = {
-						type = "choose-elem-button",
-						style = "factoriochem-big-slot-button",
-						elem_type = "item",
-						elem_filters = atom_filters,
-					}
+				if is_row or is_col then
+					local spec = {type = "choose-elem-button", elem_type = "item"}
+					if not is_col then
+						spec.elem_filters = h_bond_filters
+					elseif not is_row then
+						spec.elem_filters = v_bond_filters
+					else
+						spec.elem_filters = atom_filters
+						spec.style = "factoriochem-big-slot-button"
+					end
 					table.insert(cells, spec)
-				elseif is_row then
-					table.insert(cells, {type = "sprite-button"})
-				elseif is_col then
-					table.insert(cells, {type = "sprite-button"})
 				else
 					table.insert(cells, {type = "empty-widget"})
 				end

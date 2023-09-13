@@ -606,7 +606,7 @@ for shape_n = 1, bit32.lshift(1, GRID_AREA) - 1 do
 end
 
 
--- Add complex molecule equipment grids and bonds
+-- Add complex molecule equipment grids and bonds, and molecule builder bonds
 data:extend({{type = "equipment-category", name = COMPLEX_MOLECULE_PARTS_NAME}})
 for y_scale = 1, MAX_GRID_HEIGHT do
 	for x_scale = 1, MAX_GRID_WIDTH do
@@ -622,6 +622,20 @@ for y_scale = 1, MAX_GRID_HEIGHT do
 		::continue::
 	end
 end
+data:extend({
+	{
+		type = "item-subgroup",
+		name = MOLECULE_BUILDER_BONDS_SUBGROUP_PREFIX.."H",
+		group = "signals",
+		order = "k",
+	},
+	{
+		type = "item-subgroup",
+		name = MOLECULE_BUILDER_BONDS_SUBGROUP_PREFIX.."V",
+		group = "signals",
+		order = "l",
+	},
+})
 for _, direction in ipairs({"H", "V"}) do
 	for bonds = 1, MAX_SINGLE_BONDS do
 		data:extend({
@@ -646,6 +660,16 @@ for _, direction in ipairs({"H", "V"}) do
 				name = MOLECULE_BONDS_PREFIX..direction..bonds,
 				filename = BOND_ICON_ROOT..direction..bonds.."l.png",
 				size = EQUIPMENT_GRID_SIZE,
+			},
+			-- and an item for the molecule builder
+			{
+				type = "item",
+				name = MOLECULE_BONDS_PREFIX..direction..bonds,
+				subgroup = MOLECULE_BUILDER_BONDS_SUBGROUP_PREFIX..direction,
+				localised_name = {"factoriochem.complex-bonds-"..direction, bonds},
+				icon = BOND_ICON_ROOT..direction..bonds.."l.png",
+				icon_size = EQUIPMENT_GRID_SIZE,
+				stack_size = 1,
 			},
 		})
 	end
