@@ -60,7 +60,7 @@ local PARSE_MOLECULE_ATOM_MATCH = "([^"..ATOM_COL_SEPARATOR.."]*)"..ATOM_COL_SEP
 local MOLECULE_ID_ATOMS_PER_SIGNAL = 3
 
 
--- Global utilities
+-- Global utilities - parse molecule inputs and selectors
 function parse_molecule_id(molecule)
 	local shape = {}
 
@@ -109,6 +109,23 @@ function parse_molecule(molecule)
 	end
 end
 
+function parse_target(target)
+	return tonumber(string.sub(target, -4, -4)), -- y_scale
+		tonumber(string.sub(target, -3, -3)), -- x_scale
+		tonumber(string.sub(target, -2, -2)) + 1, -- y
+		tonumber(string.sub(target, -1, -1)) + 1 -- x
+end
+
+function parse_atom_bond(atom_bond)
+	return tonumber(string.sub(atom_bond, -5, -5)), -- y_scale
+		tonumber(string.sub(atom_bond, -4, -4)), -- x_scale
+		tonumber(string.sub(atom_bond, -3, -3)) + 1, -- y
+		tonumber(string.sub(atom_bond, -2, -2)) + 1, -- x
+		string.sub(atom_bond, -1, -1) -- direction
+end
+
+
+-- Global utilities - export molecule item names
 function assemble_molecule(shape, height, width)
 	if height == 1 and width == 1 then return ATOM_ITEM_PREFIX..shape[1][1].symbol end
 	local builder = {MOLECULE_ITEM_PREFIX}
@@ -132,21 +149,16 @@ function assemble_molecule(shape, height, width)
 	return table.concat(builder)
 end
 
-function parse_target(target)
-	return tonumber(string.sub(target, -4, -4)), -- y_scale
-		tonumber(string.sub(target, -3, -3)), -- x_scale
-		tonumber(string.sub(target, -2, -2)) + 1, -- y
-		tonumber(string.sub(target, -1, -1)) + 1 -- x
+function get_complex_molecule_item_name(shape)
+	local shape_n = 0
+	for y, shape_row in pairs(shape) do
+		for x, _ in pairs(shape_row) do shape_n = shape_n + bit32.lshift(1, (y - 1) * MAX_GRID_WIDTH + x - 1) end
+	end
+	return COMPLEX_MOLECULE_ITEM_PREFIX..string.format("%03X", shape_n)
 end
 
-function parse_atom_bond(atom_bond)
-	return tonumber(string.sub(atom_bond, -5, -5)), -- y_scale
-		tonumber(string.sub(atom_bond, -4, -4)), -- x_scale
-		tonumber(string.sub(atom_bond, -3, -3)) + 1, -- y
-		tonumber(string.sub(atom_bond, -2, -2)) + 1, -- x
-		string.sub(atom_bond, -1, -1) -- direction
-end
 
+-- Global utilities - read and write combinators
 function write_molecule_id_to_combinator(behavior, molecule_id)
 	local shape
 	if not pcall(function() shape = parse_molecule_id(molecule_id) end) then shape = {{}} end
@@ -215,12 +227,4 @@ function read_molecule_id_from_combinator(behavior)
 		::continue_signals::
 	end
 	return table.concat(builder)
-end
-
-function get_complex_molecule_item_name(shape)
-	local shape_n = 0
-	for y, shape_row in pairs(shape) do
-		for x, _ in pairs(shape_row) do shape_n = shape_n + bit32.lshift(1, (y - 1) * MAX_GRID_WIDTH + x - 1) end
-	end
-	return COMPLEX_MOLECULE_ITEM_PREFIX..string.format("%03X", shape_n)
 end
