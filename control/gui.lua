@@ -35,9 +35,9 @@ local SCIENCES = {
 	"utility-science-pack",
 }
 local MOLECULE_BUILDER_SCIENCES_NAME_MAP = {}
-for _, science in ipairs(SCIENCES) do
-	MOLECULE_BUILDER_SCIENCES_NAME_MAP[MOLECULE_BUILDER_SCIENCES_NAME.."-"..science] = science
-end
+local MOLECULE_BUILDER_INGREDIENTS_NAME_MAP = {}
+local MOLECULE_BUILDER_ROWS = MAX_GRID_HEIGHT * 2 - 1
+local MOLECULE_BUILDER_COLS = MAX_GRID_WIDTH * 2 - 1
 local MOLECULE_CONTENTS_CACHE = {}
 local MOLECULE_CONTENTS_STRING = "factoriochem.molecule-contents"
 local GUI_READY = false
@@ -569,7 +569,7 @@ local function toggle_periodic_table_gui(player)
 end
 
 
--- Molecule builder GUI construction
+-- Molecule builder GUI construction / destruction + utilities
 local function set_molecule_builder_ingredients(gui, molecule_builder_science_name)
 	local recipe = GAME_RECIPE_PROTOTYPES[molecule_builder_science_name]
 	local ingredients_gui = gui.screen[MOLECULE_BUILDER_NAME].outer[MOLECULE_BUILDER_INGREDIENTS_NAME]
@@ -612,8 +612,8 @@ local function toggle_molecule_builder_gui(gui)
 		local h_bond_filters = {{filter = "subgroup", subgroup = MOLECULE_BUILDER_BONDS_SUBGROUP_PREFIX.."H"}}
 		local v_bond_filters = {{filter = "subgroup", subgroup = MOLECULE_BUILDER_BONDS_SUBGROUP_PREFIX.."V"}}
 		local cells = {}
-		for y = 1, MAX_GRID_HEIGHT * 2 - 1 do
-			for x = 1, MAX_GRID_WIDTH * 2 - 1 do
+		for y = 1, MOLECULE_BUILDER_ROWS do
+			for x = 1, MOLECULE_BUILDER_COLS do
 				local is_row = (y + 1) % 2 == 0
 				local is_col = (x + 1) % 2 == 0
 				if is_row or is_col then
@@ -660,7 +660,7 @@ local function toggle_molecule_builder_gui(gui)
 					type = "table",
 					name = MOLECULE_BUILDER_TABLE_NAME,
 					style = "factoriochem-molecule-builder-table",
-					column_count = MAX_GRID_WIDTH * 2 - 1,
+					column_count = MOLECULE_BUILDER_COLS,
 					children = build_molecule_builder_table_children(),
 				}},
 			}, {
@@ -675,6 +675,51 @@ local function toggle_molecule_builder_gui(gui)
 	molecule_builder_gui.titlebar.drag_target = molecule_builder_gui
 
 	set_molecule_builder_ingredients(gui, SCIENCES[1])
+end
+
+local function show_molecule_in_builder(gui, molecule_builder_ingredient_name)
+	local shape, height, width = parse_molecule(molecule_builder_ingredient_name)
+	local molecule_builder_table_children = gui
+		.screen
+		[MOLECULE_BUILDER_NAME]
+		.outer
+		[MOLECULE_BUILDER_MAIN_NAME]
+		[MOLECULE_BUILDER_TABLE_FRAME_NAME]
+		[MOLECULE_BUILDER_TABLE_NAME]
+		.children
+	for y = 1, MOLECULE_BUILDER_ROWS do
+		for x = 1, MOLECULE_BUILDER_COLS do
+			local is_row = (y + 1) % 2 == 0
+			local is_col = (x + 1) % 2 == 0
+			-- use math.floor to get the right atom for right and down bonds
+			local atom_x = math.floor((x + 1) / 2)
+			local atom_y = math.floor((y + 1) / 2)
+			local atom = atom_y <= height and atom_x <= width and shape[atom_y][atom_x]
+			local element = molecule_builder_table_children[(y - 1) * MOLECULE_BUILDER_COLS + x]
+			-- show atoms
+			if is_row and is_col then
+				if atom then
+					element.elem_value = ATOM_ITEM_PREFIX..atom.symbol
+				else
+					element.elem_value = nil
+				end
+			-- show right bonds
+			elseif is_row then
+				if atom and atom.right then
+					element.elem_value = MOLECULE_BONDS_PREFIX.."H"..atom.right
+				else
+					element.elem_value = nil
+				end
+			-- show down bonds
+			elseif is_col then
+				if atom and atom.down then
+					element.elem_value = MOLECULE_BONDS_PREFIX.."V"..atom.down
+				else
+					element.elem_value = nil
+				end
+			end
+		end
+	end
 end
 
 
@@ -757,6 +802,10 @@ local function on_gui_click(event)
 	-- show the ingredients of a science in the molecule builder
 	local molecule_builder_science_name = MOLECULE_BUILDER_SCIENCES_NAME_MAP[element.name]
 	if molecule_builder_science_name then set_molecule_builder_ingredients(player.gui, molecule_builder_science_name) end
+
+	-- show the contents of a science ingredient in the molecule builder
+	local molecule_builder_ingredient_name = MOLECULE_BUILDER_INGREDIENTS_NAME_MAP[element.name]
+	if molecule_builder_ingredient_name then show_molecule_in_builder(player.gui, molecule_builder_ingredient_name) end
 end
 
 local function on_gui_elem_changed(event)
@@ -919,6 +968,15 @@ function gui_on_first_tick()
 			end
 		end
 		BUILDING_EXAMPLES_TEXT[name] = examples_text
+	end
+	-- match GUI names with sciences/science ingredients
+	for _, science in ipairs(SCIENCES) do
+		MOLECULE_BUILDER_SCIENCES_NAME_MAP[MOLECULE_BUILDER_SCIENCES_NAME.."-"..science] = science
+		local recipe = GAME_RECIPE_PROTOTYPES[science]
+		for _, ingredient in pairs(recipe.ingredients) do
+			ingredient = ingredient.name
+			MOLECULE_BUILDER_INGREDIENTS_NAME_MAP[MOLECULE_BUILDER_INGREDIENTS_NAME.."-"..ingredient] = ingredient
+		end
 	end
 	GUI_READY = true
 end
