@@ -665,6 +665,8 @@ local function toggle_molecule_builder_gui(gui)
 				}},
 			}, {
 				type = "sprite-button",
+			}, {
+				type = "textfield",
 			}}
 		}},
 	}
