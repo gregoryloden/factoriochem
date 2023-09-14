@@ -1083,14 +1083,18 @@ BUILDING_DEFINITIONS = {
 				end
 			end
 			if not top_x then return false end
+
 			local has_left = false
+			local has_right = false
 			for y = 1, height do
-				if shape[y][1] then
-					has_left = true
-					break
-				end
+				if shape[y][1] then has_left = true end
+				if shape[y][width] then has_right = true end
 			end
-			if not has_left then return false end
+			if not has_left or not has_right then return false end
+
+			local has_bottom = false
+			for _, _ in pairs(shape[height]) do has_bottom = true end
+			if not has_bottom then return false end
 
 			-- make sure all atoms are connected
 			local all_atoms = extract_connected_atoms(shape, top_x, 1)
