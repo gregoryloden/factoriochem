@@ -583,6 +583,14 @@ local function set_molecule_builder_ingredients(gui, molecule_builder_science_na
 	end
 end
 
+local function iter_molecule_builder_cells(handle_cell)
+	for y = 1, MOLECULE_BUILDER_ROWS do
+		for x = 1, MOLECULE_BUILDER_COLS do
+			handle_cell(y, x, (y + 1) % 2 == 0, (x + 1) % 2 == 0, (y - 1) * MOLECULE_BUILDER_COLS + x)
+		end
+	end
+end
+
 local function toggle_molecule_builder_gui(gui)
 	if gui.screen[MOLECULE_BUILDER_NAME] then
 		gui.screen[MOLECULE_BUILDER_NAME].destroy()
@@ -612,26 +620,22 @@ local function toggle_molecule_builder_gui(gui)
 		local h_bond_filters = {{filter = "subgroup", subgroup = MOLECULE_BUILDER_BONDS_SUBGROUP_PREFIX.."H"}}
 		local v_bond_filters = {{filter = "subgroup", subgroup = MOLECULE_BUILDER_BONDS_SUBGROUP_PREFIX.."V"}}
 		local cells = {}
-		for y = 1, MOLECULE_BUILDER_ROWS do
-			for x = 1, MOLECULE_BUILDER_COLS do
-				local is_row = (y + 1) % 2 == 0
-				local is_col = (x + 1) % 2 == 0
-				if is_row or is_col then
-					local spec = {type = "choose-elem-button", elem_type = "item"}
-					if not is_col then
-						spec.elem_filters = h_bond_filters
-					elseif not is_row then
-						spec.elem_filters = v_bond_filters
-					else
-						spec.elem_filters = atom_filters
-						spec.style = "factoriochem-big-slot-button"
-					end
-					table.insert(cells, spec)
+		iter_molecule_builder_cells(function(y, x, is_row, is_col, cell_i)
+			if is_row or is_col then
+				local spec = {type = "choose-elem-button", elem_type = "item"}
+				if not is_col then
+					spec.elem_filters = h_bond_filters
+				elseif not is_row then
+					spec.elem_filters = v_bond_filters
 				else
-					table.insert(cells, {type = "empty-widget"})
+					spec.elem_filters = atom_filters
+					spec.style = "factoriochem-big-slot-button"
 				end
+				cells[cell_i] = spec
+			else
+				cells[cell_i] = {type = "empty-widget"}
 			end
-		end
+		end)
 		return cells
 	end
 	local inner_gui_spec = {
@@ -689,39 +693,35 @@ local function show_molecule_in_builder(gui, molecule_builder_ingredient_name)
 		[MOLECULE_BUILDER_TABLE_FRAME_NAME]
 		[MOLECULE_BUILDER_TABLE_NAME]
 		.children
-	for y = 1, MOLECULE_BUILDER_ROWS do
-		for x = 1, MOLECULE_BUILDER_COLS do
-			local is_row = (y + 1) % 2 == 0
-			local is_col = (x + 1) % 2 == 0
-			-- use math.floor to get the right atom for right and down bonds
-			local atom_x = math.floor((x + 1) / 2)
-			local atom_y = math.floor((y + 1) / 2)
-			local atom = atom_y <= height and atom_x <= width and shape[atom_y][atom_x]
-			local element = molecule_builder_table_children[(y - 1) * MOLECULE_BUILDER_COLS + x]
-			-- show atoms
-			if is_row and is_col then
-				if atom then
-					element.elem_value = ATOM_ITEM_PREFIX..atom.symbol
-				else
-					element.elem_value = nil
-				end
-			-- show right bonds
-			elseif is_row then
-				if atom and atom.right then
-					element.elem_value = MOLECULE_BONDS_PREFIX.."H"..atom.right
-				else
-					element.elem_value = nil
-				end
-			-- show down bonds
-			elseif is_col then
-				if atom and atom.down then
-					element.elem_value = MOLECULE_BONDS_PREFIX.."V"..atom.down
-				else
-					element.elem_value = nil
-				end
+	iter_molecule_builder_cells(function(y, x, is_row, is_col, cell_i)
+		-- use math.floor to get the right atom for right and down bonds
+		local atom_x = math.floor((x + 1) / 2)
+		local atom_y = math.floor((y + 1) / 2)
+		local atom = atom_y <= height and atom_x <= width and shape[atom_y][atom_x]
+		local element = molecule_builder_table_children[cell_i]
+		-- show atoms
+		if is_row and is_col then
+			if atom then
+				element.elem_value = ATOM_ITEM_PREFIX..atom.symbol
+			else
+				element.elem_value = nil
+			end
+		-- show right bonds
+		elseif is_row then
+			if atom and atom.right then
+				element.elem_value = MOLECULE_BONDS_PREFIX.."H"..atom.right
+			else
+				element.elem_value = nil
+			end
+		-- show down bonds
+		elseif is_col then
+			if atom and atom.down then
+				element.elem_value = MOLECULE_BONDS_PREFIX.."V"..atom.down
+			else
+				element.elem_value = nil
 			end
 		end
-	end
+	end)
 end
 
 
