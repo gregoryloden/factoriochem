@@ -713,12 +713,13 @@ local function export_built_molecule(table_gui)
 				{symbol = string.sub(element.elem_value, #ATOM_ITEM_PREFIX + 1), x = atom_x, y = atom_y}
 		-- add right or down bonds
 		elseif is_row or is_col then
-			if atom_y < height or not shape[atom_y] then
+			local atom = atom_y <= height and shape[atom_y][atom_x]
+			if not atom then
 				valid = false
 			elseif is_row then
-				shape[atom_y][atom_x].right = tonumber(string.sub(element.elem_value, #element.elem_value))
+				atom.right = tonumber(string.sub(element.elem_value, #element.elem_value))
 			else
-				shape[atom_y][atom_x].down = tonumber(string.sub(element.elem_value, #element.elem_value))
+				atom.down = tonumber(string.sub(element.elem_value, #element.elem_value))
 			end
 		end
 	end)
