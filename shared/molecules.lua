@@ -268,3 +268,37 @@ end
 function verify_bond_count(atom)
 	return (atom.left or 0) + (atom.up or 0) + (atom.right or 0) + (atom.down or 0) <= ALL_ATOMS[atom.symbol].bonds
 end
+
+function validate_molecule(shape, height, width)
+	-- make sure that the size and positioning is valid
+	if height == 0 or height > MAX_GRID_HEIGHT or width == 0 or width > MAX_GRID_WIDTH then return false end
+
+	local top_x
+	local has_bottom = false
+	for x = 1, width do
+		if shape[1][x] then top_x = x end
+		if shape[height][x] then has_bottom = true end
+	end
+	if not top_x or not has_bottom then return false end
+
+	local has_left = false
+	local has_right = false
+	for y = 1, height do
+		if shape[y][1] then has_left = true end
+		if shape[y][width] then has_right = true end
+	end
+	if not has_left or not has_right then return false end
+
+	-- make sure all atoms are connected
+	local all_atoms = extract_connected_atoms(shape, top_x, 1)
+	local not_connected = has_any_atoms(shape)
+	for _, atom in ipairs(all_atoms) do shape[atom.y][atom.x] = atom end
+	if not_connected then return false end
+
+	-- make sure all bond counts are valid
+	for _, atom in ipairs(all_atoms) do
+		if not ALL_ATOMS[atom.symbol] or not verify_bond_count(atom) then return false end
+	end
+
+	return true
+end
