@@ -256,6 +256,34 @@ function extract_connected_atoms(shape, start_x, start_y)
 	return atoms
 end
 
+function normalize_shape(shape)
+	local min_x, max_x, min_y, max_y
+	for y, shape_row in pairs(shape) do
+		for x, atom in pairs(shape_row) do
+			if not min_x or x < min_x then min_x = x end
+			if not max_x or x > max_x then max_x = x end
+			if not min_y or y < min_y then min_y = y end
+			if not max_y or y > max_y then max_y = y end
+		end
+	end
+	local width = max_x - min_x + 1
+	local height = max_y - min_y + 1
+	if width > MAX_GRID_WIDTH or height > MAX_GRID_HEIGHT then return nil end
+	if min_x == 1 and min_y == 1 then return shape, height, width end
+	local new_shape = {}
+	for y = 1, height do
+		local new_shape_row = {}
+		local shape_row = shape[min_y + y - 1]
+		for x = 1, width do
+			local atom = shape_row[min_x + x - 1]
+			if atom then atom.x, atom.y = x, y end
+			new_shape_row[x] = atom
+		end
+		new_shape[y] = new_shape_row
+	end
+	return new_shape, height, width
+end
+
 function has_any_atoms(shape)
 	for _, shape_row in pairs(shape) do
 		for _, _ in pairs(shape_row) do return true end
