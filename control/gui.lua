@@ -26,6 +26,7 @@ local MOLECULE_BUILDER_INGREDIENTS_NAME = "molecule-builder-ingredients"
 local MOLECULE_BUILDER_MAIN_NAME = "molecule-builder-main"
 local MOLECULE_BUILDER_TABLE_FRAME_NAME = "molecule-builder-table-frame"
 local MOLECULE_BUILDER_TABLE_NAME = "molecule-builder-table"
+local MOLECULE_BUILDER_RESULT_NAME = "molecule-builder-result"
 local MOLECULE_BUILDER_RESULT_TEXT_NAME = "molecule-builder-result-text"
 local SCIENCES = {
 	"automation-science-pack",
@@ -670,6 +671,7 @@ local function toggle_molecule_builder_gui(gui)
 				}},
 			}, {
 				type = "sprite-button",
+				name = MOLECULE_BUILDER_RESULT_NAME,
 			}, {
 				type = "textfield",
 				name = MOLECULE_BUILDER_RESULT_TEXT_NAME,
@@ -686,6 +688,7 @@ local function toggle_molecule_builder_gui(gui)
 end
 
 local function export_built_molecule(table_gui)
+	local result = table_gui.parent.parent[MOLECULE_BUILDER_RESULT_NAME]
 	local result_text = table_gui.parent.parent[MOLECULE_BUILDER_RESULT_TEXT_NAME]
 	local table_children = table_gui.children
 	local valid = true
@@ -757,12 +760,18 @@ local function export_built_molecule(table_gui)
 	end
 	if valid then
 		local molecule = assemble_molecule(shape, height, width)
+		if GAME_ITEM_PROTOTYPES[molecule] then
+			result.sprite = "item/"..molecule
+		else
+			result.sprite = "item/"..get_complex_molecule_item_name(shape)
+		end
 		if height == 1 and width == 1 then
 			result_text.text = string.sub(molecule, #ATOM_ITEM_PREFIX + 1)
 		else
 			result_text.text = string.sub(molecule, #MOLECULE_ITEM_PREFIX + 1)
 		end
 	else
+		result.sprite = nil
 		result_text.text = ""
 	end
 end
@@ -924,7 +933,7 @@ local function on_gui_elem_changed(event)
 		return
 	end
 
-	-- update the molecule builder result text after changing part of it
+	-- update the molecule builder result and result text after changing part of it
 	if element.parent.name == MOLECULE_BUILDER_TABLE_NAME then export_built_molecule(element.parent) end
 end
 
