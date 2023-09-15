@@ -776,12 +776,11 @@ local function export_built_molecule(table_gui)
 	end
 end
 
-local function show_molecule_in_builder(gui, molecule_builder_ingredient_name)
+local function show_molecule_in_builder(element, molecule_builder_ingredient_name)
 	local shape, height, width = parse_molecule(molecule_builder_ingredient_name)
-	local table_gui = gui
-		.screen
-		[MOLECULE_BUILDER_NAME]
-		.outer
+	local table_gui = element
+		.parent
+		.parent
 		[MOLECULE_BUILDER_MAIN_NAME]
 		[MOLECULE_BUILDER_TABLE_FRAME_NAME]
 		[MOLECULE_BUILDER_TABLE_NAME]
@@ -901,7 +900,7 @@ local function on_gui_click(event)
 
 	-- show the contents of a science ingredient in the molecule builder
 	local molecule_builder_ingredient_name = MOLECULE_BUILDER_INGREDIENTS_NAME_MAP[element.name]
-	if molecule_builder_ingredient_name then show_molecule_in_builder(player.gui, molecule_builder_ingredient_name) end
+	if molecule_builder_ingredient_name then show_molecule_in_builder(element, molecule_builder_ingredient_name) end
 end
 
 local function on_gui_elem_changed(event)
