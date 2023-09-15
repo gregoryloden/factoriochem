@@ -228,3 +228,43 @@ function read_molecule_id_from_combinator(behavior)
 	end
 	return table.concat(builder)
 end
+
+
+-- Global utilities - modify and validate molecules
+function extract_connected_atoms(shape, start_x, start_y)
+	-- make sure we actually have an atom at the starting position
+	local start_row = shape[start_y]
+	if not start_row then return nil end
+	local atom = start_row[start_x]
+	if not atom then return nil end
+
+	-- BFS through the shape, removing any atom connected through bonds to the starting atom
+	shape[start_y][start_x] = nil
+	local atoms = {atom}
+	local atom_i = 1
+	function check_connected_atom(check_atom)
+		if not check_atom then return end
+		table.insert(atoms, check_atom)
+		shape[check_atom.y][check_atom.x] = nil
+	end
+	repeat
+		if atom.left then check_connected_atom(shape[atom.y][atom.x - 1]) end
+		if atom.up then check_connected_atom(shape[atom.y - 1][atom.x]) end
+		if atom.right then check_connected_atom(shape[atom.y][atom.x + 1]) end
+		if atom.down then check_connected_atom(shape[atom.y + 1][atom.x]) end
+		atom_i = atom_i + 1
+		atom = atoms[atom_i]
+	until not atom
+	return atoms
+end
+
+function has_any_atoms(shape)
+	for _, shape_row in pairs(shape) do
+		for _, _ in pairs(shape_row) do return true end
+	end
+	return false
+end
+
+function verify_bond_count(atom)
+	return (atom.left or 0) + (atom.up or 0) + (atom.right or 0) + (atom.down or 0) <= ALL_ATOMS[atom.symbol].bonds
+end
