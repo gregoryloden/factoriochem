@@ -75,7 +75,7 @@ function parse_molecule_id(molecule)
 			x = x + 1
 			local symbol = string.match(atom_data, "%a+")
 			if symbol then
-				local atom = {symbol = symbol}
+				local atom = {symbol = symbol, x = x, y = grid_height}
 				local up = string.match(atom_data, "^%d")
 				if up then atom.up = tonumber(up) end
 				local right = string.match(atom_data, "%d$")
@@ -87,13 +87,11 @@ function parse_molecule_id(molecule)
 		shape[grid_height] = shape_row
 	end
 
-	-- add corresponding down and left bonds and add coordinates
+	-- add corresponding down and left bonds
 	for y, shape_row in pairs(shape) do
 		for x, atom in pairs(shape_row) do
 			if atom.up then shape[y - 1][x].down = atom.up end
 			if atom.right then shape_row[x + 1].left = atom.right end
-			atom.x = x
-			atom.y = y
 		end
 	end
 	return shape, grid_height, grid_width
