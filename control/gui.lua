@@ -26,6 +26,7 @@ local MOLECULE_BUILDER_INGREDIENTS_NAME = "molecule-builder-ingredients"
 local MOLECULE_BUILDER_MAIN_NAME = "molecule-builder-main"
 local MOLECULE_BUILDER_TABLE_FRAME_NAME = "molecule-builder-table-frame"
 local MOLECULE_BUILDER_TABLE_NAME = "molecule-builder-table"
+local MOLECULE_BUILDER_RESULT_TEXT_NAME = "molecule-builder-result-text"
 local SCIENCES = {
 	"automation-science-pack",
 	"logistic-science-pack",
@@ -671,6 +672,7 @@ local function toggle_molecule_builder_gui(gui)
 				type = "sprite-button",
 			}, {
 				type = "textfield",
+				name = MOLECULE_BUILDER_RESULT_TEXT_NAME,
 			}}
 		}},
 	}
@@ -683,22 +685,103 @@ local function toggle_molecule_builder_gui(gui)
 	set_molecule_builder_ingredients(gui, SCIENCES[1])
 end
 
+local function export_built_molecule(table_gui)
+	local result_text = table_gui.parent.parent[MOLECULE_BUILDER_RESULT_TEXT_NAME]
+	local table_children = table_gui.children
+	local valid = true
+
+	-- assemble the shape of the molecule
+	local shape = {}
+	local height = 0
+	local width = 0
+	iter_molecule_builder_cells(function(y, x, is_row, is_col, cell_i)
+		-- use math.floor to get the right atom for right and down bonds
+		local atom_x = math.floor((x + 1) / 2)
+		local atom_y = math.floor((y + 1) / 2)
+		local element = table_children[cell_i]
+		-- nothing to see here
+		if (not is_row and not is_col) or not element.elem_value then
+			-- pass
+		-- add atoms
+		elseif is_row and is_col then
+			while height < atom_y do
+				height = height + 1
+				shape[height] = {}
+			end
+			if width < atom_x then width = atom_x end
+			shape[atom_y][atom_x] =
+				{symbol = string.sub(element.elem_value, #ATOM_ITEM_PREFIX + 1), x = atom_x, y = atom_y}
+		-- add right or down bonds
+		elseif is_row or is_col then
+			if atom_y < height or not shape[atom_y] then
+				valid = false
+			elseif is_row then
+				shape[atom_y][atom_x].right = tonumber(string.sub(element.elem_value, #element.elem_value))
+			else
+				shape[atom_y][atom_x].down = tonumber(string.sub(element.elem_value, #element.elem_value))
+			end
+		end
+	end)
+
+	-- add corresponding up and left bonds
+	for y, shape_row in pairs(shape) do
+		for x, atom in pairs(shape_row) do
+			if atom.down then
+				local other_atom = y + 1 <= height and shape[y + 1][x]
+				if other_atom then
+					other_atom.up = atom.down
+				else
+					valid = false
+				end
+			end
+			if atom.right then
+				local other_atom = shape_row[x + 1]
+				if other_atom then
+					other_atom.left = atom.right
+				else
+					valid = false
+				end
+			end
+		end
+	end
+
+	-- validate the shape and write it to the results
+	if not valid then
+		-- pass
+	elseif height == 0 then
+		valid = false
+	else
+		shape, height, width = normalize_shape(shape)
+		valid = validate_molecule(shape, height, width)
+	end
+	if valid then
+		local molecule = assemble_molecule(shape, height, width)
+		if height == 1 and width == 1 then
+			result_text.text = string.sub(molecule, #ATOM_ITEM_PREFIX + 1)
+		else
+			result_text.text = string.sub(molecule, #MOLECULE_ITEM_PREFIX + 1)
+		end
+	else
+		result_text.text = ""
+	end
+end
+
 local function show_molecule_in_builder(gui, molecule_builder_ingredient_name)
 	local shape, height, width = parse_molecule(molecule_builder_ingredient_name)
-	local molecule_builder_table_children = gui
+	local table_gui = gui
 		.screen
 		[MOLECULE_BUILDER_NAME]
 		.outer
 		[MOLECULE_BUILDER_MAIN_NAME]
 		[MOLECULE_BUILDER_TABLE_FRAME_NAME]
 		[MOLECULE_BUILDER_TABLE_NAME]
-		.children
+	local table_children = table_gui.children
 	iter_molecule_builder_cells(function(y, x, is_row, is_col, cell_i)
 		-- use math.floor to get the right atom for right and down bonds
 		local atom_x = math.floor((x + 1) / 2)
 		local atom_y = math.floor((y + 1) / 2)
 		local atom = atom_y <= height and atom_x <= width and shape[atom_y][atom_x]
-		local element = molecule_builder_table_children[cell_i]
+		local element = table_children[cell_i]
 		-- show atoms
 		if is_row and is_col then
 			if atom then
@@ -722,6 +805,7 @@ local function show_molecule_in_builder(gui, molecule_builder_ingredient_name)
 			end
 		end
 	end)
+	export_built_molecule(table_gui)
 end
 
 
@@ -838,6 +922,9 @@ local function on_gui_elem_changed(event)
 		demo_reaction(building_data, demo_state, element.parent)
 		return
 	end
+
+	-- update the molecule builder result text after changing part of it
+	if element.parent.name == MOLECULE_BUILDER_TABLE_NAME then export_built_molecule(element.parent) end
 end
 
 local function on_gui_selection_state_changed(event)

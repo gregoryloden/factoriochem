@@ -297,7 +297,7 @@ end
 
 function validate_molecule(shape, height, width)
 	-- make sure that the size and positioning is valid
-	if height == 0 or height > MAX_GRID_HEIGHT or width == 0 or width > MAX_GRID_WIDTH then return false end
+	if not shape or height == 0 or height > MAX_GRID_HEIGHT or width == 0 or width > MAX_GRID_WIDTH then return false end
 
 	local top_x
 	local has_bottom = false
