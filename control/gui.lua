@@ -687,7 +687,7 @@ local function toggle_molecule_builder_gui(gui)
 	set_molecule_builder_ingredients(gui, SCIENCES[1])
 end
 
-local function export_built_molecule(table_gui)
+local function export_built_molecule(source, table_gui)
 	local result = table_gui.parent.parent[MOLECULE_BUILDER_RESULT_NAME]
 	local result_text = table_gui.parent.parent[MOLECULE_BUILDER_RESULT_TEXT_NAME]
 	local table_children = table_gui.children
@@ -758,42 +758,38 @@ local function export_built_molecule(table_gui)
 		shape, height, width = normalize_shape(shape)
 		valid = validate_molecule(shape, height, width)
 	end
+	local result_val = nil
+	local result_text_val = ""
 	if valid then
 		local molecule = assemble_molecule(shape, height, width)
 		if GAME_ITEM_PROTOTYPES[molecule] then
-			result.sprite = "item/"..molecule
+			result_val = "item/"..molecule
 		else
-			result.sprite = "item/"..get_complex_molecule_item_name(shape)
+			result_val = "item/"..get_complex_molecule_item_name(shape)
 		end
 		if height == 1 and width == 1 then
-			result_text.text = string.sub(molecule, #ATOM_ITEM_PREFIX + 1)
+			result_text_val = string.sub(molecule, #ATOM_ITEM_PREFIX + 1)
 		else
-			result_text.text = string.sub(molecule, #MOLECULE_ITEM_PREFIX + 1)
+			result_text_val = string.sub(molecule, #MOLECULE_ITEM_PREFIX + 1)
 		end
-	else
-		result.sprite = nil
-		result_text.text = ""
 	end
+	result.sprite = result_val
+	if source.name ~= MOLECULE_BUILDER_RESULT_TEXT_NAME then result_text.text = result_text_val end
 end
 
-local function show_molecule_in_builder(element, molecule_builder_ingredient_name)
-	local shape, height, width = parse_molecule(molecule_builder_ingredient_name)
-	local table_gui = element
-		.parent
-		.parent
-		[MOLECULE_BUILDER_MAIN_NAME]
-		[MOLECULE_BUILDER_TABLE_FRAME_NAME]
-		[MOLECULE_BUILDER_TABLE_NAME]
+local function show_molecule_in_builder(source, table_gui, shape, height)
 	local table_children = table_gui.children
 	iter_molecule_builder_cells(function(y, x, is_row, is_col, cell_i)
 		-- use math.floor to get the right atom for right and down bonds
 		local atom_x = math.floor((x + 1) / 2)
 		local atom_y = math.floor((y + 1) / 2)
-		local atom = atom_y <= height and atom_x <= width and shape[atom_y][atom_x]
+		local atom = atom_y <= height and shape[atom_y][atom_x]
 		local element = table_children[cell_i]
 		-- show atoms
 		if is_row and is_col then
-			if atom then
+			-- we can receive molecules from the ID field, which may have invalid symbols which parse fine
+			-- this is OK, it's better to extract an invalid molecule into the builder than to clear the builder
+			if atom and ALL_ATOMS[atom.symbol] then
 				element.elem_value = ATOM_ITEM_PREFIX..atom.symbol
 			else
 				element.elem_value = nil
@@ -814,7 +810,7 @@ local function show_molecule_in_builder(element, molecule_builder_ingredient_nam
 			end
 		end
 	end)
-	export_built_molecule(table_gui)
+	export_built_molecule(source, table_gui)
 end
 
 
@@ -900,7 +896,16 @@ local function on_gui_click(event)
 
 	-- show the contents of a science ingredient in the molecule builder
 	local molecule_builder_ingredient_name = MOLECULE_BUILDER_INGREDIENTS_NAME_MAP[element.name]
-	if molecule_builder_ingredient_name then show_molecule_in_builder(element, molecule_builder_ingredient_name) end
+	if molecule_builder_ingredient_name then
+		local shape, height = parse_molecule(molecule_builder_ingredient_name)
+		local table_gui = element
+			.parent
+			.parent
+			[MOLECULE_BUILDER_MAIN_NAME]
+			[MOLECULE_BUILDER_TABLE_FRAME_NAME]
+			[MOLECULE_BUILDER_TABLE_NAME]
+		show_molecule_in_builder(element, table_gui, shape, height)
+	end
 end
 
 local function on_gui_elem_changed(event)
@@ -933,7 +938,7 @@ local function on_gui_elem_changed(event)
 	end
 
 	-- update the molecule builder result and result text after changing part of it
-	if element.parent.name == MOLECULE_BUILDER_TABLE_NAME then export_built_molecule(element.parent) end
+	if element.parent.name == MOLECULE_BUILDER_TABLE_NAME then export_built_molecule(element, element.parent) end
 end
 
 local function on_gui_selection_state_changed(event)
@@ -1018,6 +1023,14 @@ local function on_gui_text_changed(event)
 		demo_state.selectors[reaction_demo_table_selector_reactant_name] = element.text
 		demo_reaction(building_data, demo_state, element.parent)
 		return
+	end
+
+	-- update the molecule builder and the result if the text changed
+	if element.name == MOLECULE_BUILDER_RESULT_TEXT_NAME then
+		local shape, height
+		if not pcall(function() shape, height = parse_molecule_id(element.text) end) then shape, height = {}, 0 end
+		local table_gui = element.parent[MOLECULE_BUILDER_TABLE_FRAME_NAME][MOLECULE_BUILDER_TABLE_NAME]
+		show_molecule_in_builder(element, table_gui, shape, height)
 	end
 end
 
