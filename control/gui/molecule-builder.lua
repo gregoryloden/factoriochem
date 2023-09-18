@@ -44,16 +44,12 @@ local function set_molecule_builder_ingredients(outer_gui, molecule_builder_scie
 	ingredients_gui.add({type = "sprite-button", name = MOLECULE_BUILDER_CLEAR_NAME, sprite = "cancel"})
 end
 
-local function export_built_molecule(source, table_gui)
-	local result = table_gui.parent.parent[MOLECULE_BUILDER_RESULT_NAME]
-	local result_text = table_gui.parent.parent[MOLECULE_BUILDER_RESULT_TEXT_NAME]
-	local table_children = table_gui.children
-	local valid = true
-
+local function get_valid_molecule_builder_shape(table_children)
 	-- assemble the shape of the molecule
 	local shape = {}
 	local height = 0
 	local width = 0
+	local valid = true
 	iter_molecule_builder_cells(function(y, x, is_row, is_col, cell_i)
 		-- use math.floor to get the right atom for right and down bonds
 		local atom_x = math.floor((x + 1) / 2)
@@ -83,40 +79,35 @@ local function export_built_molecule(source, table_gui)
 			end
 		end
 	end)
+	if not valid or height == 0 then return false end
 
 	-- add corresponding up and left bonds
 	for y, shape_row in pairs(shape) do
 		for x, atom in pairs(shape_row) do
 			if atom.down then
 				local other_atom = y + 1 <= height and shape[y + 1][x]
-				if other_atom then
-					other_atom.up = atom.down
-				else
-					valid = false
-				end
+				if not other_atom then return false end
+				other_atom.up = atom.down
 			end
 			if atom.right then
 				local other_atom = shape_row[x + 1]
-				if other_atom then
-					other_atom.left = atom.right
-				else
-					valid = false
-				end
+				if not other_atom then return false end
+				other_atom.left = atom.right
 			end
 		end
 	end
 
-	-- validate the shape and write it to the results
-	if not valid then
-		-- pass
-	elseif height == 0 then
-		valid = false
-	else
-		shape, height, width = normalize_shape(shape)
-		valid = validate_molecule(shape, height, width)
-	end
+	-- validate the shape before returning it
+	shape, height, width = normalize_shape(shape)
+	return validate_molecule(shape, height, width), shape, height, width
+end
+
+local function export_built_molecule(source, table_gui)
+	local result = table_gui.parent.parent[MOLECULE_BUILDER_RESULT_NAME]
+	local result_text = table_gui.parent.parent[MOLECULE_BUILDER_RESULT_TEXT_NAME]
 	local result_val = nil
 	local result_text_val = ""
+	local valid, shape, height, width = get_valid_molecule_builder_shape(table_gui.children)
 	if valid then
 		local molecule = assemble_molecule(shape, height, width)
 		if GAME_ITEM_PROTOTYPES[molecule] then
