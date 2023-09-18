@@ -125,23 +125,15 @@ local function build_molecule_contents_text(molecule)
 	return table.concat(builder, "\n")
 end
 
-local function update_reaction_table_sprite(element, chest_stack, component)
-	local complex_molecule
-	if chest_stack and chest_stack.valid_for_read then
-		component = chest_stack.name
-		element.sprite = "item/"..component
-		local complex_shape = COMPLEX_SHAPES[component]
-		if complex_shape then complex_molecule = parse_complex_molecule(chest_stack.grid, complex_shape) end
-	elseif component then
-		if GAME_ITEM_PROTOTYPES[component] then
-			element.sprite = "item/"..component
-		else
-			complex_molecule = component
-			element.sprite = "item/"..get_complex_molecule_item_name(parse_molecule(component))
-		end
-	else
-		element.sprite = nil
+local function indexof_reactant(reactant_name)
+	for i, found_reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
+		if reactant_name == found_reactant_name then return i end
 	end
+end
+
+
+-- Global utilities
+function gui_update_complex_molecule_tooltip(element, complex_molecule)
 	local tooltip = element.tooltip
 	if complex_molecule then
 		local molecule_contents_text = MOLECULE_CONTENTS_CACHE[complex_molecule]
@@ -160,6 +152,64 @@ local function update_reaction_table_sprite(element, chest_stack, component)
 	end
 end
 
+function build_centered_titlebar_gui(gui, name, title, content)
+	local gui_spec = {
+		type = "frame",
+		name = name,
+		direction = "vertical",
+		children = {
+			{
+				type = "flow",
+				name = "titlebar",
+				children = {{
+					type = "label",
+					caption = title,
+					style = "frame_title",
+					ignored_by_interaction = true,
+				}, {
+					type = "empty-widget",
+					style = "factoriochem-titlebar-drag-handle",
+					ignored_by_interaction = true,
+				}, {
+					type = "sprite-button",
+					name = "close",
+					style = "frame_action_button",
+					sprite = "utility/close_white",
+					hovered_sprite = "utility/close_black",
+					clicked_sprite = "utility/close_black",
+				}},
+			},
+			content,
+		},
+	}
+	local titlebar_gui = gui_add_recursive(gui.screen, gui_spec)
+	titlebar_gui.titlebar.drag_target = titlebar_gui
+	titlebar_gui.force_auto_center()
+	return titlebar_gui
+end
+
+
+-- Reaction display utilities
+local function update_reaction_table_sprite(element, chest_stack, component)
+	local complex_molecule
+	if chest_stack and chest_stack.valid_for_read then
+		component = chest_stack.name
+		element.sprite = "item/"..component
+		local complex_shape = COMPLEX_SHAPES[component]
+		if complex_shape then complex_molecule = parse_complex_molecule(chest_stack.grid, complex_shape) end
+	elseif component then
+		if GAME_ITEM_PROTOTYPES[component] then
+			element.sprite = "item/"..component
+		else
+			complex_molecule = component
+			element.sprite = "item/"..get_complex_molecule_item_name(parse_molecule(component))
+		end
+	else
+		element.sprite = nil
+	end
+	gui_update_complex_molecule_tooltip(element, complex_molecule)
+end
+
 local function update_all_reaction_table_sprites(gui, building_data)
 	local reaction_table =
 		gui.relative[MOLECULE_REACTION_NAME].outer[REACTION_PREFIX..FRAME_NAME][REACTION_PREFIX..TABLE_NAME]
@@ -172,12 +222,6 @@ local function update_all_reaction_table_sprites(gui, building_data)
 	for _, product_name in ipairs(building_definition.products) do
 		update_reaction_table_sprite(
 			reaction_table[REACTION_PREFIX..product_name], chest_stacks[product_name], products[product_name])
-	end
-end
-
-local function indexof_reactant(reactant_name)
-	for i, found_reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
-		if reactant_name == found_reactant_name then return i end
 	end
 end
 
@@ -217,44 +261,6 @@ local function demo_reaction_with_reactant(building_data, demo_state, element, r
 	demo_state.reactants[reactant_name] = reactant
 	update_reaction_table_sprite(element, nil, reactant)
 	demo_reaction(building_data, demo_state, element.parent)
-end
-
-
--- Global utilities
-function build_centered_titlebar_gui(gui, name, title, content)
-	local gui_spec = {
-		type = "frame",
-		name = name,
-		direction = "vertical",
-		children = {
-			{
-				type = "flow",
-				name = "titlebar",
-				children = {{
-					type = "label",
-					caption = title,
-					style = "frame_title",
-					ignored_by_interaction = true,
-				}, {
-					type = "empty-widget",
-					style = "factoriochem-titlebar-drag-handle",
-					ignored_by_interaction = true,
-				}, {
-					type = "sprite-button",
-					name = "close",
-					style = "frame_action_button",
-					sprite = "utility/close_white",
-					hovered_sprite = "utility/close_black",
-					clicked_sprite = "utility/close_black",
-				}},
-			},
-			content,
-		},
-	}
-	local titlebar_gui = gui_add_recursive(gui.screen, gui_spec)
-	titlebar_gui.titlebar.drag_target = titlebar_gui
-	titlebar_gui.force_auto_center()
-	return titlebar_gui
 end
 
 
