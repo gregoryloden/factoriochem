@@ -6,7 +6,7 @@ local MOLECULE_BUILDER_TABLE_FRAME_NAME = "molecule-builder-table-frame"
 local MOLECULE_BUILDER_TABLE_NAME = "molecule-builder-table"
 local MOLECULE_BUILDER_CLEAR_NAME = "molecule-builder-clear"
 local MOLECULE_BUILDER_RESULT_NAME = "molecule-builder-result"
-local MOLECULE_BUILDER_RESULT_TEXT_NAME = "molecule-builder-result-text"
+local MOLECULE_BUILDER_RESULT_ID_NAME = "molecule-builder-result-id"
 local MOLECULE_BUILDER_SCIENCES = {
 	"automation-science-pack",
 	"logistic-science-pack",
@@ -103,26 +103,32 @@ local function get_valid_molecule_builder_shape(table_children)
 end
 
 local function export_built_molecule(source, table_gui)
-	local result = table_gui.parent.parent[MOLECULE_BUILDER_RESULT_NAME]
-	local result_text = table_gui.parent.parent[MOLECULE_BUILDER_RESULT_TEXT_NAME]
+	local main_gui = table_gui.parent.parent
+	local result = main_gui[MOLECULE_BUILDER_RESULT_NAME]
+	local result_id = main_gui[MOLECULE_BUILDER_RESULT_ID_NAME]
+	local complex_molecule = nil
 	local result_val = nil
-	local result_text_val = ""
+	local result_id_val = ""
 	local valid, shape, height, width = get_valid_molecule_builder_shape(table_gui.children)
 	if valid then
+		-- set the result ID
 		local molecule = assemble_molecule(shape, height, width)
-		if GAME_ITEM_PROTOTYPES[molecule] then
-			result_val = "item/"..molecule
-		else
-			result_val = "item/"..get_complex_molecule_item_name(shape)
-		end
 		if height == 1 and width == 1 then
-			result_text_val = string.sub(molecule, #ATOM_ITEM_PREFIX + 1)
+			result_id_val = string.sub(molecule, #ATOM_ITEM_PREFIX + 1)
 		else
-			result_text_val = string.sub(molecule, #MOLECULE_ITEM_PREFIX + 1)
+			result_id_val = string.sub(molecule, #MOLECULE_ITEM_PREFIX + 1)
 		end
+
+		-- set the result and the stack item
+		if not GAME_ITEM_PROTOTYPES[molecule] then
+			complex_molecule = molecule
+			molecule = get_complex_molecule_item_name(shape)
+		end
+		result_val = "item/"..molecule
 	end
 	result.sprite = result_val
-	if source.name ~= MOLECULE_BUILDER_RESULT_TEXT_NAME then result_text.text = result_text_val end
+	gui_update_complex_molecule_tooltip(result, complex_molecule, false)
+	if source.name ~= MOLECULE_BUILDER_RESULT_ID_NAME then result_id.text = result_id_val end
 end
 
 local function show_molecule_in_builder(source, table_gui, shape, height)
@@ -242,9 +248,11 @@ function toggle_molecule_builder_gui(gui, ATOMS_SUBGROUP_PREFIX_MATCH)
 			}, {
 				type = "sprite-button",
 				name = MOLECULE_BUILDER_RESULT_NAME,
+				tooltip = {"factoriochem.molecule-builder-result"},
 			}, {
 				type = "textfield",
-				name = MOLECULE_BUILDER_RESULT_TEXT_NAME,
+				name = MOLECULE_BUILDER_RESULT_ID_NAME,
+				tooltip = {"factoriochem.molecule-builder-result-id"},
 			}}
 		}},
 	}
@@ -288,7 +296,7 @@ function molecule_builder_on_gui_click(element)
 end
 
 function molecule_builder_on_gui_elem_changed(element)
-	-- update the molecule builder result and result text after changing part of it
+	-- update the molecule builder result and result ID after changing part of it
 	if element.parent.name == MOLECULE_BUILDER_TABLE_NAME then
 		export_built_molecule(element, element.parent)
 		return true
@@ -299,7 +307,7 @@ end
 
 function molecule_builder_on_gui_text_changed(element)
 	-- update the molecule builder and the result if the text changed
-	if element.name == MOLECULE_BUILDER_RESULT_TEXT_NAME then
+	if element.name == MOLECULE_BUILDER_RESULT_ID_NAME then
 		local shape, height
 		if not pcall(function() shape, height = parse_molecule_id(element.text) end) then shape, height = {}, 0 end
 		local table_gui = element.parent[MOLECULE_BUILDER_TABLE_FRAME_NAME][MOLECULE_BUILDER_TABLE_NAME]

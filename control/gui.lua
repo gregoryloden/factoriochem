@@ -133,13 +133,13 @@ end
 
 
 -- Global utilities
-function gui_update_complex_molecule_tooltip(element, complex_molecule)
+function gui_update_complex_molecule_tooltip(element, complex_molecule, cache_result)
 	local tooltip = element.tooltip
 	if complex_molecule then
 		local molecule_contents_text = MOLECULE_CONTENTS_CACHE[complex_molecule]
 		if not molecule_contents_text then
 			molecule_contents_text = build_molecule_contents_text(complex_molecule)
-			MOLECULE_CONTENTS_CACHE[complex_molecule] = molecule_contents_text
+			if cache_result then MOLECULE_CONTENTS_CACHE[complex_molecule] = molecule_contents_text end
 		end
 		if tooltip[1] ~= MOLECULE_CONTENTS_STRING then
 			tooltip = {MOLECULE_CONTENTS_STRING, molecule_contents_text, tooltip}
@@ -207,7 +207,7 @@ local function update_reaction_table_sprite(element, chest_stack, component)
 	else
 		element.sprite = nil
 	end
-	gui_update_complex_molecule_tooltip(element, complex_molecule)
+	gui_update_complex_molecule_tooltip(element, complex_molecule, true)
 end
 
 local function update_all_reaction_table_sprites(gui, building_data)
