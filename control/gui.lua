@@ -26,6 +26,7 @@ local MOLECULE_BUILDER_INGREDIENTS_NAME = "molecule-builder-ingredients"
 local MOLECULE_BUILDER_MAIN_NAME = "molecule-builder-main"
 local MOLECULE_BUILDER_TABLE_FRAME_NAME = "molecule-builder-table-frame"
 local MOLECULE_BUILDER_TABLE_NAME = "molecule-builder-table"
+local MOLECULE_BUILDER_CLEAR_NAME = "molecule-builder-clear"
 local MOLECULE_BUILDER_RESULT_NAME = "molecule-builder-result"
 local MOLECULE_BUILDER_RESULT_TEXT_NAME = "molecule-builder-result-text"
 local SCIENCES = {
@@ -583,6 +584,7 @@ local function set_molecule_builder_ingredients(gui, molecule_builder_science_na
 			sprite = "item/"..ingredient.name,
 		})
 	end
+	ingredients_gui.add({type = "sprite-button", name = MOLECULE_BUILDER_CLEAR_NAME, sprite = "cancel"})
 end
 
 local function iter_molecule_builder_cells(handle_cell)
@@ -897,7 +899,12 @@ local function on_gui_click(event)
 	-- show the contents of a science ingredient in the molecule builder
 	local molecule_builder_ingredient_name = MOLECULE_BUILDER_INGREDIENTS_NAME_MAP[element.name]
 	if molecule_builder_ingredient_name then
-		local shape, height = parse_molecule(molecule_builder_ingredient_name)
+		local shape, height
+		if molecule_builder_ingredient_name == "" then
+			shape, height = {}, 0
+		else
+			shape, height = parse_molecule(molecule_builder_ingredient_name)
+		end
 		local table_gui = element
 			.parent
 			.parent
@@ -1089,6 +1096,7 @@ function gui_on_first_tick()
 			MOLECULE_BUILDER_INGREDIENTS_NAME_MAP[MOLECULE_BUILDER_INGREDIENTS_NAME.."-"..ingredient] = ingredient
 		end
 	end
+	MOLECULE_BUILDER_INGREDIENTS_NAME_MAP[MOLECULE_BUILDER_CLEAR_NAME] = ""
 	GUI_READY = true
 end
 

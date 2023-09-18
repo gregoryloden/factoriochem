@@ -16,7 +16,7 @@ require("data/buildings")
 require("data/styles")
 
 
--- Empty sprites
+-- Empty and cancel sprites
 for _, size in ipairs({{1, 1}, {1, 2}}) do
 	data:extend({{
 		type = "sprite",
@@ -26,6 +26,13 @@ for _, size in ipairs({{1, 1}, {1, 2}}) do
 		height = size[2],
 	}})
 end
+data:extend({{
+	type = "sprite",
+	name = "cancel",
+	filename = "__core__/graphics/cancel.png",
+	width = 64,
+	height = 64,
+}})
 
 
 -- Periodic table prototypes
