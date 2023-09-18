@@ -172,7 +172,7 @@ end
 
 
 -- Global utility - molecule builder GUI construction / destruction
-function toggle_molecule_builder_gui(gui, ATOMS_SUBGROUP_PREFIX_MATCH, build_title_bar_gui_spec, gui_add_recursive)
+function toggle_molecule_builder_gui(gui, ATOMS_SUBGROUP_PREFIX_MATCH, build_centered_titlebar_gui)
 	if gui.screen[MOLECULE_BUILDER_NAME] then
 		gui.screen[MOLECULE_BUILDER_NAME].destroy()
 		return
@@ -257,11 +257,7 @@ function toggle_molecule_builder_gui(gui, ATOMS_SUBGROUP_PREFIX_MATCH, build_tit
 			}}
 		}},
 	}
-	local gui_spec =
-		build_title_bar_gui_spec(MOLECULE_BUILDER_NAME, {"factoriochem."..MOLECULE_BUILDER_NAME}, inner_gui_spec)
-	local molecule_builder_gui = gui_add_recursive(gui.screen, gui_spec)
-	molecule_builder_gui.force_auto_center()
-	molecule_builder_gui.titlebar.drag_target = molecule_builder_gui
+	build_centered_titlebar_gui(gui, MOLECULE_BUILDER_NAME, {"factoriochem."..MOLECULE_BUILDER_NAME}, inner_gui_spec)
 
 	set_molecule_builder_ingredients(gui, MOLECULE_BUILDER_SCIENCES[1])
 end

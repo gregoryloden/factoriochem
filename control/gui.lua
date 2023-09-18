@@ -219,8 +219,8 @@ local function demo_reaction_with_reactant(building_data, demo_state, element, r
 	demo_reaction(building_data, demo_state, element.parent)
 end
 
-local function build_title_bar_gui_spec(name, title, content)
-	return {
+local function build_centered_titlebar_gui(gui, name, title, content)
+	local gui_spec = {
 		type = "frame",
 		name = name,
 		direction = "vertical",
@@ -249,6 +249,10 @@ local function build_title_bar_gui_spec(name, title, content)
 			content,
 		},
 	}
+	local titlebar_gui = gui_add_recursive(gui.screen, gui_spec)
+	titlebar_gui.titlebar.drag_target = titlebar_gui
+	titlebar_gui.force_auto_center()
+	return titlebar_gui
 end
 
 
@@ -541,10 +545,8 @@ local function toggle_periodic_table_gui(player)
 			children = build_element_table_children(),
 		}},
 	}
-	local gui_spec = build_title_bar_gui_spec(PERIODIC_TABLE_NAME, {"shortcut-name."..PERIODIC_TABLE_NAME}, inner_gui_spec)
-	local periodic_table_gui = gui_add_recursive(gui.screen, gui_spec)
-	periodic_table_gui.force_auto_center()
-	periodic_table_gui.titlebar.drag_target = periodic_table_gui
+	local periodic_table_gui =
+		build_centered_titlebar_gui(gui, PERIODIC_TABLE_NAME, {"shortcut-name."..PERIODIC_TABLE_NAME}, inner_gui_spec)
 	if player.opened_gui_type == defines.gui_type.none then
 		periodic_table_gui.titlebar.close.tooltip = {"gui.close-instruction"}
 		player.opened = periodic_table_gui
@@ -635,8 +637,7 @@ local function on_gui_click(event)
 
 	-- open the molecule builder
 	if element.name == MOLECULE_BUILDER_DEMO_NAME then
-		toggle_molecule_builder_gui(
-			player.gui, ATOMS_SUBGROUP_PREFIX_MATCH, build_title_bar_gui_spec, gui_add_recursive)
+		toggle_molecule_builder_gui(player.gui, ATOMS_SUBGROUP_PREFIX_MATCH, build_centered_titlebar_gui)
 		return
 	end
 
