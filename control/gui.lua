@@ -642,7 +642,7 @@ local function on_gui_click(event)
 	end
 
 	-- check molecule builder events
-	if molecule_builder_on_gui_click(element, player) then return end
+	if molecule_builder_on_gui_click(element) then return end
 end
 
 local function on_gui_elem_changed(event)

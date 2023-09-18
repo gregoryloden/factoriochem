@@ -30,9 +30,9 @@ local function iter_molecule_builder_cells(handle_cell)
 	end
 end
 
-local function set_molecule_builder_ingredients(gui, molecule_builder_science_name)
+local function set_molecule_builder_ingredients(outer_gui, molecule_builder_science_name)
 	local recipe = GAME_RECIPE_PROTOTYPES[molecule_builder_science_name]
-	local ingredients_gui = gui.screen[MOLECULE_BUILDER_NAME].outer[MOLECULE_BUILDER_INGREDIENTS_NAME]
+	local ingredients_gui = outer_gui[MOLECULE_BUILDER_INGREDIENTS_NAME]
 	for _, child in pairs(ingredients_gui.children) do child.destroy() end
 	for _, ingredient in pairs(recipe.ingredients) do
 		ingredients_gui.add({
@@ -257,18 +257,19 @@ function toggle_molecule_builder_gui(gui, ATOMS_SUBGROUP_PREFIX_MATCH, build_cen
 			}}
 		}},
 	}
-	build_centered_titlebar_gui(gui, MOLECULE_BUILDER_NAME, {"factoriochem."..MOLECULE_BUILDER_NAME}, inner_gui_spec)
+	local molecule_builder_gui = build_centered_titlebar_gui(
+		gui, MOLECULE_BUILDER_NAME, {"factoriochem."..MOLECULE_BUILDER_NAME}, inner_gui_spec)
 
-	set_molecule_builder_ingredients(gui, MOLECULE_BUILDER_SCIENCES[1])
+	set_molecule_builder_ingredients(molecule_builder_gui.outer, MOLECULE_BUILDER_SCIENCES[1])
 end
 
 
 -- Global event handling
-function molecule_builder_on_gui_click(element, player)
+function molecule_builder_on_gui_click(element)
 	-- show the ingredients of a science in the molecule builder
 	local molecule_builder_science_name = MOLECULE_BUILDER_SCIENCES_NAME_MAP[element.name]
 	if molecule_builder_science_name then
-		set_molecule_builder_ingredients(player.gui, molecule_builder_science_name)
+		set_molecule_builder_ingredients(element.parent.parent, molecule_builder_science_name)
 		return true
 	end
 
