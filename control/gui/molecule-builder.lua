@@ -163,7 +163,7 @@ end
 
 
 -- Global utility - molecule builder GUI construction / destruction
-function toggle_molecule_builder_gui(gui, ATOMS_SUBGROUP_PREFIX_MATCH, build_centered_titlebar_gui)
+function toggle_molecule_builder_gui(gui, ATOMS_SUBGROUP_PREFIX_MATCH)
 	if gui.screen[MOLECULE_BUILDER_NAME] then
 		gui.screen[MOLECULE_BUILDER_NAME].destroy()
 		return

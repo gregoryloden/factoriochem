@@ -219,7 +219,9 @@ local function demo_reaction_with_reactant(building_data, demo_state, element, r
 	demo_reaction(building_data, demo_state, element.parent)
 end
 
-local function build_centered_titlebar_gui(gui, name, title, content)
+
+-- Global utilities
+function build_centered_titlebar_gui(gui, name, title, content)
 	local gui_spec = {
 		type = "frame",
 		name = name,
@@ -637,7 +639,7 @@ local function on_gui_click(event)
 
 	-- open the molecule builder
 	if element.name == MOLECULE_BUILDER_DEMO_NAME then
-		toggle_molecule_builder_gui(player.gui, ATOMS_SUBGROUP_PREFIX_MATCH, build_centered_titlebar_gui)
+		toggle_molecule_builder_gui(player.gui, ATOMS_SUBGROUP_PREFIX_MATCH)
 		return
 	end
 
