@@ -887,14 +887,23 @@ local function on_gui_click(event)
 	end
 
 	-- open the periodic table
-	if element.name == PERIODIC_TABLE_DEMO_NAME then toggle_periodic_table_gui(player) end
+	if element.name == PERIODIC_TABLE_DEMO_NAME then
+		toggle_periodic_table_gui(player)
+		return
+	end
 
 	-- open the molecule builder
-	if element.name == MOLECULE_BUILDER_DEMO_NAME then toggle_molecule_builder_gui(player.gui) end
+	if element.name == MOLECULE_BUILDER_DEMO_NAME then
+		toggle_molecule_builder_gui(player.gui)
+		return
+	end
 
 	-- show the ingredients of a science in the molecule builder
 	local molecule_builder_science_name = MOLECULE_BUILDER_SCIENCES_NAME_MAP[element.name]
-	if molecule_builder_science_name then set_molecule_builder_ingredients(player.gui, molecule_builder_science_name) end
+	if molecule_builder_science_name then
+		set_molecule_builder_ingredients(player.gui, molecule_builder_science_name)
+		return
+	end
 
 	-- show the contents of a science ingredient in the molecule builder
 	local molecule_builder_ingredient_name = MOLECULE_BUILDER_INGREDIENTS_NAME_MAP[element.name]
@@ -912,6 +921,7 @@ local function on_gui_click(event)
 			[MOLECULE_BUILDER_TABLE_FRAME_NAME]
 			[MOLECULE_BUILDER_TABLE_NAME]
 		show_molecule_in_builder(element, table_gui, shape, height)
+		return
 	end
 end
 
@@ -945,7 +955,10 @@ local function on_gui_elem_changed(event)
 	end
 
 	-- update the molecule builder result and result text after changing part of it
-	if element.parent.name == MOLECULE_BUILDER_TABLE_NAME then export_built_molecule(element, element.parent) end
+	if element.parent.name == MOLECULE_BUILDER_TABLE_NAME then
+		export_built_molecule(element, element.parent)
+		return
+	end
 end
 
 local function on_gui_selection_state_changed(event)
@@ -1038,6 +1051,7 @@ local function on_gui_text_changed(event)
 		if not pcall(function() shape, height = parse_molecule_id(element.text) end) then shape, height = {}, 0 end
 		local table_gui = element.parent[MOLECULE_BUILDER_TABLE_FRAME_NAME][MOLECULE_BUILDER_TABLE_NAME]
 		show_molecule_in_builder(element, table_gui, shape, height)
+		return
 	end
 end
 
