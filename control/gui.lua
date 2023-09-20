@@ -787,6 +787,7 @@ script.on_event(defines.events.on_gui_text_changed, on_gui_text_changed)
 function gui_on_init()
 	global.current_gui_reaction_building_data = {}
 	global.gui_demo_items = {}
+	global.molecule_builder_inventory = game.create_inventory(1)
 end
 
 function gui_on_first_tick()

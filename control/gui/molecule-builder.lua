@@ -19,6 +19,7 @@ local MOLECULE_BUILDER_SCIENCES_NAME_MAP = {}
 local MOLECULE_BUILDER_INGREDIENTS_NAME_MAP = {}
 local MOLECULE_BUILDER_ROWS = MAX_GRID_HEIGHT * 2 - 1
 local MOLECULE_BUILDER_COLS = MAX_GRID_WIDTH * 2 - 1
+local MOLECULE_BUILDER_STATE_STACK = nil
 
 
 -- Utilities
@@ -106,6 +107,7 @@ local function export_built_molecule(source, table_gui)
 	local main_gui = table_gui.parent.parent
 	local result = main_gui[MOLECULE_BUILDER_RESULT_NAME]
 	local result_id = main_gui[MOLECULE_BUILDER_RESULT_ID_NAME]
+	local table_children = table_gui.children
 	local complex_molecule = nil
 	local result_val = nil
 	local result_id_val = ""
@@ -126,9 +128,20 @@ local function export_built_molecule(source, table_gui)
 		end
 		result_val = "item/"..molecule
 	end
+
+	-- write the results to the GUI elements
 	result.sprite = result_val
 	gui_update_complex_molecule_tooltip(result, complex_molecule, false)
 	if source.name ~= MOLECULE_BUILDER_RESULT_ID_NAME then result_id.text = result_id_val end
+
+	-- save the state into the stack
+	local grid = MOLECULE_BUILDER_STATE_STACK.grid
+	grid.clear()
+	iter_molecule_builder_cells(function(y, x, is_row, is_col, cell_i)
+		if not is_row and not is_col then return end
+		local val = table_children[cell_i].elem_value
+		if val then grid.put({name = val, position = {x - 1, y - 1}}) end
+	end)
 end
 
 local function show_molecule_in_builder(source, table_gui, shape, height)
@@ -260,6 +273,21 @@ function toggle_molecule_builder_gui(gui, ATOMS_SUBGROUP_PREFIX_MATCH)
 		gui, MOLECULE_BUILDER_NAME, {"factoriochem."..MOLECULE_BUILDER_NAME}, inner_gui_spec)
 
 	set_molecule_builder_ingredients(molecule_builder_gui.outer, MOLECULE_BUILDER_SCIENCES[1])
+
+	-- load the previous molecule
+	local grid = MOLECULE_BUILDER_STATE_STACK.grid
+	local table_gui = molecule_builder_gui
+		.outer
+		[MOLECULE_BUILDER_MAIN_NAME]
+		[MOLECULE_BUILDER_TABLE_FRAME_NAME]
+		[MOLECULE_BUILDER_TABLE_NAME]
+	local table_children = table_gui.children
+	iter_molecule_builder_cells(function(y, x, is_row, is_col, cell_i)
+		if not is_row and not is_col then return end
+		local equipment = grid.get({x - 1, y - 1})
+		if equipment then table_children[cell_i].elem_value = equipment.name end
+	end)
+	export_built_molecule(molecule_builder_gui, table_gui)
 end
 
 
@@ -329,4 +357,9 @@ function gui_molecule_buider_on_first_tick()
 		end
 	end
 	MOLECULE_BUILDER_INGREDIENTS_NAME_MAP[MOLECULE_BUILDER_CLEAR_NAME] = ""
+	MOLECULE_BUILDER_STATE_STACK = global.molecule_builder_inventory[1]
+	if MOLECULE_BUILDER_STATE_STACK.count == 0 then
+		local shape_n = bit32.lshift(1, MAX_GRID_HEIGHT * MAX_GRID_WIDTH) - 1
+		MOLECULE_BUILDER_STATE_STACK.set_stack({name = COMPLEX_MOLECULE_ITEM_PREFIX..string.format("%03X", shape_n)})
+	end
 end
