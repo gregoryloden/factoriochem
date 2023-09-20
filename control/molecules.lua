@@ -8,7 +8,7 @@ local MOLECULE_ID_ATOMS_PER_SIGNAL = 3
 
 
 -- Global utilities - complex molecules
-function parse_complex_molecule(grid, complex_shape)
+function assemble_complex_molecule(grid, complex_shape)
 	local max_x = complex_shape.max_x
 	local builder_i = 2
 	for y = 0, complex_shape.max_y, 2 do

@@ -344,7 +344,7 @@ local function update_reaction_building(entity, building_data)
 		if chest_stack.valid_for_read then
 			reactant = chest_stack.name
 			local complex_shape = COMPLEX_SHAPES[reactant]
-			if complex_shape then reactant = parse_complex_molecule(chest_stack.grid, complex_shape) end
+			if complex_shape then reactant = assemble_complex_molecule(chest_stack.grid, complex_shape) end
 			reaction.reactants[reactant_name] = reactant
 		else
 			reactant = ""

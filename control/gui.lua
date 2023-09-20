@@ -196,7 +196,7 @@ local function update_reaction_table_sprite(element, chest_stack, component)
 		component = chest_stack.name
 		element.sprite = "item/"..component
 		local complex_shape = COMPLEX_SHAPES[component]
-		if complex_shape then complex_molecule = parse_complex_molecule(chest_stack.grid, complex_shape) end
+		if complex_shape then complex_molecule = assemble_complex_molecule(chest_stack.grid, complex_shape) end
 	elseif component then
 		if GAME_ITEM_PROTOTYPES[component] then
 			element.sprite = "item/"..component
@@ -257,7 +257,7 @@ end
 local function demo_reaction_with_reactant(building_data, demo_state, element, reactant_name, reactant_stack)
 	local reactant = reactant_stack and reactant_stack.name
 	local complex_shape = reactant and COMPLEX_SHAPES[reactant]
-	if complex_shape then reactant = parse_complex_molecule(reactant_stack.grid, complex_shape) end
+	if complex_shape then reactant = assemble_complex_molecule(reactant_stack.grid, complex_shape) end
 	demo_state.reactants[reactant_name] = reactant
 	update_reaction_table_sprite(element, nil, reactant)
 	demo_reaction(building_data, demo_state, element.parent)
