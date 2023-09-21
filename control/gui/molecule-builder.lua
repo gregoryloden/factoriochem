@@ -144,7 +144,8 @@ local function export_built_molecule(source, table_gui)
 	end)
 end
 
-local function show_molecule_in_builder(source, table_gui, shape, height)
+local function show_molecule_in_builder(source, main_gui, shape, height)
+	local table_gui = main_gui[MOLECULE_BUILDER_TABLE_FRAME_NAME][MOLECULE_BUILDER_TABLE_NAME]
 	local table_children = table_gui.children
 	iter_molecule_builder_cells(function(y, x, is_row, is_col, cell_i)
 		-- use math.floor to get the right atom for right and down bonds
@@ -310,13 +311,7 @@ function molecule_builder_on_gui_click(element)
 		else
 			shape, height = parse_molecule(molecule_builder_ingredient_name)
 		end
-		local table_gui = element
-			.parent
-			.parent
-			[MOLECULE_BUILDER_MAIN_NAME]
-			[MOLECULE_BUILDER_TABLE_FRAME_NAME]
-			[MOLECULE_BUILDER_TABLE_NAME]
-		show_molecule_in_builder(element, table_gui, shape, height)
+		show_molecule_in_builder(element, element.parent.parent[MOLECULE_BUILDER_MAIN_NAME], shape, height)
 		return true
 	end
 
@@ -338,8 +333,7 @@ function molecule_builder_on_gui_text_changed(element)
 	if element.name == MOLECULE_BUILDER_RESULT_ID_NAME then
 		local shape, height
 		if not pcall(function() shape, height = parse_molecule_id(element.text) end) then shape, height = {}, 0 end
-		local table_gui = element.parent[MOLECULE_BUILDER_TABLE_FRAME_NAME][MOLECULE_BUILDER_TABLE_NAME]
-		show_molecule_in_builder(element, table_gui, shape, height)
+		show_molecule_in_builder(element, element.parent, shape, height)
 		return true
 	end
 
