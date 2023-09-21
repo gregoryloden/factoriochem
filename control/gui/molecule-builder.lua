@@ -20,6 +20,17 @@ local MOLECULE_BUILDER_INGREDIENTS_NAME_MAP = {}
 local MOLECULE_BUILDER_ROWS = MAX_GRID_HEIGHT * 2 - 1
 local MOLECULE_BUILDER_COLS = MAX_GRID_WIDTH * 2 - 1
 local MOLECULE_BUILDER_STATE_STACK = nil
+local MOLECULE_BUILDER_EXPORT_STACK = nil
+
+
+-- Global utility - molecule builder export stack
+function get_molecule_builder_export_stack(player)
+	local cursor_ghost = player.cursor_ghost
+	if not cursor_ghost or MOLECULE_BUILDER_EXPORT_STACK.count == 0 then return nil end
+	if cursor_ghost.name ~= MOLECULE_BUILDER_EXPORT_STACK.name then return nil end
+	player.clear_cursor()
+	return MOLECULE_BUILDER_EXPORT_STACK
+end
 
 
 -- Utilities
@@ -103,11 +114,12 @@ local function get_valid_molecule_builder_shape(table_children)
 	return validate_molecule(shape, height, width), shape, height, width
 end
 
-local function export_built_molecule(source, table_gui)
+local function export_built_molecule(source, table_gui, player)
+	-- the act of getting the stack will clear the cursor if it matches
+	get_molecule_builder_export_stack(player)
 	local main_gui = table_gui.parent.parent
 	local result = main_gui[MOLECULE_BUILDER_RESULT_NAME]
 	local result_id = main_gui[MOLECULE_BUILDER_RESULT_ID_NAME]
-	local table_children = table_gui.children
 	local complex_molecule = nil
 	local result_val = nil
 	local result_id_val = ""
@@ -122,11 +134,20 @@ local function export_built_molecule(source, table_gui)
 		end
 
 		-- set the result and the stack item
+		local complex_contents = nil
 		if not GAME_ITEM_PROTOTYPES[molecule] then
 			complex_molecule = molecule
-			molecule = get_complex_molecule_item_name(shape)
+			complex_contents = build_complex_contents(shape, height, width)
+			molecule = complex_contents.item
 		end
 		result_val = "item/"..molecule
+		MOLECULE_BUILDER_EXPORT_STACK.set_stack({name = molecule})
+		if complex_contents then
+			local grid = MOLECULE_BUILDER_EXPORT_STACK.grid
+			for _, equipment in ipairs(complex_contents) do grid.put(equipment) end
+		end
+	else
+		MOLECULE_BUILDER_EXPORT_STACK.clear()
 	end
 
 	-- write the results to the GUI elements
@@ -136,6 +157,7 @@ local function export_built_molecule(source, table_gui)
 
 	-- save the state into the stack
 	local grid = MOLECULE_BUILDER_STATE_STACK.grid
+	local table_children = table_gui.children
 	grid.clear()
 	iter_molecule_builder_cells(function(y, x, is_row, is_col, cell_i)
 		if not is_row and not is_col then return end
@@ -144,7 +166,7 @@ local function export_built_molecule(source, table_gui)
 	end)
 end
 
-local function show_molecule_in_builder(source, main_gui, shape, height)
+local function show_molecule_in_builder(source, main_gui, shape, height, player)
 	local table_gui = main_gui[MOLECULE_BUILDER_TABLE_FRAME_NAME][MOLECULE_BUILDER_TABLE_NAME]
 	local table_children = table_gui.children
 	iter_molecule_builder_cells(function(y, x, is_row, is_col, cell_i)
@@ -178,12 +200,13 @@ local function show_molecule_in_builder(source, main_gui, shape, height)
 			end
 		end
 	end)
-	export_built_molecule(source, table_gui)
+	export_built_molecule(source, table_gui, player)
 end
 
 
 -- Global utility - molecule builder GUI construction / destruction
-function toggle_molecule_builder_gui(gui, ATOMS_SUBGROUP_PREFIX_MATCH)
+function toggle_molecule_builder_gui(player, ATOMS_SUBGROUP_PREFIX_MATCH)
+	local gui = player.gui
 	if gui.screen[MOLECULE_BUILDER_NAME] then
 		gui.screen[MOLECULE_BUILDER_NAME].destroy()
 		return
@@ -288,12 +311,12 @@ function toggle_molecule_builder_gui(gui, ATOMS_SUBGROUP_PREFIX_MATCH)
 		local equipment = grid.get({x - 1, y - 1})
 		if equipment then table_children[cell_i].elem_value = equipment.name end
 	end)
-	export_built_molecule(molecule_builder_gui, table_gui)
+	export_built_molecule(molecule_builder_gui, table_gui, player)
 end
 
 
 -- Global event handling
-function molecule_builder_on_gui_click(element)
+function molecule_builder_on_gui_click(element, player)
 	-- show the ingredients of a science in the molecule builder
 	local molecule_builder_science_name = MOLECULE_BUILDER_SCIENCES_NAME_MAP[element.name]
 	if molecule_builder_science_name then
@@ -311,29 +334,38 @@ function molecule_builder_on_gui_click(element)
 		else
 			shape, height = parse_molecule(molecule_builder_ingredient_name)
 		end
-		show_molecule_in_builder(element, element.parent.parent[MOLECULE_BUILDER_MAIN_NAME], shape, height)
+		show_molecule_in_builder(element, element.parent.parent[MOLECULE_BUILDER_MAIN_NAME], shape, height, player)
+		return true
+	end
+
+	-- put the result molecule under the cursor if possible
+	if element.name == MOLECULE_BUILDER_RESULT_NAME then
+		if MOLECULE_BUILDER_EXPORT_STACK.count > 0 then
+			player.clear_cursor() -- remove anything that was there before
+			player.cursor_ghost = MOLECULE_BUILDER_EXPORT_STACK.name
+		end
 		return true
 	end
 
 	return false
 end
 
-function molecule_builder_on_gui_elem_changed(element)
+function molecule_builder_on_gui_elem_changed(element, event)
 	-- update the molecule builder result and result ID after changing part of it
 	if element.parent.name == MOLECULE_BUILDER_TABLE_NAME then
-		export_built_molecule(element, element.parent)
+		export_built_molecule(element, element.parent, game.get_player(event.player_index))
 		return true
 	end
 
 	return false
 end
 
-function molecule_builder_on_gui_text_changed(element)
+function molecule_builder_on_gui_text_changed(element, event)
 	-- update the molecule builder and the result if the text changed
 	if element.name == MOLECULE_BUILDER_RESULT_ID_NAME then
 		local shape, height
 		if not pcall(function() shape, height = parse_molecule_id(element.text) end) then shape, height = {}, 0 end
-		show_molecule_in_builder(element, element.parent, shape, height)
+		show_molecule_in_builder(element, element.parent, shape, height, game.get_player(event.player_index))
 		return true
 	end
 
@@ -352,6 +384,7 @@ function gui_molecule_buider_on_first_tick()
 	end
 	MOLECULE_BUILDER_INGREDIENTS_NAME_MAP[MOLECULE_BUILDER_CLEAR_NAME] = ""
 	MOLECULE_BUILDER_STATE_STACK = global.molecule_builder_inventory[1]
+	MOLECULE_BUILDER_EXPORT_STACK = global.molecule_builder_inventory[2]
 	if MOLECULE_BUILDER_STATE_STACK.count == 0 then
 		local shape_n = bit32.lshift(1, MAX_GRID_HEIGHT * MAX_GRID_WIDTH) - 1
 		MOLECULE_BUILDER_STATE_STACK.set_stack({name = COMPLEX_MOLECULE_ITEM_PREFIX..string.format("%03X", shape_n)})

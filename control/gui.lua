@@ -131,6 +131,10 @@ local function indexof_reactant(reactant_name)
 	end
 end
 
+local function get_stack_if_valid_for_read(stack)
+	return stack and stack.valid_for_read and stack
+end
+
 
 -- Global utilities
 function gui_update_complex_molecule_tooltip(element, complex_molecule, cache_result)
@@ -624,13 +628,17 @@ local function on_gui_click(event)
 	local reaction_demo_table_reactant_name = REACTION_DEMO_TABLE_REACTANT_NAME_MAP[element.name]
 	if reaction_demo_table_reactant_name then
 		local demo_state = get_demo_state(building_data.entity.name)
-		local chest_stack = building_data.chest_stacks[reaction_demo_table_reactant_name]
-		local reactant_stack
-		if chest_stack.valid_for_read then reactant_stack = chest_stack end
-		if player.cursor_stack and player.cursor_stack.valid_for_read then reactant_stack = player.cursor_stack end
 		if event.button == defines.mouse_button_type.right then
 			demo_reaction_with_reactant(building_data, demo_state, element, reaction_demo_table_reactant_name, nil)
-		elseif reactant_stack then
+			return
+		end
+
+		-- set the reactant stack to one of the source stacks, in order of priority
+		local reactant_stack =
+			get_molecule_builder_export_stack(player)
+				or get_stack_if_valid_for_read(player.cursor_stack)
+				or get_stack_if_valid_for_read(building_data.chest_stacks[reaction_demo_table_reactant_name])
+		if reactant_stack then
 			demo_reaction_with_reactant(
 				building_data, demo_state, element, reaction_demo_table_reactant_name, reactant_stack)
 		end
@@ -645,12 +653,12 @@ local function on_gui_click(event)
 
 	-- open the molecule builder
 	if element.name == MOLECULE_BUILDER_DEMO_NAME then
-		toggle_molecule_builder_gui(player.gui, ATOMS_SUBGROUP_PREFIX_MATCH)
+		toggle_molecule_builder_gui(player, ATOMS_SUBGROUP_PREFIX_MATCH)
 		return
 	end
 
 	-- check molecule builder events
-	if molecule_builder_on_gui_click(element) then return end
+	if molecule_builder_on_gui_click(element, player) then return end
 end
 
 local function on_gui_elem_changed(event)
@@ -683,7 +691,7 @@ local function on_gui_elem_changed(event)
 	end
 
 	-- check molecule builder events
-	if molecule_builder_on_gui_elem_changed(element) then return end
+	if molecule_builder_on_gui_elem_changed(element, event) then return end
 end
 
 local function on_gui_selection_state_changed(event)
@@ -771,7 +779,7 @@ local function on_gui_text_changed(event)
 	end
 
 	-- check molecule builder events
-	if molecule_builder_on_gui_text_changed(element) then return end
+	if molecule_builder_on_gui_text_changed(element, event) then return end
 end
 
 script.on_event(defines.events.on_gui_opened, on_gui_opened)
@@ -787,7 +795,7 @@ script.on_event(defines.events.on_gui_text_changed, on_gui_text_changed)
 function gui_on_init()
 	global.current_gui_reaction_building_data = {}
 	global.gui_demo_items = {}
-	global.molecule_builder_inventory = game.create_inventory(1)
+	global.molecule_builder_inventory = game.create_inventory(2)
 end
 
 function gui_on_first_tick()

@@ -56,6 +56,24 @@ function get_complex_molecule_item_name(shape)
 	return COMPLEX_MOLECULE_ITEM_PREFIX..string.format("%03X", shape_n)
 end
 
+function build_complex_contents(shape, height, width)
+	local contents = {item = get_complex_molecule_item_name(shape)}
+	for y, shape_row in pairs(shape) do
+		y = (y - 1) * 2
+		for x, atom in pairs(shape_row) do
+			x = (x - 1) * 2
+			table.insert(contents, {name = "atom-"..atom.symbol, position = {x, y}})
+			if atom.right then
+				table.insert(contents, {name = MOLECULE_BONDS_PREFIX.."H"..atom.right, position = {x + 1, y}})
+			end
+			if atom.down then
+				table.insert(contents, {name = MOLECULE_BONDS_PREFIX.."V"..atom.down, position = {x, y + 1}})
+			end
+		end
+	end
+	return contents
+end
+
 
 -- Global utilities - read and write combinators
 function write_molecule_id_to_combinator(behavior, molecule_id)

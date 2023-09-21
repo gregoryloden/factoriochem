@@ -276,25 +276,6 @@ local function update_buildings(building_datas, tick, update_building, delete_bu
 	end
 end
 
-local function build_complex_contents(product)
-	local shape, height, width = parse_molecule(product)
-	local contents = {item = get_complex_molecule_item_name(shape)}
-	for y, shape_row in pairs(shape) do
-		y = (y - 1) * 2
-		for x, atom in pairs(shape_row) do
-			x = (x - 1) * 2
-			table.insert(contents, {name = "atom-"..atom.symbol, position = {x, y}})
-			if atom.right then
-				table.insert(contents, {name = MOLECULE_BONDS_PREFIX.."H"..atom.right, position = {x + 1, y}})
-			end
-			if atom.down then
-				table.insert(contents, {name = MOLECULE_BONDS_PREFIX.."V"..atom.down, position = {x, y + 1}})
-			end
-		end
-	end
-	return contents
-end
-
 local function start_reaction(reaction, chest_stacks, machine_inputs)
 	for reactant_name, _ in pairs(reaction.reactants) do chest_stacks[reactant_name].clear() end
 	machine_inputs.insert({name = MOLECULE_REACTION_REACTANTS_NAME, count = 1})
@@ -388,7 +369,7 @@ local function update_reaction_building(entity, building_data)
 			if not GAME_ITEM_PROTOTYPES[product] then
 				has_complex_molecules = true
 				if not COMPLEX_CONTENTS[product] then
-					COMPLEX_CONTENTS[product] = build_complex_contents(product)
+					COMPLEX_CONTENTS[product] = build_complex_contents(parse_molecule(product))
 				end
 			end
 		end
@@ -530,7 +511,7 @@ local function reset_building_caches()
 		-- also regenerate any complex contents for the products, where needed
 		for _, product in pairs(building_data.reaction.products) do
 			if not GAME_ITEM_PROTOTYPES[product] and not COMPLEX_CONTENTS[product] then
-				COMPLEX_CONTENTS[product] = build_complex_contents(product)
+				COMPLEX_CONTENTS[product] = build_complex_contents(parse_molecule(product))
 			end
 		end
 	end
