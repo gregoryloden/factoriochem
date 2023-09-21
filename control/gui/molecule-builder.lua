@@ -51,9 +51,15 @@ local function set_molecule_builder_ingredients(outer_gui, molecule_builder_scie
 			type = "sprite-button",
 			name = MOLECULE_BUILDER_INGREDIENTS_NAME.."-"..ingredient.name,
 			sprite = "item/"..ingredient.name,
+			tooltip = {"factoriochem.molecule-builder-ingredient"},
 		})
 	end
-	ingredients_gui.add({type = "sprite-button", name = MOLECULE_BUILDER_CLEAR_NAME, sprite = "cancel"})
+	ingredients_gui.add({
+		type = "sprite-button",
+		name = MOLECULE_BUILDER_CLEAR_NAME,
+		sprite = "cancel",
+		tooltip = {"factoriochem.molecule-builder-clear"},
+	})
 end
 
 local function get_valid_molecule_builder_shape(table_children)
@@ -219,6 +225,7 @@ function toggle_molecule_builder_gui(player, ATOMS_SUBGROUP_PREFIX_MATCH)
 				type = "sprite-button",
 				name = MOLECULE_BUILDER_SCIENCES_NAME.."-"..science,
 				sprite = "item/"..science,
+				tooltip = {"factoriochem.molecule-builder-science", {"item-name."..science}},
 			}
 			table.insert(buttons, spec)
 		end
