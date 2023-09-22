@@ -1,3 +1,6 @@
+require("control/gui/molecule-builder")
+
+
 -- Constants
 local REACTION_PREFIX = "reaction-"
 local REACTION_DEMO_PREFIX = "reaction-demo-"
@@ -564,11 +567,6 @@ local function toggle_periodic_table_gui(player)
 		player.opened = periodic_table_gui
 	end
 end
-
-
--- Feature imports
--- I'm not thrilled about doing these imports so far down in the file, but it really does result in the simplest code
-require("control/gui/molecule-builder")
 
 
 -- Event handling
