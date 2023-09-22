@@ -226,7 +226,11 @@ function load_molecule_into_builder(molecule_builder_gui, player)
 	iter_molecule_builder_cells(function(y, x, is_row, is_col, cell_i)
 		if not is_row and not is_col then return end
 		local equipment = grid.get({x - 1, y - 1})
-		if equipment then table_children[cell_i].elem_value = equipment.name end
+		if equipment then
+			table_children[cell_i].elem_value = equipment.name
+		else
+			table_children[cell_i].elem_value = nil
+		end
 	end)
 	export_built_molecule(molecule_builder_gui, table_gui, player)
 end
