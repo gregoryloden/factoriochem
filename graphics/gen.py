@@ -6,6 +6,13 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
 #Constants
+with open(os.path.join("..", "game-data-path.txt"), "r") as file:
+	GAME_DATA_PATH = file.read()
+BASE_GRAPHICS_PATH = os.path.join(GAME_DATA_PATH, "base", "graphics")
+BASE_ICONS_PATH = os.path.join(BASE_GRAPHICS_PATH, "icons")
+BASE_FLUID_ICONS_PATH = os.path.join(BASE_ICONS_PATH, "fluid")
+CORE_GRAPHICS_PATH = os.path.join(GAME_DATA_PATH, "core", "graphics")
+CORE_ICONS_MIP_PATH = os.path.join(CORE_GRAPHICS_PATH, "icons", "mip")
 MAX_GRID_WIDTH = 3
 MAX_GRID_HEIGHT = 3
 MAX_GRID_AREA = MAX_GRID_WIDTH * MAX_GRID_HEIGHT
@@ -94,6 +101,7 @@ MOLECULE_ABSORBER_CORNER_RADIUS_FRACTION = 10 / BASE_ICON_SIZE
 BUTTON_ICON_DARK_COLOR = (0, 0, 0, 0)
 BUTTON_ICON_LIGHT_COLOR = (224, 224, 224, 0)
 MOLECULE_BUILDER_RADIUS_FRACTION = 3 / 24
+DROPPER_ICON_COLOR_MASK = (128, 128, 128)
 ROTATION_SELECTOR_COLOR = (224, 224, 192, 0)
 ROTATION_SELECTOR_RADIUS_FRACTION = 24 / BASE_ICON_SIZE
 ROTATION_SELECTOR_THICKNESS_FRACTION = 4 / BASE_ICON_SIZE
@@ -132,10 +140,6 @@ MOLECULE_MUTATOR_2_ARROW_SIZE_FRACTION = 5 / BASE_ICON_SIZE
 MOLECULE_VOIDER_XY_FRACTION = 8 / BASE_ICON_SIZE
 MOLECULE_VOIDER_THICKNESS_FRACTION = 6 / BASE_ICON_SIZE
 MOLECULE_PRINTER_TOP_CENTER_Y_FRACTION = 16 / BASE_ICON_SIZE
-with open(os.path.join("..", "base-graphics-path.txt"), "r") as file:
-	BASE_GRAPHICS_PATH = file.read()
-BASE_ICONS_PATH = os.path.join(BASE_GRAPHICS_PATH, "icons")
-BASE_FLUID_ICONS_PATH = os.path.join(BASE_ICONS_PATH, "fluid")
 MOLECULIFY_ARROW_COLOR = (128, 64, 224, 0)
 MOLECULIFY_ARROW_THICKNESS_FRACTION = 6 / BASE_ICON_SIZE
 MOLECULIFY_ARROW_SIZE_FRACTION = 8 / BASE_ICON_SIZE
@@ -784,6 +788,12 @@ def gen_molecule_builder_icon():
 		layers.append(("line", {"start": (h_lines_left, y), "end": (h_lines_right, y), "thickness": 1}))
 	write_image(".", "molecule-builder", gen_composite_image(layers))
 	image_counter_print("Molecule builder written")
+
+def gen_dropper_icon():
+	image = cv2.imread(os.path.join(CORE_ICONS_MIP_PATH, "color-picker.png"), cv2.IMREAD_UNCHANGED)
+	image[:, :, 0:3] = DROPPER_ICON_COLOR_MASK
+	write_image(".", "dropper", image)
+	image_counter_print("Dropper written")
 
 def gen_thumbnail():
 	image = numpy.zeros((144, 144, 4), numpy.uint8)
@@ -1665,6 +1675,7 @@ gen_molecule_reaction_reactants_icon(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_molecule_absorber_icon(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_periodic_table_icon()
 gen_molecule_builder_icon()
+gen_dropper_icon()
 gen_thumbnail()
 gen_empty_image()
 gen_all_selectors(BASE_ICON_SIZE, BASE_ICON_MIPS)

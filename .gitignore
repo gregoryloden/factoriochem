@@ -1,5 +1,5 @@
 deploy.bat
-base-graphics-path.txt
+game-data-path.txt
 thumbnail.png
 graphics/*.png
 graphics/atoms/*
