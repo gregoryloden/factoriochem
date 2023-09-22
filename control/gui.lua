@@ -608,6 +608,10 @@ local function on_gui_click(event)
 	-- transfer a stack between the player's cursor and one of the chests if applicable
 	local reaction_table_component_name = REACTION_TABLE_COMPONENT_NAME_MAP[element.name]
 	if reaction_table_component_name then
+		-- instead of doing a transfer, copy a molecule into the builder if applicable
+		if molecule_builder_copy_reaction_slot(player, reaction_table_component_name, building_data) then return end
+
+		-- otherwise, proceed with a transfer
 		local chest_stack = building_data.chest_stacks[reaction_table_component_name]
 		if chest_stack.valid_for_read then
 			local empty_player_stack = player.get_main_inventory().find_empty_stack()
@@ -625,13 +629,19 @@ local function on_gui_click(event)
 	-- set or clear one of the demo reactant slots if applicable
 	local reaction_demo_table_reactant_name = REACTION_DEMO_TABLE_REACTANT_NAME_MAP[element.name]
 	if reaction_demo_table_reactant_name then
+		-- first things first, clear the slot if the user clicked the right mouse button
 		local demo_state = get_demo_state(building_data.entity.name)
 		if event.button == defines.mouse_button_type.right then
 			demo_reaction_with_reactant(building_data, demo_state, element, reaction_demo_table_reactant_name, nil)
 			return
 		end
 
-		-- set the reactant stack to one of the source stacks, in order of priority
+		-- instead of modifying a slot, copy a molecule into the builder if applicable
+		if molecule_builder_copy_reaction_demo_slot(player, reaction_demo_table_reactant_name, demo_state) then
+			return
+		end
+
+		-- otherwise, proceed with setting the reactant stack to one of the source stacks, in order of priority
 		local reactant_stack =
 			get_molecule_builder_export_stack(player)
 				or get_stack_if_valid_for_read(player.cursor_stack)

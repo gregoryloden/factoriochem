@@ -30,8 +30,7 @@ data:extend({{
 	type = "sprite",
 	name = "cancel",
 	filename = "__core__/graphics/cancel.png",
-	width = 64,
-	height = 64,
+	size = 64,
 }})
 
 
@@ -59,11 +58,22 @@ periodic_table_24.name = PERIODIC_TABLE_NAME.."-24"
 data:extend({periodic_table, periodic_table_24})
 
 
--- Molecule builder sprite
-data:extend({{
-	type = "sprite",
-	name = MOLECULE_BUILDER_NAME.."-24",
-	filename = GRAPHICS_ROOT..MOLECULE_BUILDER_NAME..".png",
-	size = 24,
-	flags = {"gui-icon"},
-}})
+-- Molecule builder sprite and dropper item
+data:extend({
+	{
+		type = "sprite",
+		name = MOLECULE_BUILDER_NAME.."-24",
+		filename = GRAPHICS_ROOT..MOLECULE_BUILDER_NAME..".png",
+		size = 24,
+		flags = {"gui-icon"},
+	},
+	{
+		type = "item",
+		name = MOLECULE_BUILDER_DROPPER_NAME,
+		icon = GRAPHICS_ROOT.."dropper.png",
+		icon_size = 32,
+		icon_mipmaps = 2,
+		stack_size = 1,
+		flags = {"hidden"},
+	},
+})
