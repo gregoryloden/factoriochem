@@ -19,6 +19,10 @@ for _, reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
 	REACTION_TABLE_SELECTOR_NAME_MAP[REACTION_PREFIX..reactant_name..SELECTOR_SUFFIX] = reactant_name
 	REACTION_DEMO_TABLE_SELECTOR_NAME_MAP[REACTION_DEMO_PREFIX..reactant_name..SELECTOR_SUFFIX] = reactant_name
 end
+local REACTION_DEMO_TABLE_PRODUCT_NAME_MAP = {}
+for _, product_name in ipairs(MOLECULE_REACTION_PRODUCT_NAMES) do
+	REACTION_DEMO_TABLE_PRODUCT_NAME_MAP[REACTION_DEMO_PREFIX..product_name] = product_name
+end
 local ATOMS_SUBGROUP_PREFIX_MATCH = "^"..ATOMS_SUBGROUP_PREFIX
 local BUILDING_EXAMPLES_TEXT = {}
 local EMPTY_SPRITE_1X1_TEXT = "[img=empty-1x1]"
@@ -608,7 +612,7 @@ local function on_gui_click(event)
 	-- transfer a stack between the player's cursor and one of the chests if applicable
 	local reaction_table_component_name = REACTION_TABLE_COMPONENT_NAME_MAP[element.name]
 	if reaction_table_component_name then
-		-- instead of doing a transfer, copy a molecule into the builder if applicable
+		-- instead of doing a transfer, copy a molecule into the molecule builder if applicable
 		if molecule_builder_copy_reaction_slot(player, reaction_table_component_name, building_data) then return end
 
 		-- otherwise, proceed with a transfer
@@ -636,7 +640,7 @@ local function on_gui_click(event)
 			return
 		end
 
-		-- instead of modifying a slot, copy a molecule into the builder if applicable
+		-- instead of modifying a slot, copy a molecule into the molecule builder if applicable
 		if molecule_builder_copy_reaction_demo_slot(player, reaction_demo_table_reactant_name, demo_state) then
 			return
 		end
@@ -650,6 +654,15 @@ local function on_gui_click(event)
 			demo_reaction_with_reactant(
 				building_data, demo_state, element, reaction_demo_table_reactant_name, reactant_stack)
 		end
+		return
+	end
+
+	-- copy a demo result molecule into the molecule builder if applicable
+	local reaction_demo_table_product_name = REACTION_DEMO_TABLE_PRODUCT_NAME_MAP[element.name]
+	if reaction_demo_table_product_name then
+		local demo_state = get_demo_state(building_data.entity.name)
+		molecule_builder_copy_reaction_demo_slot(player, reaction_demo_table_product_name, demo_state)
+		-- whether there was a valid molecule to copy or not, we're done
 		return
 	end
 
