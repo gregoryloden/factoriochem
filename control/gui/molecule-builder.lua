@@ -237,7 +237,10 @@ local function write_molecule_into_builder(player, molecule)
 	grid.clear()
 	for _, equipment in ipairs(complex_contents) do grid.put(equipment) end
 	local molecule_builder_gui = player.gui.screen[MOLECULE_BUILDER_NAME]
-	if molecule_builder_gui then load_molecule_into_builder(molecule_builder_gui, player) end
+	if molecule_builder_gui then
+		load_molecule_into_builder(molecule_builder_gui, player)
+		molecule_builder_gui.bring_to_front()
+	end
 end
 
 
