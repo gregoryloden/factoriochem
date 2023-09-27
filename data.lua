@@ -14,6 +14,7 @@ require("data/technologies")
 require("data/recipes")
 require("data/buildings")
 require("data/styles")
+require("data/tips-and-tricks")
 
 
 -- Empty and cancel sprites
