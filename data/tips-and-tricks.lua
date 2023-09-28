@@ -18,4 +18,13 @@ data:extend({
 		is_title = true,
 		image = TIPS_AND_TRICKS_GRAPHICS_ROOT.."introduction.png",
 	},
+	{
+		type = "tips-and-tricks-item",
+		name = "factoriochem-buildings",
+		category = "factoriochem",
+		order = "b",
+		starting_status = "suggested",
+		indent = 1,
+		image = TIPS_AND_TRICKS_GRAPHICS_ROOT.."buildings.png",
+	},
 })
