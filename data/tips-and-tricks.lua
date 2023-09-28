@@ -44,6 +44,7 @@ local tips_and_tricks_structure = {
 		children = {
 			{name = "gui-io"},
 			{name = "gui-selectors"},
+			{name = "gui-demo"},
 		},
 	}},
 }
