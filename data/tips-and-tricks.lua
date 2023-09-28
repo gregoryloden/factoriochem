@@ -27,4 +27,13 @@ data:extend({
 		indent = 1,
 		image = TIPS_AND_TRICKS_GRAPHICS_ROOT.."buildings.png",
 	},
+	{
+		type = "tips-and-tricks-item",
+		name = "factoriochem-moleculifier",
+		category = "factoriochem",
+		order = "c",
+		starting_status = "unlocked",
+		indent = 2,
+		image = TIPS_AND_TRICKS_GRAPHICS_ROOT.."moleculifier.png",
+	},
 })
