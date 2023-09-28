@@ -45,6 +45,7 @@ local tips_and_tricks_structure = {
 			{name = "gui-io"},
 			{name = "gui-selectors"},
 			{name = "gui-demo"},
+			{name = "gui-examples"},
 		},
 	}},
 }
