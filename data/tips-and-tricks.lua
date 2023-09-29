@@ -48,6 +48,8 @@ local tips_and_tricks_structure = {
 			{name = "gui-examples"},
 			{name = "gui-tools"},
 		},
+	}, {
+		name = "gui-periodic-table",
 	}},
 }
 
