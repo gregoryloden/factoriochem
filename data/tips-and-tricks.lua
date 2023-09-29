@@ -51,6 +51,8 @@ local tips_and_tricks_structure = {
 		},
 	}, {
 		name = "gui-periodic-table",
+	}, {
+		name = "gui-molecule-builder",
 	}},
 }
 
