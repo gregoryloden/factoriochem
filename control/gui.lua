@@ -379,7 +379,7 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 			}, {
 				type = "sprite-button",
 				name = MOLECULE_BUILDER_DEMO_NAME,
-				tooltip = {"factoriochem."..MOLECULE_BUILDER_NAME},
+				tooltip = {"shortcut-name."..MOLECULE_BUILDER_NAME},
 				sprite = MOLECULE_BUILDER_NAME.."-24",
 				style = "factoriochem-tool-button-24",
 			}}
@@ -666,13 +666,13 @@ local function on_gui_click(event)
 		return
 	end
 
-	-- open the periodic table
+	-- open or close the periodic table
 	if element.name == PERIODIC_TABLE_DEMO_NAME then
 		toggle_periodic_table_gui(player)
 		return
 	end
 
-	-- open the molecule builder
+	-- open or close the molecule builder
 	if element.name == MOLECULE_BUILDER_DEMO_NAME then
 		toggle_molecule_builder_gui(player, ATOMS_SUBGROUP_PREFIX_MATCH)
 		return
@@ -870,5 +870,16 @@ end
 
 function gui_on_lua_shortcut(event)
 	local player = game.get_player(event.player_index)
-	if event.prototype_name == PERIODIC_TABLE_NAME then toggle_periodic_table_gui(player) end
+
+	-- open or close the periodic table
+	if event.prototype_name == PERIODIC_TABLE_NAME then
+		toggle_periodic_table_gui(player)
+		return
+	end
+
+	-- open or close the molecule builder
+	if event.prototype_name == MOLECULE_BUILDER_NAME then
+		toggle_molecule_builder_gui(player, ATOMS_SUBGROUP_PREFIX_MATCH)
+		return
+	end
 end

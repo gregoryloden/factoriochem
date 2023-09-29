@@ -35,46 +35,39 @@ data:extend({{
 }})
 
 
--- Periodic table prototypes
-local periodic_table = {type = "shortcut", name = PERIODIC_TABLE_NAME, action = "lua"}
-for _, disabled_prefix in ipairs({"", "disabled_"}) do
-	for size_prefix, size in pairs({[""] = 32, small_ = 24}) do
-		if disabled_prefix ~= "" and size_prefix == "" then goto continue end
-		local y = 0
-		if size == 32 then y = 48 end
-		if disabled_prefix ~= "" then y = y + size end
-		periodic_table[disabled_prefix..size_prefix.."icon"] = {
-			filename = GRAPHICS_ROOT..PERIODIC_TABLE_NAME..".png",
-			size = size,
-			y = y,
-			mipmap_count = 2,
-			flags = {"gui-icon"},
-		}
-		::continue::
+-- Periodic table and molecule builder prototypes
+for _, name in ipairs({PERIODIC_TABLE_NAME, MOLECULE_BUILDER_NAME}) do
+	local shortcut_icon = {type = "shortcut", name = name, action = "lua"}
+	for _, disabled_prefix in ipairs({"", "disabled_"}) do
+		for size_prefix, size in pairs({[""] = 32, small_ = 24}) do
+			if disabled_prefix ~= "" and size_prefix == "" then goto continue end
+			local y = 0
+			if size == 32 then y = 48 end
+			if disabled_prefix ~= "" then y = y + size end
+			shortcut_icon[disabled_prefix..size_prefix.."icon"] = {
+				filename = GRAPHICS_ROOT..name..".png",
+				size = size,
+				y = y,
+				mipmap_count = 2,
+				flags = {"gui-icon"},
+			}
+			::continue::
+		end
 	end
+	local reaction_table_icon = table.deepcopy(shortcut_icon.small_icon)
+	reaction_table_icon.type = "sprite"
+	reaction_table_icon.name = name.."-24"
+	data:extend({shortcut_icon, reaction_table_icon})
 end
-local periodic_table_24 = table.deepcopy(periodic_table.small_icon)
-periodic_table_24.type = "sprite"
-periodic_table_24.name = PERIODIC_TABLE_NAME.."-24"
-data:extend({periodic_table, periodic_table_24})
 
 
--- Molecule builder sprite and dropper item
-data:extend({
-	{
-		type = "sprite",
-		name = MOLECULE_BUILDER_NAME.."-24",
-		filename = GRAPHICS_ROOT..MOLECULE_BUILDER_NAME..".png",
-		size = 24,
-		flags = {"gui-icon"},
-	},
-	{
-		type = "item",
-		name = MOLECULE_BUILDER_DROPPER_NAME,
-		icon = GRAPHICS_ROOT.."dropper.png",
-		icon_size = 32,
-		icon_mipmaps = 2,
-		stack_size = 1,
-		flags = {"hidden"},
-	},
-})
+-- Molecule builder dropper item
+data:extend({{
+	type = "item",
+	name = MOLECULE_BUILDER_DROPPER_NAME,
+	icon = GRAPHICS_ROOT.."dropper.png",
+	icon_size = 32,
+	icon_mipmaps = 2,
+	stack_size = 1,
+	flags = {"hidden"},
+}})

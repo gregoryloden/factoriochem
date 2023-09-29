@@ -339,7 +339,7 @@ function toggle_molecule_builder_gui(player, ATOMS_SUBGROUP_PREFIX_MATCH)
 		}},
 	}
 	local molecule_builder_gui = build_centered_titlebar_gui(
-		gui, MOLECULE_BUILDER_NAME, {"factoriochem."..MOLECULE_BUILDER_NAME}, inner_gui_spec)
+		gui, MOLECULE_BUILDER_NAME, {"shortcut-name."..MOLECULE_BUILDER_NAME}, inner_gui_spec)
 
 	set_molecule_builder_ingredients(molecule_builder_gui.outer, MOLECULE_BUILDER_SCIENCES[1])
 	load_molecule_into_builder(molecule_builder_gui, player)

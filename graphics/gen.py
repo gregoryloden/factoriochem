@@ -310,7 +310,7 @@ def gen_composite_image(layers, base_image = None, include_outline = False):
 			else:
 				height = layer.get("height", None) or layer["size"]
 				width = layer.get("width", None) or layer["size"]
-				layer_image = numpy.full((height, width, 4), layer["color"], numpy.uint8)
+				layer_image = numpy.full((height, width, 4), layer["color"] or (0, 0, 0, 0), numpy.uint8)
 				if include_outline:
 					layer_outline_image = \
 						numpy.full((height, width, 4), ICON_OVERLAY_OUTLINE_COLOR, numpy.uint8)
@@ -733,6 +733,20 @@ def gen_molecule_absorber_icon(base_size, mips):
 	write_image(".", "molecule-absorber", gen_composite_image(layers, image))
 	image_counter_print("Molecule absorber written")
 
+def gen_shortcut_gui_icon(base_alpha):
+	#create an image with 3 rows: a dark 24, a light 24, and a dark 32
+	image = numpy.full((24 + 24 + 32, 32 + 16, 4), BUTTON_ICON_DARK_COLOR, numpy.uint8)
+	image[24:24 * 2, :24 + 12] = BUTTON_ICON_LIGHT_COLOR
+
+	#insert all 6 mip images
+	for (y, size) in [(0, 24), (24, 24), (48, 32)]:
+		x = 0
+		for mip in range(2):
+			size = size // (1 << mip)
+			image[y:y + size, x:x + size, 3] = resize(base_alpha, size, size, multi_color_alpha_weighting=False)
+			x += size
+	return image
+
 def gen_periodic_table_icon():
 	#generate the basic icon, in alpha form
 	height = 10
@@ -749,44 +763,37 @@ def gen_periodic_table_icon():
 	big_alpha = numpy.zeros((width * 2, width * 2), numpy.uint8)
 	big_alpha[width - height:width + height, :] = resize(alpha, width * 2, height * 2, multi_color_alpha_weighting=False)
 
-	#create an image with 3 rows: a dark 24, a light 24, and a dark 32
-	image = numpy.full((24 + 24 + 32, 32 + 16, 4), BUTTON_ICON_DARK_COLOR, numpy.uint8)
-	image[24:24 * 2, :24 + 12] = BUTTON_ICON_LIGHT_COLOR
-
-	#insert all 6 mip images
-	for (y, size) in [(0, 24), (24, 24), (48, 32)]:
-		x = 0
-		for mip in range(2):
-			size = size // (1 << mip)
-			image[y:y + size, x:x + size, 3] = resize(big_alpha, size, size, multi_color_alpha_weighting=False)
-			x += size
-
-	#now write it
-	write_image(".", "periodic-table", image)
+	#make a GUI icon from it and write it
+	write_image(".", "periodic-table", gen_shortcut_gui_icon(big_alpha))
 	image_counter_print("Periodic table written")
 
 def gen_molecule_builder_icon():
-	size = 24
+	#generate the basic icon for its alpha
+	size = 24 * 3
+	thickness = 2
 	dot_radius = MOLECULE_BUILDER_RADIUS_FRACTION * size
-	layers = [("layer", {"size": size, "color": BUTTON_ICON_DARK_COLOR})]
+	layers = [("layer", {"size": size, "color": None})]
 	for y in range(MAX_GRID_HEIGHT):
 		y = (y + 0.5) / MAX_GRID_HEIGHT * size
 		for x in range(MAX_GRID_WIDTH):
 			x = (x + 0.5) / MAX_GRID_WIDTH * size
 			layers.append(("circle", {"center": (x, y), "radius": dot_radius}))
-	layers.append(("layer", {"size": size, "color": BUTTON_ICON_DARK_COLOR}))
+	layers.append(("layer", {"size": size, "color": None}))
 	v_lines_top = 0.5 / MAX_GRID_HEIGHT * size
 	v_lines_bottom = size - v_lines_top
 	for x in range(MAX_GRID_WIDTH):
 		x = (x + 0.5) / MAX_GRID_WIDTH * size
-		layers.append(("line", {"start": (x, v_lines_top), "end": (x, v_lines_bottom), "thickness": 1}))
-	layers.append(("layer", {"size": size, "color": BUTTON_ICON_DARK_COLOR}))
+		layers.append(("line", {"start": (x, v_lines_top), "end": (x, v_lines_bottom), "thickness": thickness}))
+	layers.append(("layer", {"size": size, "color": None}))
 	h_lines_left = 0.5 / MAX_GRID_WIDTH * size
 	h_lines_right = size - h_lines_left
 	for y in range(MAX_GRID_HEIGHT):
 		y = (y + 0.5) / MAX_GRID_HEIGHT * size
-		layers.append(("line", {"start": (h_lines_left, y), "end": (h_lines_right, y), "thickness": 1}))
-	write_image(".", "molecule-builder", gen_composite_image(layers))
+		layers.append(("line", {"start": (h_lines_left, y), "end": (h_lines_right, y), "thickness": thickness}))
+	base_alpha = gen_composite_image(layers)[:, :, 3]
+
+	#make a GUI icon from it and write it
+	write_image(".", "molecule-builder", gen_shortcut_gui_icon(base_alpha))
 	image_counter_print("Molecule builder written")
 
 def gen_dropper_icon():
