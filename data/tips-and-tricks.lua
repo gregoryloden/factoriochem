@@ -1,5 +1,6 @@
 -- Constants
 local TIPS_AND_TRICKS_GRAPHICS_ROOT = GRAPHICS_ROOT.."tips-and-tricks/"
+local ORDER_BYTE_BASE = string.byte("a") - 1
 
 
 -- Tips and tricks
@@ -25,7 +26,7 @@ function add_tips_and_tricks_recursive(structure, indent, order)
 	local children = structure.children
 	if children then
 		for i, child in ipairs(children) do
-			add_tips_and_tricks_recursive(child, indent + 1, order..string.char(i + 96))
+			add_tips_and_tricks_recursive(child, indent + 1, order..string.char(i + ORDER_BYTE_BASE))
 		end
 	end
 end
