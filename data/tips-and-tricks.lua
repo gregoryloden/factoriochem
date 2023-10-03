@@ -31,6 +31,7 @@ function add_tips_and_tricks_recursive(structure, indent, order)
 	end
 end
 
+data:extend({{type = "tips-and-tricks-item-category", name = "factoriochem", order = "_"}})
 local tips_and_tricks_structure = {
 	name = "introduction",
 	starting_status = "suggested",
@@ -55,6 +56,4 @@ local tips_and_tricks_structure = {
 		name = "gui-molecule-builder",
 	}},
 }
-
-data:extend({{type = "tips-and-tricks-item-category", name = "factoriochem", order = "_"}})
 add_tips_and_tricks_recursive(tips_and_tricks_structure, 0, "a")
