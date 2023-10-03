@@ -6,13 +6,12 @@ local ORDER_BYTE_BASE = string.byte("a") - 1
 -- Tips and tricks
 function add_tips_and_tricks_recursive(structure, indent, order)
 	-- add this entry
-	local name = structure.name
 	local entry = {
 		type = "tips-and-tricks-item",
-		name = "factoriochem-"..name,
+		name = "factoriochem-"..structure.name,
 		category = "factoriochem",
 		order = order,
-		image = TIPS_AND_TRICKS_GRAPHICS_ROOT..name..".png",
+		image = TIPS_AND_TRICKS_GRAPHICS_ROOT..structure.name..".png",
 		starting_status = structure.starting_status or "unlocked",
 	}
 	if indent == 0 then
@@ -23,9 +22,8 @@ function add_tips_and_tricks_recursive(structure, indent, order)
 	data:extend({entry})
 
 	-- add children entries
-	local children = structure.children
-	if children then
-		for i, child in ipairs(children) do
+	if structure.children then
+		for i, child in ipairs(structure.children) do
 			add_tips_and_tricks_recursive(child, indent + 1, order..string.char(i + ORDER_BYTE_BASE))
 		end
 	end
