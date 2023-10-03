@@ -1,22 +1,23 @@
 -- Constants
-local MOLECULE_BUILDER_SCIENCES_NAME = "molecule-builder-sciences"
-local MOLECULE_BUILDER_INGREDIENTS_NAME = "molecule-builder-ingredients"
+local MOLECULE_BUILDER_CATEGORIES_NAME = "molecule-builder-categories"
+local MOLECULE_BUILDER_SELECTIONS_NAME = "molecule-builder-selections"
 local MOLECULE_BUILDER_MAIN_NAME = "molecule-builder-main"
 local MOLECULE_BUILDER_TABLE_FRAME_NAME = "molecule-builder-table-frame"
 local MOLECULE_BUILDER_TABLE_NAME = "molecule-builder-table"
 local MOLECULE_BUILDER_CLEAR_NAME = "molecule-builder-clear"
 local MOLECULE_BUILDER_RESULT_NAME = "molecule-builder-result"
 local MOLECULE_BUILDER_RESULT_ID_NAME = "molecule-builder-result-id"
-local MOLECULE_BUILDER_SCIENCES = {
+local MOLECULE_BUILDER_CATEGORIES = {
 	"automation-science-pack",
 	"logistic-science-pack",
 	"military-science-pack",
 	"chemical-science-pack",
 	"production-science-pack",
 	"utility-science-pack",
+	MOLECULIFIER_NAME,
 }
-local MOLECULE_BUILDER_SCIENCES_NAME_MAP = {}
-local MOLECULE_BUILDER_INGREDIENTS_NAME_MAP = {}
+local MOLECULE_BUILDER_CATEGORIES_NAME_MAP = {}
+local MOLECULE_BUILDER_SELECTIONS_NAME_MAP = {}
 local MOLECULE_BUILDER_ROWS = MAX_GRID_HEIGHT * 2 - 1
 local MOLECULE_BUILDER_COLS = MAX_GRID_WIDTH * 2 - 1
 local MOLECULE_BUILDER_STATE_STACK = nil
@@ -42,25 +43,36 @@ local function iter_molecule_builder_cells(handle_cell)
 	end
 end
 
-local function set_molecule_builder_ingredients(outer_gui, molecule_builder_science_name)
-	local recipe = GAME_RECIPE_PROTOTYPES[molecule_builder_science_name]
-	local ingredients_gui = outer_gui[MOLECULE_BUILDER_INGREDIENTS_NAME]
-	for _, child in pairs(ingredients_gui.children) do child.destroy() end
-	for _, ingredient in pairs(recipe.ingredients) do
-		ingredients_gui.add({
+local function set_molecule_builder_selections(outer_gui, recipe_name, use_products)
+	local selections
+	if use_products then
+		selections = GAME_RECIPE_PROTOTYPES[recipe_name].products
+	else
+		selections = GAME_RECIPE_PROTOTYPES[recipe_name].ingredients
+	end
+	local selections_gui = outer_gui[MOLECULE_BUILDER_SELECTIONS_NAME]
+	if selections_gui then selections_gui.destroy() end
+	selections_gui = outer_gui.add({
+		type = "table",
+		name = MOLECULE_BUILDER_SELECTIONS_NAME,
+		column_count = math.ceil((#selections + 2) / 9),
+		index = 2,
+	})
+	for _, selection in ipairs(selections) do
+		selections_gui.add({
 			type = "sprite-button",
-			name = MOLECULE_BUILDER_INGREDIENTS_NAME.."-"..ingredient.name,
-			sprite = "item/"..ingredient.name,
-			tooltip = {"factoriochem.molecule-builder-ingredient"},
+			name = MOLECULE_BUILDER_SELECTIONS_NAME.."-"..selection.name,
+			sprite = "item/"..selection.name,
+			tooltip = {"factoriochem.molecule-builder-selection"},
 		})
 	end
-	ingredients_gui.add({
+	selections_gui.add({
 		type = "sprite-button",
 		name = MOLECULE_BUILDER_CLEAR_NAME,
 		sprite = "cancel",
 		tooltip = {"factoriochem.molecule-builder-clear"},
 	})
-	ingredients_gui.add({
+	selections_gui.add({
 		type = "sprite-button",
 		name = MOLECULE_BUILDER_DROPPER_NAME,
 		sprite = "item/"..MOLECULE_BUILDER_DROPPER_NAME,
@@ -256,15 +268,21 @@ function toggle_molecule_builder_gui(player, ATOMS_SUBGROUP_PREFIX_MATCH)
 		return
 	end
 
-	function build_science_buttons()
+	function build_category_buttons()
 		local buttons = {}
-		for _, science in ipairs(MOLECULE_BUILDER_SCIENCES) do
-			local spec = {
-				type = "sprite-button",
-				name = MOLECULE_BUILDER_SCIENCES_NAME.."-"..science,
-				sprite = "item/"..science,
-				tooltip = {"factoriochem.molecule-builder-science", {"item-name."..science}},
-			}
+		for _, category in ipairs(MOLECULE_BUILDER_CATEGORIES) do
+			local spec = {name = MOLECULE_BUILDER_CATEGORIES_NAME.."-"..category}
+			if category == MOLECULIFIER_NAME then
+				spec.type = "choose-elem-button"
+				spec.elem_type = "recipe"
+				spec.elem_filters = {{filter = "subgroup", subgroup = MOLECULIFY_SUBGROUP_NAME}}
+				spec.recipe = MOLECULIFIER_NAME
+				spec.tooltip = {"factoriochem.molecule-builder-moleculifier", {"entity-name.moleculifier"}}
+			else
+				spec.type = "sprite-button"
+				spec.sprite = "item/"..category
+				spec.tooltip = {"factoriochem.molecule-builder-science", {"item-name."..category}}
+			end
 			table.insert(buttons, spec)
 		end
 		return buttons
@@ -304,13 +322,9 @@ function toggle_molecule_builder_gui(player, ATOMS_SUBGROUP_PREFIX_MATCH)
 		style = "inside_shallow_frame_with_padding",
 		children = {{
 			type = "flow",
-			name = MOLECULE_BUILDER_SCIENCES_NAME,
+			name = MOLECULE_BUILDER_CATEGORIES_NAME,
 			direction = "vertical",
-			children = build_science_buttons(),
-		}, {
-			type = "flow",
-			name = MOLECULE_BUILDER_INGREDIENTS_NAME,
-			direction = "vertical",
+			children = build_category_buttons(),
 		}, {
 			type = "flow",
 			name = MOLECULE_BUILDER_MAIN_NAME,
@@ -341,7 +355,7 @@ function toggle_molecule_builder_gui(player, ATOMS_SUBGROUP_PREFIX_MATCH)
 	local molecule_builder_gui = build_centered_titlebar_gui(
 		gui, MOLECULE_BUILDER_NAME, {"shortcut-name."..MOLECULE_BUILDER_NAME}, inner_gui_spec)
 
-	set_molecule_builder_ingredients(molecule_builder_gui.outer, MOLECULE_BUILDER_SCIENCES[1])
+	set_molecule_builder_selections(molecule_builder_gui.outer, MOLECULE_BUILDER_CATEGORIES[1], false)
 	load_molecule_into_builder(molecule_builder_gui, player)
 end
 
@@ -382,21 +396,23 @@ end
 -- Global event handling
 function molecule_builder_on_gui_click(element, player)
 	-- show the ingredients of a science in the molecule builder
-	local molecule_builder_science_name = MOLECULE_BUILDER_SCIENCES_NAME_MAP[element.name]
-	if molecule_builder_science_name then
-		set_molecule_builder_ingredients(element.parent.parent, molecule_builder_science_name)
+	local molecule_builder_category_name = MOLECULE_BUILDER_CATEGORIES_NAME_MAP[element.name]
+	if molecule_builder_category_name then
+		if molecule_builder_category_name ~= MOLECULIFIER_NAME then
+			set_molecule_builder_selections(element.parent.parent, molecule_builder_category_name, false)
+		end
 		return true
 	end
 
-	-- show the contents of a science ingredient in the molecule builder
-	local molecule_builder_ingredient_name = MOLECULE_BUILDER_INGREDIENTS_NAME_MAP[element.name]
-	if molecule_builder_ingredient_name then
+	-- show the contents of a science ingredient or a product from the moleculifier in the molecule builder
+	local molecule_builder_selection_name = MOLECULE_BUILDER_SELECTIONS_NAME_MAP[element.name]
+	if molecule_builder_selection_name then
 		local shape, height
-		-- the "clear" button stores its ingredient as ""
-		if molecule_builder_ingredient_name == "" then
+		-- the "clear" button stores its molecule as ""
+		if molecule_builder_selection_name == "" then
 			shape, height = {}, 0
 		else
-			shape, height = parse_molecule(molecule_builder_ingredient_name)
+			shape, height = parse_molecule(molecule_builder_selection_name)
 		end
 		show_molecule_in_builder(element, element.parent.parent[MOLECULE_BUILDER_MAIN_NAME], shape, height, player)
 		return true
@@ -421,6 +437,16 @@ function molecule_builder_on_gui_click(element, player)
 end
 
 function molecule_builder_on_gui_elem_changed(element, event)
+	-- show the products of a moleculifier recipe in the molecule builder
+	local molecule_builder_category_name = MOLECULE_BUILDER_CATEGORIES_NAME_MAP[element.name]
+	if molecule_builder_category_name then
+		if molecule_builder_category_name == MOLECULIFIER_NAME then
+			set_molecule_builder_selections(element.parent.parent, element.elem_value, true)
+			element.elem_value = MOLECULIFIER_NAME
+		end
+		return true
+	end
+
 	-- update the molecule builder result and result ID after changing part of it
 	if element.parent.name == MOLECULE_BUILDER_TABLE_NAME then
 		export_built_molecule(element, element.parent, game.get_player(event.player_index))
@@ -443,16 +469,27 @@ function molecule_builder_on_gui_text_changed(element, event)
 end
 
 function gui_molecule_buider_on_first_tick()
-	-- match GUI names with sciences/science ingredients
-	for _, science in ipairs(MOLECULE_BUILDER_SCIENCES) do
-		MOLECULE_BUILDER_SCIENCES_NAME_MAP[MOLECULE_BUILDER_SCIENCES_NAME.."-"..science] = science
-		local recipe = GAME_RECIPE_PROTOTYPES[science]
-		for _, ingredient in pairs(recipe.ingredients) do
-			ingredient = ingredient.name
-			MOLECULE_BUILDER_INGREDIENTS_NAME_MAP[MOLECULE_BUILDER_INGREDIENTS_NAME.."-"..ingredient] = ingredient
+	-- match GUI names with sciences/science ingredients and the moleculifier/its recipes' products, plus the clear button
+	for _, category in ipairs(MOLECULE_BUILDER_CATEGORIES) do
+		MOLECULE_BUILDER_CATEGORIES_NAME_MAP[MOLECULE_BUILDER_CATEGORIES_NAME.."-"..category] = category
+		if category == MOLECULIFIER_NAME then
+			local moleculify_recipes_filters = {{filter = "subgroup", subgroup = MOLECULIFY_SUBGROUP_NAME}}
+			for _, recipe in pairs(game.get_filtered_recipe_prototypes(moleculify_recipes_filters)) do
+				for _, product in ipairs(recipe.products) do
+					local selection_name = MOLECULE_BUILDER_SELECTIONS_NAME.."-"..product.name
+					MOLECULE_BUILDER_SELECTIONS_NAME_MAP[selection_name] = product.name
+				end
+			end
+		else
+			for _, ingredient in pairs(GAME_RECIPE_PROTOTYPES[category].ingredients) do
+				MOLECULE_BUILDER_SELECTIONS_NAME_MAP[MOLECULE_BUILDER_SELECTIONS_NAME.."-"..ingredient.name] =
+					ingredient.name
+			end
 		end
 	end
-	MOLECULE_BUILDER_INGREDIENTS_NAME_MAP[MOLECULE_BUILDER_CLEAR_NAME] = ""
+	MOLECULE_BUILDER_SELECTIONS_NAME_MAP[MOLECULE_BUILDER_CLEAR_NAME] = ""
+
+	-- set up stacks
 	MOLECULE_BUILDER_STATE_STACK = global.molecule_builder_inventory[1]
 	MOLECULE_BUILDER_EXPORT_STACK = global.molecule_builder_inventory[2]
 	if not MOLECULE_BUILDER_STATE_STACK.valid_for_read then

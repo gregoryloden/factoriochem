@@ -1,5 +1,4 @@
 -- Constants
-local MOLECULIFY_SUBGROUP_NAME = "moleculify"
 local MOLECULIFY_PREFIX = "moleculify-"
 local DEMOLECULIFY_SUBGROUP_NAME = "demoleculify"
 local DEMOLECULIFY_PREFIX = "demoleculify-"

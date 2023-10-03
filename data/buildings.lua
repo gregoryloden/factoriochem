@@ -19,7 +19,6 @@ local BUILDING_INGREDIENTS = {{"iron-gear-wheel", 15}, {"copper-plate", 20}, {"e
 local HIDDEN_ENTITY_FLAGS = {"hidden", "not-deconstructable", "not-blueprintable", "player-creation"}
 local EMPTY_SPRITE = {filename = "__core__/graphics/empty.png", size = 1}
 local BUILDING_OVERLAY_ICON_SIZE = 64
-local MOLECULIFIER_NAME = "moleculifier"
 local BASE_BUILDING_PROTOTYPE = table.deepcopy(data.raw["assembling-machine"]["assembling-machine-3"])
 BASE_BUILDING_PROTOTYPE.energy_source = {type = "void"}
 BASE_BUILDING_PROTOTYPE.crafting_speed = 1
