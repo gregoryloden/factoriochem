@@ -277,7 +277,7 @@ function toggle_molecule_builder_gui(player, ATOMS_SUBGROUP_PREFIX_MATCH)
 				spec.elem_type = "recipe"
 				spec.elem_filters = {{filter = "subgroup", subgroup = MOLECULIFY_SUBGROUP_NAME}}
 				spec.recipe = MOLECULIFIER_NAME
-				spec.tooltip = {"factoriochem.molecule-builder-moleculifier", {"entity-name.moleculifier"}}
+				spec.tooltip = {"factoriochem.molecule-builder-moleculifier"}
 			else
 				spec.type = "sprite-button"
 				spec.sprite = "item/"..category
