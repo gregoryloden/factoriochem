@@ -52,6 +52,9 @@ local tips_and_tricks_structure = {
 		name = "gui-periodic-table",
 	}, {
 		name = "gui-molecule-builder",
+		children = {
+			{name = "gui-molecule-builder-category"},
+		},
 	}},
 }
 add_tips_and_tricks_recursive(tips_and_tricks_structure, 0, "a")
