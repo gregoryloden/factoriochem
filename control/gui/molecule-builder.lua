@@ -68,15 +68,15 @@ local function set_molecule_builder_selections(outer_gui, recipe_name, use_produ
 	end
 	selections_gui.add({
 		type = "sprite-button",
-		name = MOLECULE_BUILDER_CLEAR_NAME,
-		sprite = "cancel",
-		tooltip = {"factoriochem.molecule-builder-clear"},
-	})
-	selections_gui.add({
-		type = "sprite-button",
 		name = MOLECULE_BUILDER_DROPPER_NAME,
 		sprite = "item/"..MOLECULE_BUILDER_DROPPER_NAME,
 		tooltip = {"factoriochem.molecule-builder-dropper"},
+	})
+	selections_gui.add({
+		type = "sprite-button",
+		name = MOLECULE_BUILDER_CLEAR_NAME,
+		sprite = "cancel",
+		tooltip = {"factoriochem.molecule-builder-clear"},
 	})
 end
 
