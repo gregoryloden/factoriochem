@@ -54,6 +54,7 @@ local tips_and_tricks_structure = {
 		name = "gui-molecule-builder",
 		children = {
 			{name = "gui-molecule-builder-main-area"},
+			{name = "gui-molecule-builder-result"},
 			{name = "gui-molecule-builder-display-buttons"},
 			{name = "gui-molecule-builder-category"},
 		},
