@@ -259,6 +259,17 @@ local function write_molecule_into_builder(player, molecule)
 	end
 end
 
+local function try_write_molecule_from_stack_into_builder(player, stack)
+	local molecule = stack.name
+	local complex_shape = COMPLEX_SHAPES[molecule]
+	local item_prototype = GAME_ITEM_PROTOTYPES[molecule]
+	if complex_shape then
+		write_molecule_into_builder(player, assemble_complex_molecule(stack.grid, complex_shape))
+	elseif item_prototype and item_prototype.group.name == MOLECULES_GROUP_NAME then
+		write_molecule_into_builder(player, molecule)
+	end
+end
+
 
 -- Global utility - molecule builder GUI construction / destruction and cross-GUI interaction
 function toggle_molecule_builder_gui(player, ATOMS_SUBGROUP_PREFIX_MATCH)
@@ -339,6 +350,7 @@ function toggle_molecule_builder_gui(player, ATOMS_SUBGROUP_PREFIX_MATCH)
 					name = MOLECULE_BUILDER_TABLE_NAME,
 					style = "factoriochem-molecule-builder-table",
 					column_count = MOLECULE_BUILDER_COLS,
+					tooltip = {"factoriochem.molecule-builder-table"},
 					children = build_molecule_builder_table_children(),
 				}},
 			}, {
@@ -364,14 +376,7 @@ function molecule_builder_copy_reaction_slot(player, component_name, building_da
 	if not cursor_ghost or cursor_ghost.name ~= MOLECULE_BUILDER_DROPPER_NAME then return false end
 	local chest_stack = building_data.chest_stacks[component_name]
 	if chest_stack.valid_for_read then
-		local component = chest_stack.name
-		local complex_shape = COMPLEX_SHAPES[reactant]
-		local item_prototype = GAME_ITEM_PROTOTYPES[component]
-		if complex_shape then
-			write_molecule_into_builder(player, assemble_complex_molecule(chest_stack.grid, complex_shape))
-		elseif item_prototype and item_prototype.group.name == MOLECULES_GROUP_NAME then
-			write_molecule_into_builder(player, component)
-		end
+		try_write_molecule_from_stack_into_builder(player, chest_stack)
 	elseif not MOLECULE_REACTION_IS_REACTANT[component_name] then
 		local product = building_data.reaction.products[component_name]
 		if product then write_molecule_into_builder(player, product) end
@@ -431,6 +436,14 @@ function molecule_builder_on_gui_click(element, player)
 	if element.name == MOLECULE_BUILDER_DROPPER_NAME then
 		player.clear_cursor() -- remove anything that was there before
 		player.cursor_ghost = MOLECULE_BUILDER_DROPPER_NAME
+		return true
+	end
+
+	-- copy a molecule if there is one under the cursor
+	if element.name == MOLECULE_BUILDER_TABLE_NAME then
+		if player.cursor_stack and player.cursor_stack.valid_for_read then
+			try_write_molecule_from_stack_into_builder(player, player.cursor_stack)
+		end
 		return true
 	end
 
