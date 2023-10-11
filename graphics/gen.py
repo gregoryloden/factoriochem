@@ -98,6 +98,8 @@ MOLECULE_ABSORBER_DOT_COLOR = (255, 255, 255, 0)
 MOLECULE_ABSORBER_DOT_RADIUS_FRACTION = 3 / BASE_ICON_SIZE
 MOLECULE_ABSORBER_CORNER_DISTANCE = 16 / BASE_ICON_SIZE
 MOLECULE_ABSORBER_CORNER_RADIUS_FRACTION = 10 / BASE_ICON_SIZE
+MOLECULE_ABSORBER_DELETE_COLOR = (64, 64, 224, 0)
+MOLECULE_ABSORBER_DELETE_THICKNESS_FRACTION = 8 / BASE_ICON_SIZE
 BUTTON_ICON_DARK_COLOR = (0, 0, 0, 0)
 BUTTON_ICON_LIGHT_COLOR = (224, 224, 224, 0)
 MOLECULE_BUILDER_RADIUS_FRACTION = 3 / 24
@@ -713,7 +715,7 @@ def gen_molecule_reaction_reactants_icon(base_size, mips):
 
 
 #Generate other single-form images
-def gen_molecule_absorber_icon(base_size, mips):
+def gen_molecule_absorber_icons(base_size, mips):
 	image = filled_mip_image(base_size, mips)
 	layers = [("layer", {"size": base_size, "mips": mips, "color": MOLECULE_ABSORBER_DOT_COLOR})]
 	dot_radius = MOLECULE_ABSORBER_DOT_RADIUS_FRACTION * base_size
@@ -731,7 +733,17 @@ def gen_molecule_absorber_icon(base_size, mips):
 		layers.append(
 			("arc", {"center": (x, y), "radius": corner_radius, "arc": [i * 90, 90], "thickness": cv2.FILLED}))
 	write_image(".", "molecule-absorber", gen_composite_image(layers, image))
-	image_counter_print("Molecule absorber written")
+	delete_low = base_size / 4
+	delete_high = base_size * 3 / 4
+	delete_thickness = int(MOLECULE_ABSORBER_DELETE_THICKNESS_FRACTION * base_size)
+	layers.append(("layer", {"size": base_size, "color": MOLECULE_ABSORBER_DELETE_COLOR}))
+	layers.append(
+		("line", {"start": (delete_low, delete_low), "end": (delete_high, delete_high), "thickness": delete_thickness}))
+	layers.append(("layer", {"size": base_size, "color": MOLECULE_ABSORBER_DELETE_COLOR}))
+	layers.append(
+		("line", {"start": (delete_low, delete_high), "end": (delete_high, delete_low), "thickness": delete_thickness}))
+	write_image(".", "molecule-absorber-delete", gen_composite_image(layers, image))
+	image_counter_print("Molecule absorbers written")
 
 def gen_shortcut_gui_icon(base_alpha):
 	#create an image with 3 rows: a dark 24, a light 24, and a dark 32
@@ -1676,7 +1688,7 @@ gen_all_atom_images(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_all_bond_images(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_item_group_icon(ITEM_GROUP_SIZE, ITEM_GROUP_MIPS)
 gen_molecule_reaction_reactants_icon(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
-gen_molecule_absorber_icon(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
+gen_molecule_absorber_icons(BASE_ICON_SIZE, MOLECULE_ICON_MIPS)
 gen_periodic_table_icon()
 gen_molecule_builder_icon()
 gen_dropper_icon()

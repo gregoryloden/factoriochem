@@ -223,6 +223,16 @@ data:extend({
 		ingredients = {},
 		result = MOLECULE_ABSORBER_NAME,
 	},
+	{
+		type = "recipe",
+		name = MOLECULE_ABSORBER_DELETE_NAME,
+		subgroup = MOLECULE_ITEMS_SUBGROUP_NAME,
+		icon = GRAPHICS_ROOT..MOLECULE_ABSORBER_DELETE_NAME..".png",
+		icon_size = ITEM_ICON_SIZE,
+		icon_mipmaps = MOLECULE_ICON_MIPMAPS,
+		ingredients = {{MOLECULE_ABSORBER_NAME, 1}},
+		results = {},
+	},
 })
 
 
