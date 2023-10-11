@@ -431,6 +431,7 @@ function molecule_builder_on_gui_click(element, player)
 	if element.name == MOLECULE_BUILDER_DROPPER_NAME then
 		player.clear_cursor() -- remove anything that was there before
 		player.cursor_ghost = MOLECULE_BUILDER_DROPPER_NAME
+		return true
 	end
 
 	return false
