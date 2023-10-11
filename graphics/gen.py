@@ -739,12 +739,9 @@ def gen_shortcut_gui_icon(base_alpha):
 	image[24:24 * 2, :24 + 12] = BUTTON_ICON_LIGHT_COLOR
 
 	#insert all 6 mip images
-	for (y, size) in [(0, 24), (24, 24), (48, 32)]:
-		x = 0
-		for mip in range(2):
-			size = size // (1 << mip)
+	for (y, base_size) in [(0, 24), (24, 24), (48, 32)]:
+		for (mip, x, size) in iter_mips(base_size, 2):
 			image[y:y + size, x:x + size, 3] = resize(base_alpha, size, size, multi_color_alpha_weighting=False)
-			x += size
 	return image
 
 def gen_periodic_table_icon():
