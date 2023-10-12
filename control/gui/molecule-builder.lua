@@ -59,11 +59,12 @@ local function set_molecule_builder_selections(outer_gui, recipe_name, use_produ
 		index = 2,
 	})
 	for _, selection in ipairs(selections) do
+		local item = GAME_ITEM_PROTOTYPES[selection.name]
 		selections_gui.add({
 			type = "sprite-button",
 			name = MOLECULE_BUILDER_SELECTIONS_NAME.."-"..selection.name,
 			sprite = "item/"..selection.name,
-			tooltip = {"factoriochem.molecule-builder-selection"},
+			tooltip = {"factoriochem.molecule-builder-selection", item.localised_name, item.localised_description},
 		})
 	end
 	selections_gui.add({
