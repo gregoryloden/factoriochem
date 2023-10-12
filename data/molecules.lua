@@ -236,8 +236,6 @@ local function gen_molecules(grid_i_i, grid_is)
 						icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 					})
 			end
-			array_push(MOLECULE_BUILDER, symbol)
-			if slot.right_bonds > 0 then array_push(MOLECULE_BUILDER, slot.right_bonds) end
 			local left_bonds = slot.left_bonds
 			if left_bonds > 0 then
 				table.insert(
@@ -248,6 +246,9 @@ local function gen_molecules(grid_i_i, grid_is)
 						icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 					})
 			end
+			array_push(MOLECULE_BUILDER, symbol)
+			local right_bonds = slot.right_bonds
+			if right_bonds > 0 then array_push(MOLECULE_BUILDER, right_bonds) end
 			local number = atom.number
 			MOLECULE_DISPLAY_COUNTER[number] = (MOLECULE_DISPLAY_COUNTER[number] or 0) + 1
 		end
