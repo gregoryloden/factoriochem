@@ -51,6 +51,10 @@ for row_n, atoms_row in ipairs(ATOM_ROWS) do
 		ALL_ATOMS[atomic_number] = atom
 	end
 end
+H_BONDS_RICH_TEXT = {}
+for h_bonds = 1, MAX_GRID_WIDTH do H_BONDS_RICH_TEXT[h_bonds] = "[img="..MOLECULE_BONDS_PREFIX.."H"..h_bonds.."]" end
+V_BONDS_RICH_TEXT = {}
+for v_bonds = 1, MAX_GRID_HEIGHT do V_BONDS_RICH_TEXT[v_bonds] = "[img="..MOLECULE_BONDS_PREFIX.."V"..v_bonds.."]" end
 
 
 -- Constants

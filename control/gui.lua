@@ -25,7 +25,6 @@ for _, product_name in ipairs(MOLECULE_REACTION_PRODUCT_NAMES) do
 end
 local ATOMS_SUBGROUP_PREFIX_MATCH = "^"..ATOMS_SUBGROUP_PREFIX
 local BUILDING_EXAMPLES_TEXT = {}
-local EMPTY_SPRITE_1X1_TEXT = "[img=empty-1x1]"
 local PERIODIC_TABLE_DEMO_NAME = "periodic-table-demo"
 local MOLECULE_BUILDER_DEMO_NAME = "molecule-builder-demo"
 local MOLECULE_CONTENTS_CACHE = {}
@@ -113,7 +112,7 @@ local function build_molecule_contents_text(molecule)
 			end
 			table.insert(row_builder, ALL_ATOMS[atom.symbol].rich_text)
 			if atom.right then
-				table.insert(row_builder, "[img="..MOLECULE_BONDS_PREFIX.."H"..atom.right.."]")
+				table.insert(row_builder, H_BONDS_RICH_TEXT[atom.right])
 				last_x = last_x + 1
 			end
 			if atom.up then
@@ -122,7 +121,7 @@ local function build_molecule_contents_text(molecule)
 					table.insert(up_builder, EMPTY_SPRITE_1X1_TEXT)
 					last_up_x = last_up_x + 1
 				end
-				table.insert(up_builder, "[img="..MOLECULE_BONDS_PREFIX.."V"..atom.up.."]")
+				table.insert(up_builder, V_BONDS_RICH_TEXT[atom.up])
 			end
 			::continue::
 		end

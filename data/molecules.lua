@@ -45,6 +45,8 @@ local MAX_SINGLE_BONDS = 3
 local MAX_SINGLE_BONDS_HCNO = 2
 local MAX_SINGLE_BONDS_Ne = MAX_SINGLE_BONDS
 local MOLECULE_BUILDER = empty_array()
+local MOLECULE_SHAPE_BUILDER = empty_array()
+local MOLECULE_SHAPE_BUILDER_DOWN_BONDS = empty_array()
 local MOLECULE_DISPLAY_COUNTER = {}
 local MOLECULE_DISPLAY_BUILDER = empty_array()
 local ATOM_ICON_ROOT = GRAPHICS_ROOT.."atoms/"
@@ -200,6 +202,7 @@ local function gen_molecules(grid_i_i, grid_is)
 	local icons = {current_shape_icon}
 	local last_row = 0
 	local last_col = 0
+	local molecule_shape_builder_parts = nil
 	for grid_i = 1, GRID_AREA do
 		local slot = GRID[grid_i]
 		if slot then
@@ -210,6 +213,22 @@ local function gen_molecules(grid_i_i, grid_is)
 				last_row = row
 				array_push(MOLECULE_BUILDER, ATOM_ROW_SEPARATOR)
 				last_col = 0
+				array_push(MOLECULE_SHAPE_BUILDER, "\n")
+				for i = 1, MOLECULE_SHAPE_BUILDER_DOWN_BONDS.n do
+					array_push(MOLECULE_SHAPE_BUILDER, MOLECULE_SHAPE_BUILDER_DOWN_BONDS[i])
+					MOLECULE_SHAPE_BUILDER_DOWN_BONDS[i] = nil
+				end
+				MOLECULE_SHAPE_BUILDER_DOWN_BONDS.n = 0
+				if molecule_shape_builder_parts then
+					molecule_shape_builder_parts = {
+						"item-description.molecule-pre-part",
+						molecule_shape_builder_parts,
+						table.concat(MOLECULE_SHAPE_BUILDER),
+					}
+				else
+					molecule_shape_builder_parts = table.concat(MOLECULE_SHAPE_BUILDER)
+				end
+				array_clear(MOLECULE_SHAPE_BUILDER)
 			end
 			while last_col < col do
 				array_push(MOLECULE_BUILDER, ATOM_COL_SEPARATOR)
@@ -245,10 +264,23 @@ local function gen_molecules(grid_i_i, grid_is)
 						icon_size = ITEM_ICON_SIZE,
 						icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 					})
+				array_push(MOLECULE_SHAPE_BUILDER, H_BONDS_RICH_TEXT[left_bonds])
+			else
+				for _ = MOLECULE_SHAPE_BUILDER.n, col * 2 - 1 do
+					array_push(MOLECULE_SHAPE_BUILDER, EMPTY_SPRITE_1X1_TEXT)
+				end
 			end
 			array_push(MOLECULE_BUILDER, symbol)
+			array_push(MOLECULE_SHAPE_BUILDER, atom.rich_text)
 			local right_bonds = slot.right_bonds
 			if right_bonds > 0 then array_push(MOLECULE_BUILDER, right_bonds) end
+			local down_bonds = slot.down_bonds
+			if down_bonds > 0 then
+				for _ = MOLECULE_SHAPE_BUILDER_DOWN_BONDS.n, col * 2 - 1 do
+					array_push(MOLECULE_SHAPE_BUILDER_DOWN_BONDS, EMPTY_SPRITE_1X1_TEXT)
+				end
+				array_push(MOLECULE_SHAPE_BUILDER_DOWN_BONDS, V_BONDS_RICH_TEXT[down_bonds])
+			end
 			local number = atom.number
 			MOLECULE_DISPLAY_COUNTER[number] = (MOLECULE_DISPLAY_COUNTER[number] or 0) + 1
 		end
@@ -296,12 +328,22 @@ local function gen_molecules(grid_i_i, grid_is)
 		end
 		description_cache = next_description_cache
 	end
+	if molecule_shape_builder_parts then
+		molecule_shape_builder_parts = {
+			"item-description.molecule-pre-part",
+			molecule_shape_builder_parts,
+			table.concat(MOLECULE_SHAPE_BUILDER),
+		}
+	else
+		molecule_shape_builder_parts = table.concat(MOLECULE_SHAPE_BUILDER)
+	end
+	array_clear(MOLECULE_SHAPE_BUILDER)
 	data:extend({{
 		type = "item",
 		name = MOLECULE_ITEM_PREFIX..table.concat(MOLECULE_BUILDER),
 		subgroup = MOLECULES_SUBGROUP_NAME,
 		localised_name = table.concat(MOLECULE_DISPLAY_BUILDER),
-		localised_description = description_cache[0],
+		localised_description = {"item-description.molecule-pre", molecule_shape_builder_parts, description_cache[0]},
 		icons = icons,
 		stack_size = 1,
 		flags = {"hidden"},
