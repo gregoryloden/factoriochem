@@ -194,115 +194,115 @@ local function gen_molecules(grid_i_i, grid_is)
 			gen_molecules(grid_i_i + 1, grid_is)
 		end
 		return
-	else
-		array_clear(MOLECULE_BUILDER)
-		local icons = {current_shape_icon}
-		local last_row = 0
-		local last_col = 0
-		for grid_i = 1, GRID_AREA do
-			local slot = GRID[grid_i]
-			if slot then
-				local grid_0_i = grid_i - 1
-				local row = math.floor(grid_0_i / MAX_GRID_WIDTH)
-				local col = grid_0_i % MAX_GRID_WIDTH
-				if row > last_row then
-					last_row = row
-					array_push(MOLECULE_BUILDER, ATOM_ROW_SEPARATOR)
-					last_col = 0
-				end
-				while last_col < col do
-					array_push(MOLECULE_BUILDER, ATOM_COL_SEPARATOR)
-					last_col = last_col + 1
-				end
-				local atom = slot.atom
-				local symbol = atom.symbol
-				local name_spec = current_shape_height..current_shape_width..row..col
+	end
+
+	array_clear(MOLECULE_BUILDER)
+	local icons = {current_shape_icon}
+	local last_row = 0
+	local last_col = 0
+	for grid_i = 1, GRID_AREA do
+		local slot = GRID[grid_i]
+		if slot then
+			local grid_0_i = grid_i - 1
+			local row = math.floor(grid_0_i / MAX_GRID_WIDTH)
+			local col = grid_0_i % MAX_GRID_WIDTH
+			if row > last_row then
+				last_row = row
+				array_push(MOLECULE_BUILDER, ATOM_ROW_SEPARATOR)
+				last_col = 0
+			end
+			while last_col < col do
+				array_push(MOLECULE_BUILDER, ATOM_COL_SEPARATOR)
+				last_col = last_col + 1
+			end
+			local atom = slot.atom
+			local symbol = atom.symbol
+			local name_spec = current_shape_height..current_shape_width..row..col
+			table.insert(
+				icons,
+				{
+					icon = ATOM_ICON_ROOT..symbol.."/"..name_spec..".png",
+					icon_size = ITEM_ICON_SIZE,
+					icon_mipmaps = MOLECULE_ICON_MIPMAPS,
+				})
+			local up_bonds = slot.up_bonds
+			if slot.up_bonds > 0 then
+				array_push(MOLECULE_BUILDER, up_bonds)
 				table.insert(
 					icons,
 					{
-						icon = ATOM_ICON_ROOT..symbol.."/"..name_spec..".png",
+						icon = BOND_ICON_ROOT.."U"..name_spec..up_bonds..".png",
 						icon_size = ITEM_ICON_SIZE,
 						icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 					})
-				local up_bonds = slot.up_bonds
-				if slot.up_bonds > 0 then
-					array_push(MOLECULE_BUILDER, up_bonds)
-					table.insert(
-						icons,
-						{
-							icon = BOND_ICON_ROOT.."U"..name_spec..up_bonds..".png",
-							icon_size = ITEM_ICON_SIZE,
-							icon_mipmaps = MOLECULE_ICON_MIPMAPS,
-						})
-				end
-				array_push(MOLECULE_BUILDER, symbol)
-				if slot.right_bonds > 0 then array_push(MOLECULE_BUILDER, slot.right_bonds) end
-				local left_bonds = slot.left_bonds
-				if left_bonds > 0 then
-					table.insert(
-						icons,
-						{
-							icon = BOND_ICON_ROOT.."L"..name_spec..left_bonds..".png",
-							icon_size = ITEM_ICON_SIZE,
-							icon_mipmaps = MOLECULE_ICON_MIPMAPS,
-						})
-				end
-				local number = atom.number
-				MOLECULE_DISPLAY_COUNTER[number] = (MOLECULE_DISPLAY_COUNTER[number] or 0) + 1
 			end
+			array_push(MOLECULE_BUILDER, symbol)
+			if slot.right_bonds > 0 then array_push(MOLECULE_BUILDER, slot.right_bonds) end
+			local left_bonds = slot.left_bonds
+			if left_bonds > 0 then
+				table.insert(
+					icons,
+					{
+						icon = BOND_ICON_ROOT.."L"..name_spec..left_bonds..".png",
+						icon_size = ITEM_ICON_SIZE,
+						icon_mipmaps = MOLECULE_ICON_MIPMAPS,
+					})
+			end
+			local number = atom.number
+			MOLECULE_DISPLAY_COUNTER[number] = (MOLECULE_DISPLAY_COUNTER[number] or 0) + 1
 		end
-		-- selection sort to assemble a chemical name in ascending atomic number order
-		array_clear(MOLECULE_DISPLAY_BUILDER)
-		local description_cache = MOLECULE_DESCRIPTION_CACHE
-		while true do
-			local atomic_number = 1000
-			for check_atomic_number, _ in pairs(MOLECULE_DISPLAY_COUNTER) do
-				if check_atomic_number < atomic_number then atomic_number = check_atomic_number end
-			end
-			if atomic_number == 1000 then break end
-			local atom = ALL_ATOMS[atomic_number]
-			array_push(MOLECULE_DISPLAY_BUILDER, atom.symbol)
-			local count = MOLECULE_DISPLAY_COUNTER[atomic_number]
-			if count > 1 then array_push(MOLECULE_DISPLAY_BUILDER, count) end
-			MOLECULE_DISPLAY_COUNTER[atomic_number] = nil
-			local next_description_cache = description_cache[atomic_number]
-			if not next_description_cache then
-				local description = description_cache[0]
-				if description then
-					next_description_cache = {
-						[0] = {
-							"item-description.molecule-AA2",
-							description,
-							atom.symbol,
-							atom.number,
-							atom.localised_name,
-						},
-					}
-				else
-					next_description_cache = {
-						[0] = {
-							"item-description.molecule-AA",
-							atom.symbol,
-							atom.number,
-							atom.localised_name
-						},
-					}
-				end
-				description_cache[atomic_number] = next_description_cache
-			end
-			description_cache = next_description_cache
-		end
-		data:extend({{
-			type = "item",
-			name = MOLECULE_ITEM_PREFIX..table.concat(MOLECULE_BUILDER),
-			subgroup = MOLECULES_SUBGROUP_NAME,
-			localised_name = table.concat(MOLECULE_DISPLAY_BUILDER),
-			localised_description = description_cache[0],
-			icons = icons,
-			stack_size = 1,
-			flags = {"hidden"},
-		}})
 	end
+	-- selection sort to assemble a chemical name in ascending atomic number order
+	array_clear(MOLECULE_DISPLAY_BUILDER)
+	local description_cache = MOLECULE_DESCRIPTION_CACHE
+	while true do
+		local atomic_number = 1000
+		for check_atomic_number, _ in pairs(MOLECULE_DISPLAY_COUNTER) do
+			if check_atomic_number < atomic_number then atomic_number = check_atomic_number end
+		end
+		if atomic_number == 1000 then break end
+		local atom = ALL_ATOMS[atomic_number]
+		array_push(MOLECULE_DISPLAY_BUILDER, atom.symbol)
+		local count = MOLECULE_DISPLAY_COUNTER[atomic_number]
+		if count > 1 then array_push(MOLECULE_DISPLAY_BUILDER, count) end
+		MOLECULE_DISPLAY_COUNTER[atomic_number] = nil
+		local next_description_cache = description_cache[atomic_number]
+		if not next_description_cache then
+			local description = description_cache[0]
+			if description then
+				next_description_cache = {
+					[0] = {
+						"item-description.molecule-AA2",
+						description,
+						atom.symbol,
+						atom.number,
+						atom.localised_name,
+					},
+				}
+			else
+				next_description_cache = {
+					[0] = {
+						"item-description.molecule-AA",
+						atom.symbol,
+						atom.number,
+						atom.localised_name
+					},
+				}
+			end
+			description_cache[atomic_number] = next_description_cache
+		end
+		description_cache = next_description_cache
+	end
+	data:extend({{
+		type = "item",
+		name = MOLECULE_ITEM_PREFIX..table.concat(MOLECULE_BUILDER),
+		subgroup = MOLECULES_SUBGROUP_NAME,
+		localised_name = table.concat(MOLECULE_DISPLAY_BUILDER),
+		localised_description = description_cache[0],
+		icons = icons,
+		stack_size = 1,
+		flags = {"hidden"},
+	}})
 	total_molecules = total_molecules + 1
 end
 
