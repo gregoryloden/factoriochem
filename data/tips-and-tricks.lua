@@ -34,11 +34,14 @@ local tips_and_tricks_structure = {
 	name = "introduction",
 	starting_status = "suggested",
 	children = {{
-		name = "buildings",
-		starting_status = "suggested",
+		name = "molecules",
 		children = {{
-			name = "moleculifier",
+			name = "simple-complex-molecules",
 		}},
+	}, {
+		name = "moleculifier",
+	}, {
+		name = "buildings",
 	}, {
 		name = "gui",
 		children = {
