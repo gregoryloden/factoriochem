@@ -226,7 +226,7 @@ local function gen_molecules(grid_i_i, grid_is)
 					icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 				})
 			local up_bonds = slot.up_bonds
-			if slot.up_bonds > 0 then
+			if up_bonds > 0 then
 				array_push(MOLECULE_BUILDER, up_bonds)
 				table.insert(
 					icons,
@@ -287,7 +287,7 @@ local function gen_molecules(grid_i_i, grid_is)
 						atom.rich_text,
 						atom.symbol,
 						atom.number,
-						atom.localised_name
+						atom.localised_name,
 					},
 				}
 			end
