@@ -177,7 +177,6 @@ local function export_built_molecule(source, table_gui, player)
 
 	-- write the results to the GUI elements
 	result.sprite = result_val
-	gui_update_complex_molecule_tooltip(result, complex_molecule, false)
 	if source.name ~= MOLECULE_BUILDER_RESULT_ID_NAME then result_id.text = result_id_val end
 
 	-- save the state into the stack
