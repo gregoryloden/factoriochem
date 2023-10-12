@@ -148,6 +148,44 @@ local function assign_valid_atoms(grid_is)
 	end
 end
 
+local function gen_atom(atom)
+	local name = ATOM_ITEM_PREFIX..atom.symbol
+	local localised_name = {"item-name.atom-AA", atom.localised_name, atom.symbol}
+	local localised_description = {"item-description.atom-AA", atom.number, atom.bonds}
+	local icon_name = ATOM_ICON_ROOT..atom.symbol.."/1100.png"
+	data:extend({
+		{
+			type = "item",
+			name = name,
+			subgroup = ATOMS_SUBGROUP_PREFIX..atom.row,
+			order = string.format("%02X", atom.number),
+			localised_name = localised_name,
+			localised_description = localised_description,
+			icon = icon_name,
+			icon_size = ITEM_ICON_SIZE,
+			icon_mipmaps = MOLECULE_ICON_MIPMAPS,
+			stack_size = 1,
+		},
+		{
+			type = "battery-equipment",
+			name = name,
+			categories = {COMPLEX_MOLECULE_PARTS_NAME},
+			localised_name = localised_name,
+			localised_description = localised_description,
+			sprite = {
+				filename = icon_name,
+				size = ITEM_ICON_SIZE,
+				mipmap_count = MOLECULE_ICON_MIPMAPS,
+				flags = {"icon"},
+			},
+			shape = {width = 1, height = 1, type = "full"},
+			energy_source = {type = "void", usage_priority = "tertiary"},
+			-- never used, but we have to specify something valid
+			take_result = MOLECULE_ABSORBER_NAME,
+		},
+	})
+end
+
 local function gen_molecules(grid_i_i, grid_is)
 	if grid_i_i <= grid_is.n then
 		local slot = GRID[grid_is[grid_i_i]]
@@ -156,44 +194,6 @@ local function gen_molecules(grid_i_i, grid_is)
 			gen_molecules(grid_i_i + 1, grid_is)
 		end
 		return
-	elseif current_atom_count == 1 then
-		local slot = GRID[1]
-		local atom_number_hex = string.format("%02X", slot.atom.number)
-		local name = ATOM_ITEM_PREFIX..slot.atom.symbol
-		local localised_name = {"item-name.atom-AA", slot.atom.localised_name, slot.atom.symbol}
-		local localised_description = {"item-description.atom-AA", slot.atom.number, slot.atom.bonds}
-		local icon_name = ATOM_ICON_ROOT..slot.atom.symbol.."/1100.png"
-		data:extend({
-			{
-				type = "item",
-				name = name,
-				subgroup = ATOMS_SUBGROUP_PREFIX..slot.atom.row,
-				order = atom_number_hex,
-				localised_name = localised_name,
-				localised_description = localised_description,
-				icon = icon_name,
-				icon_size = ITEM_ICON_SIZE,
-				icon_mipmaps = MOLECULE_ICON_MIPMAPS,
-				stack_size = 1,
-			},
-			{
-				type = "battery-equipment",
-				name = name,
-				categories = {COMPLEX_MOLECULE_PARTS_NAME},
-				localised_name = localised_name,
-				localised_description = localised_description,
-				sprite = {
-					filename = icon_name,
-					size = ITEM_ICON_SIZE,
-					mipmap_count = MOLECULE_ICON_MIPMAPS,
-					flags = {"icon"},
-				},
-				shape = {width = 1, height = 1, type = "full"},
-				energy_source = {type = "void", usage_priority = "tertiary"},
-				-- never used, but we have to specify something valid
-				take_result = MOLECULE_ABSORBER_NAME,
-			},
-		})
 	else
 		array_clear(MOLECULE_BUILDER)
 		local icons = {current_shape_icon}
@@ -579,6 +579,12 @@ for shape_n = 1, bit32.lshift(1, GRID_AREA) - 1 do
 			COMPLEX_MOLECULE_ITEM_PREFIX.."grid-"..current_shape_height..current_shape_width
 	end
 	data:extend({complex_molecule})
+
+	-- build atoms separately
+	if current_atom_count == 1 then
+		for _, atom in ipairs(MOLECULE_ATOMS_ACCEPT_BONDS[1][0]) do gen_atom(atom) end
+		goto continue_shapes
+	end
 
 	-- don't generate a simple molecule if there are too many atoms
 	if current_atom_count > MAX_ATOMS then goto continue_shapes end
