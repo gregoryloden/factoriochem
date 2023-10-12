@@ -1,4 +1,19 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.0
+Date: 2023-10-12
+  Minor Features:
+    - Molecule builder
+      - Design molecules with a custom UI to select atoms and bonds
+      - Get a close-up look a molecule from one of the science ingredients or a molecule from one of the products of a Moleculifier recipe
+      - Import a molecule into the builder from your inventory, a Molecule Reaction input or output, or the printer input field
+      - Copy the resulting molecule item to a demo slot or the printer input field
+      - The state of the builder is saved and loaded
+  Changes:
+    - Added recipe to delete the Molecule Absorber
+  Ease of use:
+    - Added Tips-and-Tricks entries
+    - Improved descriptions for simple molecules
+---------------------------------------------------------------------------------------------------
 Version: 1.0.2
 Date: 2023-05-12
   Minor Features:
