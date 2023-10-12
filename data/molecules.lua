@@ -205,85 +205,85 @@ local function gen_molecules(grid_i_i, grid_is)
 	local molecule_shape_builder_parts = nil
 	for grid_i = 1, GRID_AREA do
 		local slot = GRID[grid_i]
-		if slot then
-			local grid_0_i = grid_i - 1
-			local row = math.floor(grid_0_i / MAX_GRID_WIDTH)
-			local col = grid_0_i % MAX_GRID_WIDTH
-			if row > last_row then
-				last_row = row
-				array_push(MOLECULE_BUILDER, ATOM_ROW_SEPARATOR)
-				last_col = 0
-				array_push(MOLECULE_SHAPE_BUILDER, "\n")
-				for i = 1, MOLECULE_SHAPE_BUILDER_DOWN_BONDS.n do
-					array_push(MOLECULE_SHAPE_BUILDER, MOLECULE_SHAPE_BUILDER_DOWN_BONDS[i])
-					MOLECULE_SHAPE_BUILDER_DOWN_BONDS[i] = nil
-				end
-				MOLECULE_SHAPE_BUILDER_DOWN_BONDS.n = 0
-				if molecule_shape_builder_parts then
-					molecule_shape_builder_parts = {
-						"item-description.molecule-pre-part",
-						molecule_shape_builder_parts,
-						table.concat(MOLECULE_SHAPE_BUILDER),
-					}
-				else
-					molecule_shape_builder_parts = table.concat(MOLECULE_SHAPE_BUILDER)
-				end
-				array_clear(MOLECULE_SHAPE_BUILDER)
+		if not slot then goto continue end
+		local grid_0_i = grid_i - 1
+		local row = math.floor(grid_0_i / MAX_GRID_WIDTH)
+		local col = grid_0_i % MAX_GRID_WIDTH
+		if row > last_row then
+			last_row = row
+			array_push(MOLECULE_BUILDER, ATOM_ROW_SEPARATOR)
+			last_col = 0
+			array_push(MOLECULE_SHAPE_BUILDER, "\n")
+			for i = 1, MOLECULE_SHAPE_BUILDER_DOWN_BONDS.n do
+				array_push(MOLECULE_SHAPE_BUILDER, MOLECULE_SHAPE_BUILDER_DOWN_BONDS[i])
+				MOLECULE_SHAPE_BUILDER_DOWN_BONDS[i] = nil
 			end
-			while last_col < col do
-				array_push(MOLECULE_BUILDER, ATOM_COL_SEPARATOR)
-				last_col = last_col + 1
+			MOLECULE_SHAPE_BUILDER_DOWN_BONDS.n = 0
+			if molecule_shape_builder_parts then
+				molecule_shape_builder_parts = {
+					"item-description.molecule-pre-part",
+					molecule_shape_builder_parts,
+					table.concat(MOLECULE_SHAPE_BUILDER),
+				}
+			else
+				molecule_shape_builder_parts = table.concat(MOLECULE_SHAPE_BUILDER)
 			end
-			local atom = slot.atom
-			local symbol = atom.symbol
-			local name_spec = current_shape_height..current_shape_width..row..col
+			array_clear(MOLECULE_SHAPE_BUILDER)
+		end
+		while last_col < col do
+			array_push(MOLECULE_BUILDER, ATOM_COL_SEPARATOR)
+			last_col = last_col + 1
+		end
+		local atom = slot.atom
+		local symbol = atom.symbol
+		local name_spec = current_shape_height..current_shape_width..row..col
+		table.insert(
+			icons,
+			{
+				icon = ATOM_ICON_ROOT..symbol.."/"..name_spec..".png",
+				icon_size = ITEM_ICON_SIZE,
+				icon_mipmaps = MOLECULE_ICON_MIPMAPS,
+			})
+		local up_bonds = slot.up_bonds
+		if up_bonds > 0 then
+			array_push(MOLECULE_BUILDER, up_bonds)
 			table.insert(
 				icons,
 				{
-					icon = ATOM_ICON_ROOT..symbol.."/"..name_spec..".png",
+					icon = BOND_ICON_ROOT.."U"..name_spec..up_bonds..".png",
 					icon_size = ITEM_ICON_SIZE,
 					icon_mipmaps = MOLECULE_ICON_MIPMAPS,
 				})
-			local up_bonds = slot.up_bonds
-			if up_bonds > 0 then
-				array_push(MOLECULE_BUILDER, up_bonds)
-				table.insert(
-					icons,
-					{
-						icon = BOND_ICON_ROOT.."U"..name_spec..up_bonds..".png",
-						icon_size = ITEM_ICON_SIZE,
-						icon_mipmaps = MOLECULE_ICON_MIPMAPS,
-					})
-			end
-			local left_bonds = slot.left_bonds
-			if left_bonds > 0 then
-				table.insert(
-					icons,
-					{
-						icon = BOND_ICON_ROOT.."L"..name_spec..left_bonds..".png",
-						icon_size = ITEM_ICON_SIZE,
-						icon_mipmaps = MOLECULE_ICON_MIPMAPS,
-					})
-				array_push(MOLECULE_SHAPE_BUILDER, H_BONDS_RICH_TEXT[left_bonds])
-			else
-				for _ = MOLECULE_SHAPE_BUILDER.n, col * 2 - 1 do
-					array_push(MOLECULE_SHAPE_BUILDER, EMPTY_SPRITE_1X1_TEXT)
-				end
-			end
-			array_push(MOLECULE_BUILDER, symbol)
-			array_push(MOLECULE_SHAPE_BUILDER, atom.rich_text)
-			local right_bonds = slot.right_bonds
-			if right_bonds > 0 then array_push(MOLECULE_BUILDER, right_bonds) end
-			local down_bonds = slot.down_bonds
-			if down_bonds > 0 then
-				for _ = MOLECULE_SHAPE_BUILDER_DOWN_BONDS.n, col * 2 - 1 do
-					array_push(MOLECULE_SHAPE_BUILDER_DOWN_BONDS, EMPTY_SPRITE_1X1_TEXT)
-				end
-				array_push(MOLECULE_SHAPE_BUILDER_DOWN_BONDS, V_BONDS_RICH_TEXT[down_bonds])
-			end
-			local number = atom.number
-			MOLECULE_DISPLAY_COUNTER[number] = (MOLECULE_DISPLAY_COUNTER[number] or 0) + 1
 		end
+		local left_bonds = slot.left_bonds
+		if left_bonds > 0 then
+			table.insert(
+				icons,
+				{
+					icon = BOND_ICON_ROOT.."L"..name_spec..left_bonds..".png",
+					icon_size = ITEM_ICON_SIZE,
+					icon_mipmaps = MOLECULE_ICON_MIPMAPS,
+				})
+			array_push(MOLECULE_SHAPE_BUILDER, H_BONDS_RICH_TEXT[left_bonds])
+		else
+			for _ = MOLECULE_SHAPE_BUILDER.n, col * 2 - 1 do
+				array_push(MOLECULE_SHAPE_BUILDER, EMPTY_SPRITE_1X1_TEXT)
+			end
+		end
+		array_push(MOLECULE_BUILDER, symbol)
+		array_push(MOLECULE_SHAPE_BUILDER, atom.rich_text)
+		local right_bonds = slot.right_bonds
+		if right_bonds > 0 then array_push(MOLECULE_BUILDER, right_bonds) end
+		local down_bonds = slot.down_bonds
+		if down_bonds > 0 then
+			for _ = MOLECULE_SHAPE_BUILDER_DOWN_BONDS.n, col * 2 - 1 do
+				array_push(MOLECULE_SHAPE_BUILDER_DOWN_BONDS, EMPTY_SPRITE_1X1_TEXT)
+			end
+			array_push(MOLECULE_SHAPE_BUILDER_DOWN_BONDS, V_BONDS_RICH_TEXT[down_bonds])
+		end
+		local number = atom.number
+		MOLECULE_DISPLAY_COUNTER[number] = (MOLECULE_DISPLAY_COUNTER[number] or 0) + 1
+		::continue::
 	end
 	-- selection sort to assemble a chemical name in ascending atomic number order
 	array_clear(MOLECULE_DISPLAY_BUILDER)
