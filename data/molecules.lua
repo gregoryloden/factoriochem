@@ -274,6 +274,7 @@ local function gen_molecules(grid_i_i, grid_is)
 					[0] = {
 						"item-description.molecule-AA2",
 						description,
+						atom.rich_text,
 						atom.symbol,
 						atom.number,
 						atom.localised_name,
@@ -283,6 +284,7 @@ local function gen_molecules(grid_i_i, grid_is)
 				next_description_cache = {
 					[0] = {
 						"item-description.molecule-AA",
+						atom.rich_text,
 						atom.symbol,
 						atom.number,
 						atom.localised_name

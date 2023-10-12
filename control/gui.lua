@@ -111,7 +111,7 @@ local function build_molecule_contents_text(molecule)
 				table.insert(row_builder, EMPTY_SPRITE_1X1_TEXT)
 				last_x = last_x + 1
 			end
-			table.insert(row_builder, "[item="..ATOM_ITEM_PREFIX..atom.symbol.."]")
+			table.insert(row_builder, ALL_ATOMS[atom.symbol].rich_text)
 			if atom.right then
 				table.insert(row_builder, "[img="..MOLECULE_BONDS_PREFIX.."H"..atom.right.."]")
 				last_x = last_x + 1
