@@ -80,7 +80,7 @@ local function set_molecule_builder_selections(outer_gui, recipe_name, use_produ
 	})
 end
 
-local function get_valid_molecule_builder_shape(table_children)
+local function get_molecule_builder_shape(table_children)
 	-- assemble the shape of the molecule
 	local shape = {}
 	local height = 0
@@ -115,19 +115,19 @@ local function get_valid_molecule_builder_shape(table_children)
 			end
 		end
 	end)
-	if not valid or height == 0 then return false end
+	if not valid or height == 0 then return nil end
 
 	-- add corresponding up and left bonds
 	for y, shape_row in pairs(shape) do
 		for x, atom in pairs(shape_row) do
 			if atom.down then
 				local other_atom = y + 1 <= height and shape[y + 1][x]
-				if not other_atom then return false end
+				if not other_atom then return nil end
 				other_atom.up = atom.down
 			end
 			if atom.right then
 				local other_atom = shape_row[x + 1]
-				if not other_atom then return false end
+				if not other_atom then return nil end
 				other_atom.left = atom.right
 			end
 		end
@@ -135,7 +135,8 @@ local function get_valid_molecule_builder_shape(table_children)
 
 	-- validate the shape before returning it
 	shape, height, width = normalize_shape(shape)
-	return validate_molecule(shape, height, width), shape, height, width
+	if not validate_molecule(shape, height, width) then return nil end
+	return shape, height, width
 end
 
 local function export_built_molecule(source, table_gui, player)
@@ -147,8 +148,8 @@ local function export_built_molecule(source, table_gui, player)
 	local complex_molecule = nil
 	local result_val = nil
 	local result_id_val = ""
-	local valid, shape, height, width = get_valid_molecule_builder_shape(table_gui.children)
-	if valid then
+	local shape, height, width = get_molecule_builder_shape(table_gui.children)
+	if shape then
 		-- set the result ID
 		local molecule = assemble_molecule(shape, height, width)
 		if height == 1 and width == 1 then
