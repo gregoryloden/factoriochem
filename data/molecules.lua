@@ -23,12 +23,8 @@ local function array_pop(array)
 end
 
 local function array_clear(array)
-	local n = array.n
-	while n > 0 do
-		array[n] = nil
-		n = n - 1
-		array.n = n
-	end
+	for i = 1, array.n do array[i] = nil end
+	array.n = 0
 end
 
 
