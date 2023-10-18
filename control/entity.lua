@@ -52,6 +52,19 @@ function entity_assign_cache(building_data, building_definition)
 	building_data.reaction.cache = cache
 end
 
+function entity_assign_default_selectors(building_reaction_selectors, building_definition_selectors)
+	for _, reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
+		local selector = building_definition_selectors[reactant_name]
+		if selector == DROPDOWN_SELECTOR_NAME then
+			building_reaction_selectors[reactant_name] = 1
+		elseif selector == CHECKBOX_SELECTOR_NAME then
+			building_reaction_selectors[reactant_name] = false
+		elseif selector == TEXT_SELECTOR_NAME then
+			building_reaction_selectors[reactant_name] = ""
+		end
+	end
+end
+
 
 -- Building setup
 local function add_building_data(entity_number, building_datas, building_data)
@@ -161,16 +174,7 @@ local function build_molecule_reaction_building(entity, building_definition)
 			force = entity.force,
 			create_build_effect_smoke = false,
 		})
-		for _, reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
-			local selector = building_definition.selectors[reactant_name]
-			if selector == DROPDOWN_SELECTOR_NAME then
-				building_data.reaction.selectors[reactant_name] = 1
-			elseif selector == CHECKBOX_SELECTOR_NAME then
-				building_data.reaction.selectors[reactant_name] = false
-			elseif selector == TEXT_SELECTOR_NAME then
-				building_data.reaction.selectors[reactant_name] = ""
-			end
-		end
+		entity_assign_default_selectors(building_data.reaction.selectors, building_definition.selectors)
 	end
 	settings.destructible = false
 	building_data.settings = settings

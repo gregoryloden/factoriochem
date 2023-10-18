@@ -237,6 +237,7 @@ local function get_demo_state(entity_name)
 	local demo_state = global.gui_demo_items[entity_name]
 	if not demo_state then
 		demo_state = {reactants = {}, products = {}, selectors = {}}
+		entity_assign_default_selectors(demo_state.selectors, BUILDING_DEFINITIONS[entity_name].selectors)
 		global.gui_demo_items[entity_name] = demo_state
 	end
 	return demo_state
