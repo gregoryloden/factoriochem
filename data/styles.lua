@@ -83,3 +83,10 @@ gui_style["factoriochem-centered-vertical-flow"] = {
 	type = "vertical_flow_style",
 	horizontal_align = "center",
 }
+gui_style["factoriochem-tight-button"] = {
+	type = "button_style",
+	padding = 0,
+	minimal_width = 0,
+	minimal_height = 0,
+	font = "default-small-semibold",
+}

@@ -27,6 +27,7 @@ local ATOMS_SUBGROUP_PREFIX_MATCH = "^"..ATOMS_SUBGROUP_PREFIX
 local BUILDING_EXAMPLES_TEXT = {}
 local PERIODIC_TABLE_DEMO_NAME = "periodic-table-demo"
 local MOLECULE_BUILDER_DEMO_NAME = "molecule-builder-demo"
+local MOLECULE_REACTION_DEMO_EXAMPLES_NAME = "molecule-reaction-demo-examples"
 local MOLECULE_CONTENTS_CACHE = {}
 local MOLECULE_CONTENTS_STRING = "factoriochem.molecule-contents"
 local GUI_READY = false
@@ -272,6 +273,36 @@ local function demo_reaction_with_reactant(building_data, demo_state, element, r
 	demo_reaction(building_data, demo_state, element.parent)
 end
 
+local function cycle_demo_example(building_data, reaction_demo_table)
+	local entity_name = building_data.entity.name
+	local demo_state = get_demo_state(entity_name)
+	local building_definition = BUILDING_DEFINITIONS[entity_name]
+	local examples = building_definition.examples
+	local examples_i = global.gui_demo_items.examples_i % #examples + 1
+	global.gui_demo_items.examples_i = examples_i
+	local example = examples[examples_i]
+	for _, reactant_name in ipairs(building_definition.reactants) do
+		local reactant = example.reactants[reactant_name]
+		demo_state.reactants[reactant_name] = example.reactants[reactant_name]
+		update_reaction_table_sprite(reaction_demo_table[REACTION_DEMO_PREFIX..reactant_name], nil, reactant)
+	end
+	for reactant_name, selector in pairs(building_definition.selectors) do
+		local selector_val = example.selectors[reactant_name]
+		demo_state.selectors[reactant_name] = selector_val
+		local selector_element = reaction_demo_table[REACTION_DEMO_PREFIX..reactant_name..SELECTOR_SUFFIX]
+		if selector == DROPDOWN_SELECTOR_NAME then
+			selector_element.selected_index = selector_val or 1
+		elseif selector == CHECKBOX_SELECTOR_NAME then
+			selector_element.state = selector_val or false
+		elseif selector == TEXT_SELECTOR_NAME then
+			selector_element.text = selector_val
+		else
+			selector_element.elem_value = selector_val
+		end
+	end
+	demo_reaction(building_data, demo_state, reaction_demo_table)
+end
+
 
 -- Molecule reaction building GUI construction
 local function build_molecule_reaction_gui(entity, gui, building_definition)
@@ -420,20 +451,21 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 			},
 		}
 		if name_prefix == REACTION_DEMO_PREFIX then
-			local examples_label = {
-				type = "label",
+			local examples_button = {
+				type = "button",
+				name = MOLECULE_REACTION_DEMO_EXAMPLES_NAME,
 				caption = {"factoriochem.molecule-reaction-examples"},
 				tooltip = BUILDING_EXAMPLES_TEXT[entity.name],
+				style = "factoriochem-tight-button",
 			}
 			table.insert(spec.children, {type = "empty-widget"})
 			table.insert(spec.children, {type = "empty-widget"})
 			table.insert(spec.children, {type = "empty-widget"})
-			table.insert(spec.children, examples_label)
+			table.insert(spec.children, examples_button)
 			table.insert(spec.children, {type = "empty-widget"})
 			table.insert(spec.children, {type = "empty-widget"})
 		end
 		return spec
-
 	end
 	local gui_spec = {
 		-- outer
@@ -676,6 +708,12 @@ local function on_gui_click(event)
 		return
 	end
 
+	-- change to a different example
+	if element.name == MOLECULE_REACTION_DEMO_EXAMPLES_NAME then
+		cycle_demo_example(building_data, element.parent)
+		return
+	end
+
 	-- check molecule builder events
 	if molecule_builder_on_gui_click(element, player) then return end
 end
@@ -813,7 +851,7 @@ script.on_event(defines.events.on_gui_text_changed, on_gui_text_changed)
 -- Global event handling
 function gui_on_init()
 	global.current_gui_reaction_building_data = {}
-	global.gui_demo_items = {}
+	global.gui_demo_items = {examples_i = 0}
 	global.molecule_builder_inventory = game.create_inventory(2)
 end
 
