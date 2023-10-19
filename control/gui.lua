@@ -27,6 +27,7 @@ local ATOMS_SUBGROUP_PREFIX_MATCH = "^"..ATOMS_SUBGROUP_PREFIX
 local BUILDING_EXAMPLES_TEXT = {}
 local PERIODIC_TABLE_DEMO_NAME = "periodic-table-demo"
 local MOLECULE_BUILDER_DEMO_NAME = "molecule-builder-demo"
+local MOLECULE_REACTION_COPY_MAIN_NAME = "molecule-reaction-copy-main"
 local MOLECULE_REACTION_DEMO_EXAMPLES_NAME = "molecule-reaction-demo-examples"
 local MOLECULE_CONTENTS_CACHE = {}
 local MOLECULE_CONTENTS_STRING = "factoriochem.molecule-contents"
@@ -273,21 +274,17 @@ local function demo_reaction_with_reactant(building_data, demo_state, element, r
 	demo_reaction(building_data, demo_state, element.parent)
 end
 
-local function cycle_demo_example(building_data, reaction_demo_table)
+local function demo_reaction_with_reaction(building_data, reaction_demo_table, reaction)
 	local entity_name = building_data.entity.name
 	local demo_state = get_demo_state(entity_name)
 	local building_definition = BUILDING_DEFINITIONS[entity_name]
-	local examples = building_definition.examples
-	local examples_i = global.gui_demo_items.examples_i % #examples + 1
-	global.gui_demo_items.examples_i = examples_i
-	local example = examples[examples_i]
 	for _, reactant_name in ipairs(building_definition.reactants) do
-		local reactant = example.reactants[reactant_name]
-		demo_state.reactants[reactant_name] = example.reactants[reactant_name]
+		local reactant = reaction.reactants[reactant_name]
+		demo_state.reactants[reactant_name] = reactant
 		update_reaction_table_sprite(reaction_demo_table[REACTION_DEMO_PREFIX..reactant_name], nil, reactant)
 	end
 	for reactant_name, selector in pairs(building_definition.selectors) do
-		local selector_val = example.selectors[reactant_name]
+		local selector_val = reaction.selectors[reactant_name]
 		demo_state.selectors[reactant_name] = selector_val
 		local selector_element = reaction_demo_table[REACTION_DEMO_PREFIX..reactant_name..SELECTOR_SUFFIX]
 		if selector == DROPDOWN_SELECTOR_NAME then
@@ -301,6 +298,13 @@ local function cycle_demo_example(building_data, reaction_demo_table)
 		end
 	end
 	demo_reaction(building_data, demo_state, reaction_demo_table)
+end
+
+local function cycle_demo_example(building_data, reaction_demo_table)
+	local examples = BUILDING_DEFINITIONS[building_data.entity.name].examples
+	local examples_i = global.gui_demo_items.examples_i % #examples + 1
+	global.gui_demo_items.examples_i = examples_i
+	demo_reaction_with_reaction(building_data, reaction_demo_table, examples[examples_i])
 end
 
 
@@ -415,6 +419,7 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 		}
 	end
 	function build_reaction_table_spec(name_prefix)
+		local copy_button = {type = "button", style = "factoriochem-tight-button"}
 		local spec = {
 			type = "table",
 			name = name_prefix.."table",
@@ -445,12 +450,13 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 				build_indicator_spec(MODIFIER_NAME),
 				build_molecule_spec(name_prefix, MODIFIER_NAME),
 				build_selector_spec(name_prefix, MODIFIER_NAME),
-				{type = "empty-widget"},
+				copy_button,
 				build_molecule_spec(name_prefix, REMAINDER_NAME),
 				build_indicator_spec(REMAINDER_NAME),
 			},
 		}
 		if name_prefix == REACTION_DEMO_PREFIX then
+			copy_button.name = MOLECULE_REACTION_COPY_MAIN_NAME
 			local examples_label = {
 				type = "label",
 				caption = {"factoriochem.molecule-reaction-examples"},
@@ -470,6 +476,8 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 			table.insert(spec.children, demo_examples_button)
 			table.insert(spec.children, {type = "empty-widget"})
 		end
+		copy_button.caption = {"factoriochem."..copy_button.name}
+		copy_button.tooltip = {"factoriochem."..copy_button.name.."-tooltip"}
 		return spec
 	end
 	local gui_spec = {
@@ -698,6 +706,12 @@ local function on_gui_click(event)
 		local demo_state = get_demo_state(building_data.entity.name)
 		molecule_builder_copy_reaction_demo_slot(player, reaction_demo_table_product_name, demo_state)
 		-- whether there was a valid molecule to copy or not, we're done
+		return
+	end
+
+	-- copy the main reaction to the demo state
+	if element.name == MOLECULE_REACTION_COPY_MAIN_NAME then
+		demo_reaction_with_reaction(building_data, element.parent, building_data.reaction)
 		return
 	end
 
