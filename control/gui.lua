@@ -451,18 +451,22 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 			},
 		}
 		if name_prefix == REACTION_DEMO_PREFIX then
-			local examples_button = {
-				type = "button",
-				name = MOLECULE_REACTION_DEMO_EXAMPLES_NAME,
+			local examples_label = {
+				type = "label",
 				caption = {"factoriochem.molecule-reaction-examples"},
 				tooltip = BUILDING_EXAMPLES_TEXT[entity.name],
+			}
+			local demo_examples_button = {
+				type = "button",
+				name = MOLECULE_REACTION_DEMO_EXAMPLES_NAME,
+				caption = "[img=utility/shuffle]",
 				style = "factoriochem-tight-button",
 			}
 			table.insert(spec.children, {type = "empty-widget"})
 			table.insert(spec.children, {type = "empty-widget"})
 			table.insert(spec.children, {type = "empty-widget"})
-			table.insert(spec.children, examples_button)
-			table.insert(spec.children, {type = "empty-widget"})
+			table.insert(spec.children, examples_label)
+			table.insert(spec.children, demo_examples_button)
 			table.insert(spec.children, {type = "empty-widget"})
 		end
 		return spec
