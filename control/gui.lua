@@ -460,6 +460,7 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 				type = "button",
 				name = MOLECULE_REACTION_DEMO_EXAMPLES_NAME,
 				caption = "[img=utility/shuffle]",
+				tooltip = {"factoriochem.molecule-reaction-demo-examples"},
 				style = "factoriochem-tight-button",
 			}
 			table.insert(spec.children, {type = "empty-widget"})
