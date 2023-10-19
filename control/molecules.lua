@@ -175,4 +175,12 @@ function molecules_on_first_tick()
 		COMPLEX_SHAPES[name] = complex_shape
 		::continue::
 	end
+
+	-- complete the examples for every building by performing actual reactions on the examples
+	for name, definition in pairs(BUILDING_DEFINITIONS) do
+		for i, example in ipairs(definition.examples) do
+			example.products = {}
+			if not definition.reaction(example) then error("Invalid reaction for "..name.." example "..i) end
+		end
+	end
 end

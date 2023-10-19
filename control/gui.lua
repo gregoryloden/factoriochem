@@ -818,13 +818,10 @@ function gui_on_init()
 end
 
 function gui_on_first_tick()
-	-- build the example text for every building by performing actual reactions on the examples
+	-- build the example text for every building from the pre-completed examples
 	for name, definition in pairs(BUILDING_DEFINITIONS) do
 		local examples_text
-		local examples = definition.examples
-		for i, example in ipairs(examples) do
-			example.products = {}
-			if not definition.reaction(example) then error("Invalid reaction for "..name.." example "..i) end
+		for _, example in ipairs(definition.examples) do
 			local example_builder = {}
 			for i, reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
 				local product_name = MOLECULE_REACTION_PRODUCT_NAMES[i]
