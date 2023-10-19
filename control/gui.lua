@@ -27,6 +27,7 @@ local ATOMS_SUBGROUP_PREFIX_MATCH = "^"..ATOMS_SUBGROUP_PREFIX
 local BUILDING_EXAMPLES_TEXT = {}
 local PERIODIC_TABLE_DEMO_NAME = "periodic-table-demo"
 local MOLECULE_BUILDER_DEMO_NAME = "molecule-builder-demo"
+local MOLECULE_REACTION_COPY_DEMO_NAME = "molecule-reaction-copy-demo"
 local MOLECULE_REACTION_COPY_MAIN_NAME = "molecule-reaction-copy-main"
 local MOLECULE_REACTION_DEMO_EXAMPLES_NAME = "molecule-reaction-demo-examples"
 local MOLECULE_CONTENTS_CACHE = {}
@@ -235,6 +236,18 @@ local function update_all_reaction_table_sprites(gui, building_data)
 	end
 end
 
+local function update_selector_state(selector_element, selector, selector_val)
+	if selector == DROPDOWN_SELECTOR_NAME then
+		selector_element.selected_index = selector_val or 1
+	elseif selector == CHECKBOX_SELECTOR_NAME then
+		selector_element.state = selector_val or false
+	elseif selector == TEXT_SELECTOR_NAME then
+		selector_element.text = selector_val
+	else
+		selector_element.elem_value = selector_val
+	end
+end
+
 local function get_demo_state(entity_name)
 	local demo_state = global.gui_demo_items[entity_name]
 	if not demo_state then
@@ -243,6 +256,18 @@ local function get_demo_state(entity_name)
 		global.gui_demo_items[entity_name] = demo_state
 	end
 	return demo_state
+end
+
+local function copy_demo_selectors(building_data, reaction_table)
+	local entity_name = building_data.entity.name
+	local demo_selectors = get_demo_state(entity_name).selectors
+	local building_definition = BUILDING_DEFINITIONS[entity_name]
+	for reactant_name, selector in pairs(building_definition.selectors) do
+		local selector_val = demo_selectors[reactant_name]
+		building_data.reaction.selectors[reactant_name] = selector_val
+		update_selector_state(reaction_table[REACTION_PREFIX..reactant_name..SELECTOR_SUFFIX], selector, selector_val)
+	end
+	entity_assign_cache(building_data, building_definition)
 end
 
 local function demo_reaction(building_data, demo_state, reaction_demo_table)
@@ -286,16 +311,8 @@ local function demo_reaction_with_reaction(building_data, reaction_demo_table, r
 	for reactant_name, selector in pairs(building_definition.selectors) do
 		local selector_val = reaction.selectors[reactant_name]
 		demo_state.selectors[reactant_name] = selector_val
-		local selector_element = reaction_demo_table[REACTION_DEMO_PREFIX..reactant_name..SELECTOR_SUFFIX]
-		if selector == DROPDOWN_SELECTOR_NAME then
-			selector_element.selected_index = selector_val or 1
-		elseif selector == CHECKBOX_SELECTOR_NAME then
-			selector_element.state = selector_val or false
-		elseif selector == TEXT_SELECTOR_NAME then
-			selector_element.text = selector_val
-		else
-			selector_element.elem_value = selector_val
-		end
+		update_selector_state(
+			reaction_demo_table[REACTION_DEMO_PREFIX..reactant_name..SELECTOR_SUFFIX], selector, selector_val)
 	end
 	demo_reaction(building_data, demo_state, reaction_demo_table)
 end
@@ -455,7 +472,9 @@ local function build_molecule_reaction_gui(entity, gui, building_definition)
 				build_indicator_spec(REMAINDER_NAME),
 			},
 		}
-		if name_prefix == REACTION_DEMO_PREFIX then
+		if name_prefix == REACTION_PREFIX then
+			copy_button.name = MOLECULE_REACTION_COPY_DEMO_NAME
+		else
 			copy_button.name = MOLECULE_REACTION_COPY_MAIN_NAME
 			local examples_label = {
 				type = "label",
@@ -706,6 +725,12 @@ local function on_gui_click(event)
 		local demo_state = get_demo_state(building_data.entity.name)
 		molecule_builder_copy_reaction_demo_slot(player, reaction_demo_table_product_name, demo_state)
 		-- whether there was a valid molecule to copy or not, we're done
+		return
+	end
+
+	-- copy the main reaction to the demo state
+	if element.name == MOLECULE_REACTION_COPY_DEMO_NAME then
+		copy_demo_selectors(building_data, element.parent)
 		return
 	end
 
