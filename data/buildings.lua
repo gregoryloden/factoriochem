@@ -129,6 +129,7 @@ for name, definition in pairs(BUILDING_DEFINITIONS) do
 		add_4_way_layer(entity.animation, overlay_name, true, 32, 56, shift.x, shift.y * 1.375)
 	end
 	entity.working_sound = building_design.working_sound
+	overlay_icon(entity, name, building_design)
 
 	local reaction_recipe = {
 		type = "recipe",
@@ -237,6 +238,7 @@ local moleculifier_overlay_layer = {
 }
 add_filename_and_hr_version(moleculifier_overlay_layer, BUILDING_OVERLAYS_ROOT..MOLECULIFIER_NAME)
 table.insert(moleculifier_entity.animation.layers, moleculifier_overlay_layer)
+overlay_icon(moleculifier_entity, MOLECULIFIER_NAME)
 
 local moleculifier_item = table.deepcopy(data.raw.item["assembling-machine-2"])
 moleculifier_item.name = MOLECULIFIER_NAME
