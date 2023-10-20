@@ -244,23 +244,22 @@ local function update_reaction_table_sprite(element, chest_stack, component)
 		component = chest_stack.name
 		element.sprite = "item/"..component
 		local complex_shape = COMPLEX_SHAPES[component]
-		if complex_shape then
-			molecule = assemble_complex_molecule(chest_stack.grid, complex_shape)
-		else
-			subgroup_name = GAME_ITEM_PROTOTYPES[component].subgroup.name
-			if subgroup_name == ATOMS_SUBGROUP_PREFIX or subgroup_name == MOLECULES_SUBGROUP_NAME then
-				molecule = component
-			end
-		end
+		if complex_shape then molecule = assemble_complex_molecule(chest_stack.grid, complex_shape) end
 	elseif component then
-		molecule = component
 		if GAME_ITEM_PROTOTYPES[component] then
 			element.sprite = "item/"..component
 		else
+			molecule = component
 			element.sprite = "item/"..get_complex_molecule_item_name(parse_molecule(component))
 		end
 	else
 		element.sprite = nil
+	end
+	if not molecule and component then
+		local subgroup_name = GAME_ITEM_PROTOTYPES[component].subgroup.name
+		if string.find(subgroup_name, ATOMS_SUBGROUP_PREFIX_MATCH) or subgroup_name == MOLECULES_SUBGROUP_NAME then
+			molecule = component
+		end
 	end
 	update_molecule_contents_tooltip(element, molecule)
 end
