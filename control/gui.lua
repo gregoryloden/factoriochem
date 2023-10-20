@@ -36,13 +36,18 @@ local GUI_READY = false
 
 
 -- Setup
+local function get_molecule_icon_text(molecule)
+	if not GAME_ITEM_PROTOTYPES[molecule] then molecule = get_complex_molecule_item_name(parse_molecule(molecule)) end
+	return  "[item="..molecule.."]"
+end
+
 local function build_single_example_text_row(name, definition, example, reactant_name, product_name)
 	local reactant_indicator, reactant, selector_val = "[img=empty-1x2]", EMPTY_SPRITE_1X1_TEXT, EMPTY_SPRITE_1X1_TEXT
 	local reaction_spacing, product, product_indicator = "      ", EMPTY_SPRITE_1X1_TEXT, ""
 	if definition.has_component[reactant_name] then
 		reactant_indicator = "[img="..MOLECULE_INDICATOR_PREFIX..reactant_name.."]"
 	end
-	if example.reactants[reactant_name] then reactant = "[item="..example.reactants[reactant_name].."]" end
+	if example.reactants[reactant_name] then reactant = get_molecule_icon_text(example.reactants[reactant_name]) end
 	if example.selectors[reactant_name] then
 		if definition.selectors[reactant_name] == DROPDOWN_SELECTOR_NAME then
 			selector_val = "  "..definition.dropdowns[reactant_name][example.selectors[reactant_name]]
@@ -57,7 +62,7 @@ local function build_single_example_text_row(name, definition, example, reactant
 			selector_val = "[item="..example.selectors[reactant_name].."]"
 		end
 	end
-	if example.products[product_name] then product = "[item="..example.products[product_name].."]" end
+	if example.products[product_name] then product = get_molecule_icon_text(example.products[product_name]) end
 	if definition.has_component[product_name] then
 		product_indicator = "[img="..MOLECULE_INDICATOR_PREFIX..product_name.."]"
 	end
@@ -71,6 +76,38 @@ local function build_single_example_text_row(name, definition, example, reactant
 		row_len = #row
 	until row_len == old_row_len
 	return row
+end
+
+local function build_examples_texts()
+	-- build the example text for every building from the pre-completed examples
+	for name, definition in pairs(BUILDING_DEFINITIONS) do
+		local examples_text
+		for _, example in ipairs(definition.examples) do
+			if not ALLOW_COMPLEX_MOLECULES and reaction_is_complex(example) then goto continue end
+			local example_builder = {}
+			for i, reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
+				local product_name = MOLECULE_REACTION_PRODUCT_NAMES[i]
+				local row_text = ""
+				if example.selectors[reactant_name]
+						or definition.has_component[reactant_name]
+						or definition.has_component[product_name] then
+					row_text = build_single_example_text_row(
+						name, definition, example, reactant_name, product_name)
+				end
+				table.insert(example_builder, row_text)
+			end
+			while example_builder[#example_builder] == "" do example_builder[#example_builder] = nil end
+			local example_text = table.concat(example_builder, "\n")
+			if examples_text then
+				examples_text =
+					{"factoriochem.molecule-reaction-example-continuation", examples_text, example_text}
+			else
+				examples_text = {"factoriochem.molecule-reaction-example-header", example_text}
+			end
+			::continue::
+		end
+		BUILDING_EXAMPLES_TEXT[name] = examples_text
+	end
 end
 
 
@@ -328,7 +365,13 @@ local function cycle_demo_example(building_data, reaction_demo_table)
 	local examples = BUILDING_DEFINITIONS[building_data.entity.name].examples
 	local examples_i = global.gui_demo_items.examples_i % #examples + 1
 	global.gui_demo_items.examples_i = examples_i
-	demo_reaction_with_reaction(building_data, reaction_demo_table, examples[examples_i])
+	local example = examples[examples_i]
+	-- if we can't use this example, just cycle to the next one - we assume there is at least one non-complex example
+	if not ALLOW_COMPLEX_MOLECULES and reaction_is_complex(example) then
+		cycle_demo_example(building_data, reaction_demo_table)
+	else
+		demo_reaction_with_reaction(building_data, reaction_demo_table, example)
+	end
 end
 
 
@@ -907,33 +950,7 @@ function gui_on_init()
 end
 
 function gui_on_first_tick()
-	-- build the example text for every building from the pre-completed examples
-	for name, definition in pairs(BUILDING_DEFINITIONS) do
-		local examples_text
-		for _, example in ipairs(definition.examples) do
-			local example_builder = {}
-			for i, reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
-				local product_name = MOLECULE_REACTION_PRODUCT_NAMES[i]
-				local row_text = ""
-				if example.selectors[reactant_name]
-						or definition.has_component[reactant_name]
-						or definition.has_component[product_name] then
-					row_text = build_single_example_text_row(
-						name, definition, example, reactant_name, product_name)
-				end
-				table.insert(example_builder, row_text)
-			end
-			while example_builder[#example_builder] == "" do example_builder[#example_builder] = nil end
-			local example_text = table.concat(example_builder, "\n")
-			if examples_text then
-				examples_text =
-					{"factoriochem.molecule-reaction-example-continuation", examples_text, example_text}
-			else
-				examples_text = {"factoriochem.molecule-reaction-example-header", example_text}
-			end
-		end
-		BUILDING_EXAMPLES_TEXT[name] = examples_text
-	end
+	build_examples_texts()
 	gui_molecule_buider_on_first_tick()
 	GUI_READY = true
 end
@@ -950,6 +967,10 @@ function gui_on_tick(event)
 			end
 		end
 	end
+end
+
+function gui_on_settings_changed(event)
+	build_examples_texts()
 end
 
 function gui_on_lua_shortcut(event)

@@ -75,6 +75,16 @@ function build_complex_contents(shape, height, width)
 	return contents
 end
 
+function reaction_is_complex(reaction)
+	for _, reactant in pairs(reaction.reactants) do
+		if not GAME_ITEM_PROTOTYPES[reactant] then return true end
+	end
+	for _, product in pairs(reaction.products) do
+		if not GAME_ITEM_PROTOTYPES[product] then return true end
+	end
+	return false
+end
+
 
 -- Global utilities - read and write combinators
 function write_molecule_id_to_combinator(behavior, molecule_id)

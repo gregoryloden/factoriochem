@@ -17,16 +17,6 @@ local function on_init()
 	gui_on_init()
 end
 
-local function on_runtime_mod_setting_changed(event)
-	molecules_on_settings_changed(event)
-	entity_on_settings_changed(event)
-	player_on_settings_changed(event)
-end
-
-local function on_lua_shortcut(event)
-	gui_on_lua_shortcut(event)
-end
-
 local function on_tick(event)
 	entity_on_tick(event)
 	gui_on_tick(event)
@@ -47,7 +37,18 @@ local function on_first_tick(event)
 	script.on_event(defines.events.on_tick, on_tick)
 end
 
+local function on_runtime_mod_setting_changed(event)
+	molecules_on_settings_changed(event)
+	entity_on_settings_changed(event)
+	gui_on_settings_changed(event)
+	player_on_settings_changed(event)
+end
+
+local function on_lua_shortcut(event)
+	gui_on_lua_shortcut(event)
+end
+
 script.on_init(on_init)
+script.on_event(defines.events.on_tick, on_first_tick)
 script.on_event(defines.events.on_runtime_mod_setting_changed, on_runtime_mod_setting_changed)
 script.on_event(defines.events.on_lua_shortcut, on_lua_shortcut)
-script.on_event(defines.events.on_tick, on_first_tick)

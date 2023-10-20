@@ -233,6 +233,27 @@ BUILDING_DEFINITIONS = {
 				[CATALYST_NAME] = 1,
 				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."O",
 			},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-O"},
+			selectors = {
+				[BASE_NAME] = TARGET_SELECTOR_SUBGROUP.."-1200",
+				[CATALYST_NAME] = 1,
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."O",
+			},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."N1-N"},
+			selectors = {
+				[BASE_NAME] = TARGET_SELECTOR_SUBGROUP.."-1200",
+				[CATALYST_NAME] = 1,
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."O",
+			},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-O"},
+			selectors = {
+				[BASE_NAME] = TARGET_SELECTOR_SUBGROUP.."-1300",
+				[CATALYST_NAME] = 1,
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."O",
+			},
 		}},
 	},
 	["molecule-rotator"] = {
@@ -336,6 +357,21 @@ BUILDING_DEFINITIONS = {
 			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-H|1H"},
 			selectors = {[CATALYST_NAME] = ROTATION_SELECTOR_SUBGROUP.."-r"},
 		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-O|1H-1H"},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2200E",
+				[CATALYST_NAME] = ROTATION_SELECTOR_SUBGROUP.."-f",
+			},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-N"},
+			selectors = {[CATALYST_NAME] = ROTATION_SELECTOR_SUBGROUP.."-f"},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-N"},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-1201W",
+				[CATALYST_NAME] = ROTATION_SELECTOR_SUBGROUP.."-r",
+			},
+		}, {
 			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."H|1N1-H|1O1-H"},
 			selectors = {
 				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-3220E",
@@ -400,14 +436,23 @@ BUILDING_DEFINITIONS = {
 			return true
 		end,
 		examples = {{
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."Li|1H"},
+			selectors = {[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2100S"},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O2-O"},
+			selectors = {[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-1200E"},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-O"},
+			selectors = {[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-1200E"},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-O|1H-1H"},
+			selectors = {[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2200E"},
+		}, {
 			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-H|1H"},
 			selectors = {
 				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2200E",
 				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."B",
 			},
-		}, {
-			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."Li|1H"},
-			selectors = {[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2100S"},
 		}, {
 			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-H|1H", [CATALYST_NAME] = ATOM_ITEM_PREFIX.."H"},
 			selectors = {
@@ -478,6 +523,30 @@ BUILDING_DEFINITIONS = {
 			return true
 		end,
 		examples = {{
+			reactants = {[BASE_NAME] = ATOM_ITEM_PREFIX.."Li", [MODIFIER_NAME] = ATOM_ITEM_PREFIX.."H"},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-1100S",
+				[MODIFIER_NAME] = TARGET_SELECTOR_SUBGROUP.."-1100",
+			},
+		}, {
+			reactants = {[BASE_NAME] = ATOM_ITEM_PREFIX.."O", [MODIFIER_NAME] = ATOM_ITEM_PREFIX.."O"},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-1100E",
+				[MODIFIER_NAME] = TARGET_SELECTOR_SUBGROUP.."-1100",
+			},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-O"},
+			selectors = {[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-1200E"},
+		}, {
+			reactants = {
+				[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O|1H",
+				[MODIFIER_NAME] = MOLECULE_ITEM_PREFIX.."O|1H",
+			},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2100E",
+				[MODIFIER_NAME] = TARGET_SELECTOR_SUBGROUP.."-2100",
+			},
+		}, {
 			reactants = {
 				[BASE_NAME] = MOLECULE_ITEM_PREFIX.."Li|1H",
 				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."B",
@@ -486,12 +555,6 @@ BUILDING_DEFINITIONS = {
 			selectors = {
 				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2100E",
 				[CATALYST_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
-				[MODIFIER_NAME] = TARGET_SELECTOR_SUBGROUP.."-1100",
-			},
-		}, {
-			reactants = {[BASE_NAME] = ATOM_ITEM_PREFIX.."Li", [MODIFIER_NAME] = ATOM_ITEM_PREFIX.."H"},
-			selectors = {
-				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-1100S",
 				[MODIFIER_NAME] = TARGET_SELECTOR_SUBGROUP.."-1100",
 			},
 		}, {
@@ -622,15 +685,28 @@ BUILDING_DEFINITIONS = {
 		examples = {{
 			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-H|1H"},
 			selectors = {
-				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2200E",
-				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."He",
-				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."Li",
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2200S",
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."H",
 			},
 		}, {
 			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."H|1Be|1H"},
 			selectors = {
 				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-3110S",
 				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."H",
+			},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-H|1H"},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2200E",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."He",
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."Li",
+			},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."H-H|1O1-1N"},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2210E",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."H",
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."Li",
 			},
 		}},
 	},
@@ -690,6 +766,26 @@ BUILDING_DEFINITIONS = {
 		end,
 		examples = {{
 			reactants = {
+				[BASE_NAME] = MOLECULE_ITEM_PREFIX.."N1-H",
+				[MODIFIER_NAME] = MOLECULE_ITEM_PREFIX.."H|1H",
+			},
+			selectors = {
+				[BASE_NAME] = TARGET_SELECTOR_SUBGROUP.."-1200",
+				[CATALYST_NAME] = false,
+				[MODIFIER_NAME] = TARGET_SELECTOR_SUBGROUP.."-2100",
+			},
+		}, {
+			reactants = {
+				[BASE_NAME] = MOLECULE_ITEM_PREFIX.."Li|1H",
+				[MODIFIER_NAME] = MOLECULE_ITEM_PREFIX.."H|1H",
+			},
+			selectors = {
+				[BASE_NAME] = TARGET_SELECTOR_SUBGROUP.."-2100",
+				[CATALYST_NAME] = false,
+				[MODIFIER_NAME] = TARGET_SELECTOR_SUBGROUP.."-2110",
+			},
+		}, {
+			reactants = {
 				[BASE_NAME] = MOLECULE_ITEM_PREFIX.."Li|1H",
 				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."He",
 				[MODIFIER_NAME] = MOLECULE_ITEM_PREFIX.."Li1-H",
@@ -701,13 +797,14 @@ BUILDING_DEFINITIONS = {
 			},
 		}, {
 			reactants = {
-				[BASE_NAME] = MOLECULE_ITEM_PREFIX.."Li|1H",
-				[MODIFIER_NAME] = MOLECULE_ITEM_PREFIX.."H|1H",
+				[BASE_NAME] = MOLECULE_ITEM_PREFIX.."H|1Be",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."H",
+				[MODIFIER_NAME] = MOLECULE_ITEM_PREFIX.."-H|Li1-1N",
 			},
 			selectors = {
-				[BASE_NAME] = TARGET_SELECTOR_SUBGROUP.."-2100",
-				[CATALYST_NAME] = false,
-				[MODIFIER_NAME] = TARGET_SELECTOR_SUBGROUP.."-2110",
+				[BASE_NAME] = TARGET_SELECTOR_SUBGROUP.."-2110",
+				[CATALYST_NAME] = true,
+				[MODIFIER_NAME] = TARGET_SELECTOR_SUBGROUP.."-2210",
 			},
 		}},
 	},
@@ -792,6 +889,23 @@ BUILDING_DEFINITIONS = {
 				[CATALYST_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
 				[MODIFIER_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
 			},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O2-O", [CATALYST_NAME] = ATOM_ITEM_PREFIX.."B"},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-1200E",
+				[CATALYST_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."He",
+			},
+		}, {
+			reactants = {
+				[BASE_NAME] = MOLECULE_ITEM_PREFIX.."C|3Al",
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."He",
+			},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2110N",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."B",
+				[MODIFIER_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
+			},
 		}},
 	},
 	["molecule-bonder-2"] = {
@@ -872,6 +986,23 @@ BUILDING_DEFINITIONS = {
 				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."H",
 				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."H",
 			},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O2-O", [CATALYST_NAME] = ATOM_ITEM_PREFIX.."B"},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-1200E",
+				[CATALYST_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."He",
+			},
+		}, {
+			reactants = {
+				[BASE_NAME] = MOLECULE_ITEM_PREFIX.."C|1Al",
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."He",
+			},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2110N",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."B",
+				[MODIFIER_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
+			},
 		}},
 	},
 	["molecule-mutator-2"] = {
@@ -917,17 +1048,19 @@ BUILDING_DEFINITIONS = {
 			return true
 		end,
 		examples = {{
-			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."N2-O|1H"},
-			selectors = {
-				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2200E",
-				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."He",
-				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."Be",
-			},
-		}, {
 			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."F1-F"},
 			selectors = {
 				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-1201W",
 				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."C",
+			},
+		}, {
+			reactants = {
+				[BASE_NAME] = MOLECULE_ITEM_PREFIX.."F1-Li",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."C",
+			},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-1201W",
+				[CATALYST_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
 			},
 		}, {
 			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."F|1H", [MODIFIER_NAME] = ATOM_ITEM_PREFIX.."He"},
@@ -944,13 +1077,18 @@ BUILDING_DEFINITIONS = {
 				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."He",
 			},
 		}, {
-			reactants = {
-				[BASE_NAME] = MOLECULE_ITEM_PREFIX.."F1-Li",
-				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."C",
-			},
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."O1-O", [MODIFIER_NAME] = ATOM_ITEM_PREFIX.."H"},
 			selectors = {
-				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-1201W",
-				[CATALYST_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-1200E",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."H",
+				[MODIFIER_NAME] = PERFORM_FUSION_SELECTOR_SUBGROUP,
+			},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."N2-O|1H"},
+			selectors = {
+				[BASE_NAME] = ATOM_BOND_SELECTOR_SUBGROUP.."-2200E",
+				[CATALYST_NAME] = ATOM_ITEM_PREFIX.."He",
+				[MODIFIER_NAME] = ATOM_ITEM_PREFIX.."Be",
 			},
 		}, {
 			reactants = {
@@ -982,6 +1120,9 @@ BUILDING_DEFINITIONS = {
 			selectors = {},
 		}, {
 			reactants = {[BASE_NAME] = ATOM_ITEM_PREFIX.."O"},
+			selectors = {},
+		}, {
+			reactants = {[BASE_NAME] = MOLECULE_ITEM_PREFIX.."H1-N|-1H"},
 			selectors = {},
 		}, {
 			reactants = {[BASE_NAME] = MOLECULE_REACTION_REACTANTS_NAME},
@@ -1024,7 +1165,13 @@ BUILDING_DEFINITIONS = {
 			selectors = {[BASE_NAME] = "O1-H|1H     "},
 		}, {
 			reactants = {},
+			selectors = {[BASE_NAME] = "-N|O1-1C1-H"},
+		}, {
+			reactants = {},
 			selectors = {[BASE_NAME] = "--H|H1-N1-1O|H1-1N1-H"},
+		}, {
+			reactants = {},
+			selectors = {[BASE_NAME] = "O1-N1-O|1N1-1C1-1N|1O1-1N1-1O"},
 		}},
 	},
 }
