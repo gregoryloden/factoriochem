@@ -8,7 +8,7 @@ local LOGISTIC_WIRE_TYPES = {defines.wire_type.red, defines.wire_type.green}
 local DETECTOR_ATOMIC_NUMBER_SIGNAL_ID = {type = "virtual", name = "signal-A"}
 local DETECTOR_CACHE = {}
 local DETECTOR_TARGET_CACHE = {}
-local ALLOW_COMPLEX_MOLECULES = nil
+local ENTITY_ALLOW_COMPLEX_MOLECULES = nil
 
 
 -- Setup
@@ -587,7 +587,7 @@ function entity_on_first_tick()
 	--	caches), reset the cache for buildings any time the player reloads the game.
 	reset_building_caches()
 	set_reaction_progress_complete_threshold()
-	ALLOW_COMPLEX_MOLECULES = settings.global["factoriochem-allow-complex-molecules"].value
+	ENTITY_ALLOW_COMPLEX_MOLECULES = ALLOW_COMPLEX_MOLECULES
 end
 
 function entity_on_tick(event)
@@ -605,10 +605,9 @@ function entity_on_settings_changed(event)
 	set_reaction_progress_complete_threshold()
 
 	-- if the player changed the allow-complex-molecules setting, the cache is no longer valid, so fully wipe it
-	local old_allow_complex_molecules = ALLOW_COMPLEX_MOLECULES
-	ALLOW_COMPLEX_MOLECULES = settings.global["factoriochem-allow-complex-molecules"].value
-	if ALLOW_COMPLEX_MOLECULES ~= old_allow_complex_molecules then
+	if ENTITY_ALLOW_COMPLEX_MOLECULES ~= ALLOW_COMPLEX_MOLECULES then
 		for name, _ in pairs(REACTION_CACHE) do REACTION_CACHE[name] = {} end
 		reset_building_caches()
+		ENTITY_ALLOW_COMPLEX_MOLECULES = ALLOW_COMPLEX_MOLECULES
 	end
 end

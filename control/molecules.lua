@@ -1,4 +1,5 @@
 -- Global constants
+ALLOW_COMPLEX_MOLECULES = nil
 COMPLEX_SHAPES = {}
 
 
@@ -156,6 +157,8 @@ end
 
 -- Global event handling
 function molecules_on_first_tick()
+	ALLOW_COMPLEX_MOLECULES = settings.global["factoriochem-allow-complex-molecules"].value
+
 	-- build the lists of which equipment grid positions to read for complex molecules
 	local complex_molecule_subgroup_filter = {filter = "subgroup", subgroup = COMPLEX_MOLECULES_SUBGROUP_NAME}
 	for name, prototype in pairs(game.get_filtered_item_prototypes({complex_molecule_subgroup_filter})) do
@@ -183,4 +186,8 @@ function molecules_on_first_tick()
 			if not definition.reaction(example) then error("Invalid reaction for "..name.." example "..i) end
 		end
 	end
+end
+
+function molecules_on_settings_changed(event)
+	ALLOW_COMPLEX_MOLECULES = settings.global["factoriochem-allow-complex-molecules"].value
 end

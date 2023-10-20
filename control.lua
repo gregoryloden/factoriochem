@@ -18,6 +18,7 @@ local function on_init()
 end
 
 local function on_runtime_mod_setting_changed(event)
+	molecules_on_settings_changed(event)
 	entity_on_settings_changed(event)
 	player_on_settings_changed(event)
 end
