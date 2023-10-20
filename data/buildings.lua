@@ -304,7 +304,7 @@ local detector_recipe = {
 	ingredients = {{"iron-plate", 10}, {"electronic-circuit", 20}},
 	result = MOLECULE_DETECTOR_NAME,
 }
-recipe_set_unlocking_technology(detector_recipe, "circuit-network")
+recipe_set_unlocking_technology(detector_recipe, "molecule-detector")
 
 data:extend({detector, detector_item, detector_recipe})
 

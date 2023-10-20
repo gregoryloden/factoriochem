@@ -11,6 +11,7 @@ with open(os.path.join("..", "game-data-path.txt"), "r") as file:
 BASE_GRAPHICS_PATH = os.path.join(GAME_DATA_PATH, "base", "graphics")
 BASE_ICONS_PATH = os.path.join(BASE_GRAPHICS_PATH, "icons")
 BASE_FLUID_ICONS_PATH = os.path.join(BASE_ICONS_PATH, "fluid")
+BASE_TECHNOLOGY_PATH = os.path.join(BASE_GRAPHICS_PATH, "technology")
 CORE_GRAPHICS_PATH = os.path.join(GAME_DATA_PATH, "core", "graphics")
 CORE_ICONS_MIP_PATH = os.path.join(CORE_GRAPHICS_PATH, "icons", "mip")
 MAX_GRID_WIDTH = 3
@@ -1631,6 +1632,25 @@ def gen_molecule_reaction_buildings_4b_technology_image(base_size, mips):
 		simple_overlay_image_at(image, place_x + size, size // 2, fusioner_2_image[0:size, source_x:source_x + size])
 	return image
 
+def gen_molecule_detector_technology_image(base_size, mips):
+	image = filled_mip_image(base_size, mips)
+	technology_image = cv2.imread(os.path.join(BASE_TECHNOLOGY_PATH, "circuit-network.png"), cv2.IMREAD_UNCHANGED)
+	technology_scale_factor = technology_image.shape[0] / base_size
+	top_right_molecules_image = gen_specific_molecule(base_size // 2, mips, "N-|3N")
+	bottom_left_molecules_image = gen_specific_molecule(base_size // 2, mips, "O2-O|")
+	bottom_right_molecules_image = gen_specific_molecule(base_size // 2, mips, "O1-H|1H")
+	for (place_x, source_x, size) in iter_technology_mips(base_size, mips):
+		technology_size = int(size * 2 * technology_scale_factor)
+		technology_source_x = int(source_x * 2 * technology_scale_factor)
+		technology_image_part = \
+			technology_image[0:technology_size, technology_source_x:technology_source_x + technology_size]
+		simple_overlay_image_at(image, place_x, 0, resize(technology_image_part, size * 2, size * 2))
+		simple_overlay_image_at(image, place_x + size, 0, top_right_molecules_image[0:size, source_x:source_x + size])
+		simple_overlay_image_at(image, place_x, size, bottom_left_molecules_image[0:size, source_x:source_x + size])
+		simple_overlay_image_at(
+			image, place_x + size, size, bottom_right_molecules_image[0:size, source_x:source_x + size])
+	return image
+
 def gen_molecule_printer_technology_image(base_size, mips):
 	image = filled_mip_image(base_size, mips)
 	top_left_molecules_image = gen_specific_molecule(base_size // 2, mips, "Sr1-Sb|1As2-2Ge-Ag|Au")
@@ -1671,6 +1691,7 @@ def iter_gen_all_technology_images(base_size, mips):
 	yield ("molecule-reaction-buildings-3", gen_molecule_reaction_buildings_3_technology_image(base_size, mips))
 	yield ("molecule-reaction-buildings-4a", gen_molecule_reaction_buildings_4a_technology_image(base_size, mips))
 	yield ("molecule-reaction-buildings-4b", gen_molecule_reaction_buildings_4b_technology_image(base_size, mips))
+	yield ("molecule-detector", gen_molecule_detector_technology_image(base_size, mips))
 	yield ("molecule-printer", gen_molecule_printer_technology_image(base_size, mips))
 
 def gen_all_technology_images(base_size, mips):

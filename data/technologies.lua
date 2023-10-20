@@ -295,28 +295,36 @@ for _, technology in pairs(reaction_building_unlock_technologies) do
 end
 data:extend(reaction_building_unlock_technologies)
 
-local molecule_printer_technology = {
-	name = "molecule-printer",
-	unit = {
-		count = 100,
-		time = 10,
-		ingredients = {
-			{"automation-science-pack", 1},
-			{"logistic-science-pack", 1},
-			{"chemical-science-pack", 1},
-			{"production-science-pack", 1},
-			{"utility-science-pack", 1},
-			{"space-science-pack", 1},
+-- Add technologies to unlock other buildings and moleculify recipes, recipes will add themselves as effects
+local other_unlock_technologies = {
+	{
+		name = "molecule-detector",
+		unit = {
+			count = 10,
+			time = 10,
+			ingredients = {
+				{"automation-science-pack", 1},
+				{"logistic-science-pack", 1},
+			},
 		},
+		prerequisites = {"circuit-network"},
 	},
-	prerequisites = {},
-}
-set_technology_properties(molecule_printer_technology)
-data:extend({molecule_printer_technology})
-
-
--- Add technologies to unlock moleculify recipes, recipes will add themselves as effects
-local moleculify_unlock_technologies = {
+	{
+		name = "molecule-printer",
+		unit = {
+			count = 100,
+			time = 10,
+			ingredients = {
+				{"automation-science-pack", 1},
+				{"logistic-science-pack", 1},
+				{"chemical-science-pack", 1},
+				{"production-science-pack", 1},
+				{"utility-science-pack", 1},
+				{"space-science-pack", 1},
+			},
+		},
+		prerequisites = {},
+	},
 	{
 		name = "moleculify-plates",
 		unit = {
@@ -376,5 +384,5 @@ local moleculify_unlock_technologies = {
 		prerequisites = {"uranium-processing"},
 	},
 }
-for _, technology in pairs(moleculify_unlock_technologies) do set_technology_properties(technology) end
-data:extend(moleculify_unlock_technologies)
+for _, technology in pairs(other_unlock_technologies) do set_technology_properties(technology) end
+data:extend(other_unlock_technologies)
