@@ -144,13 +144,13 @@ local function get_stack_if_valid_for_read(stack)
 	return stack and stack.valid_for_read and stack
 end
 
-local function gui_update_complex_molecule_tooltip(element, complex_molecule)
+local function update_molecule_contents_tooltip(element, molecule)
 	local tooltip = element.tooltip
-	if complex_molecule then
-		local molecule_contents_text = MOLECULE_CONTENTS_CACHE[complex_molecule]
+	if molecule then
+		local molecule_contents_text = MOLECULE_CONTENTS_CACHE[molecule]
 		if not molecule_contents_text then
-			molecule_contents_text = build_molecule_contents_text(complex_molecule)
-			MOLECULE_CONTENTS_CACHE[complex_molecule] = molecule_contents_text
+			molecule_contents_text = build_molecule_contents_text(molecule)
+			MOLECULE_CONTENTS_CACHE[molecule] = molecule_contents_text
 		end
 		if tooltip[1] ~= MOLECULE_CONTENTS_STRING then
 			tooltip = {MOLECULE_CONTENTS_STRING, molecule_contents_text, tooltip}
@@ -202,23 +202,30 @@ end
 
 -- Reaction display utilities
 local function update_reaction_table_sprite(element, chest_stack, component)
-	local complex_molecule
+	local molecule
 	if chest_stack and chest_stack.valid_for_read then
 		component = chest_stack.name
 		element.sprite = "item/"..component
 		local complex_shape = COMPLEX_SHAPES[component]
-		if complex_shape then complex_molecule = assemble_complex_molecule(chest_stack.grid, complex_shape) end
+		if complex_shape then
+			molecule = assemble_complex_molecule(chest_stack.grid, complex_shape)
+		else
+			subgroup_name = GAME_ITEM_PROTOTYPES[component].subgroup.name
+			if subgroup_name == ATOMS_SUBGROUP_PREFIX or subgroup_name == MOLECULES_SUBGROUP_NAME then
+				molecule = component
+			end
+		end
 	elseif component then
+		molecule = component
 		if GAME_ITEM_PROTOTYPES[component] then
 			element.sprite = "item/"..component
 		else
-			complex_molecule = component
 			element.sprite = "item/"..get_complex_molecule_item_name(parse_molecule(component))
 		end
 	else
 		element.sprite = nil
 	end
-	gui_update_complex_molecule_tooltip(element, complex_molecule)
+	update_molecule_contents_tooltip(element, molecule)
 end
 
 local function update_all_reaction_table_sprites(gui, building_data)
