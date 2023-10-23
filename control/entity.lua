@@ -565,12 +565,29 @@ local function on_marked_for_deconstruction(event)
 	end
 end
 
+local function on_player_pipette(event)
+	if event.item.name == MOLECULE_REACTION_SETTINGS_NAME then
+		local player = game.get_player(event.player_index)
+		local selected = player.selected
+		if not selected then return end
+		if (selected.ghost_prototype or selected.prototype).name ~= MOLECULE_REACTION_SETTINGS_NAME then return end
+		for _, entity in pairs(selected.surface.find_entities(selected.bounding_box)) do
+			local prototype = entity.ghost_prototype or entity.prototype
+			if prototype.subgroup.name == MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME then
+				player.cursor_ghost = prototype.name
+				return
+			end
+		end
+	end
+end
+
 script.on_event(defines.events.on_built_entity, on_built_entity)
 script.on_event(defines.events.on_robot_built_entity, on_built_entity)
 script.on_event(defines.events.on_player_mined_entity, on_mined_entity)
 script.on_event(defines.events.on_robot_mined_entity, on_mined_entity)
 script.on_event(defines.events.on_entity_settings_pasted, on_entity_settings_pasted)
 script.on_event(defines.events.on_marked_for_deconstruction, on_marked_for_deconstruction)
+script.on_event(defines.events.on_player_pipette, on_player_pipette)
 
 
 -- Global event handling

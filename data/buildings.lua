@@ -1,6 +1,5 @@
 -- Constants
 local BUILDING_OVERLAYS_ROOT = GRAPHICS_ROOT.."building-overlays/"
-local MOLECULE_REACTION_BUILDINGS_SUBGROUP_NAME = "molecule-reaction-buildings"
 local DIRECTION_GET_SPRITE_DATA = {
 	north = function(width, height, shift_x, shift_y)
 		return {width = width, height = height, x = 0, y = 0, shift = {shift_x, shift_y}}
