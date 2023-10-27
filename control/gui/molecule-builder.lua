@@ -76,7 +76,7 @@ local function set_molecule_builder_selections(outer_gui, recipe_name, use_produ
 	selections_gui.add({
 		type = "sprite-button",
 		name = MOLECULE_BUILDER_CLEAR_NAME,
-		sprite = "cancel",
+		sprite = "utility/deconstruction_mark",
 		tooltip = {"factoriochem.molecule-builder-clear"},
 	})
 end
