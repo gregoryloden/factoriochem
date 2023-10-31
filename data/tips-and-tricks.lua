@@ -46,6 +46,7 @@ local tips_and_tricks_structure = {
 			{name = "buildings-1"},
 			{name = "buildings-2"},
 			{name = "buildings-3"},
+			{name = "buildings-4a"},
 		},
 	}, {
 		name = "gui",
