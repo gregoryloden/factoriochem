@@ -35,9 +35,10 @@ local tips_and_tricks_structure = {
 	starting_status = "suggested",
 	children = {{
 		name = "molecules",
-		children = {{
-			name = "simple-complex-molecules",
-		}},
+		children = {
+			{name = "simple-complex-molecules"},
+			{name = "filtering-molecules"},
+		},
 	}, {
 		name = "moleculifier",
 	}, {
