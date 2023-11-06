@@ -285,7 +285,8 @@ local function update_selector_state(selector_element, selector, selector_val)
 	elseif selector == CHECKBOX_SELECTOR_NAME then
 		selector_element.state = selector_val or false
 	elseif selector == TEXT_SELECTOR_NAME then
-		selector_element.text = selector_val
+		-- strip the trailing whitespace that was used for spacing in the example tooltip
+		selector_element.text = string.gsub(selector_val, "%s+$", "")
 	else
 		selector_element.elem_value = selector_val
 	end
