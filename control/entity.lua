@@ -141,10 +141,12 @@ local function build_molecule_reaction_building(entity, building_definition)
 	for _, reactant in ipairs(building_definition.reactants) do build_sub_entities(reactant, false) end
 	for _, product in ipairs(building_definition.products) do build_sub_entities(product, true) end
 
-	local settings_filter = {ghost_name = MOLECULE_REACTION_SETTINGS_NAME, position = entity.position}
+	local settings_filter = {name = MOLECULE_REACTION_SETTINGS_NAME, position = entity.position}
 	local settings = entity.surface.find_entities_filtered(settings_filter)[1]
-	if settings then
-		_, settings = settings.silent_revive()
+	local settings_ghost_filter = {ghost_name = MOLECULE_REACTION_SETTINGS_NAME, position = entity.position}
+	local settings_ghost = entity.surface.find_entities_filtered(settings_ghost_filter)[1]
+	if settings or settings_ghost then
+		if settings_ghost then _, settings = settings_ghost.silent_revive() end
 		local settings_behavior = settings.get_control_behavior()
 		for i, reactant_name in ipairs(MOLECULE_REACTION_REACTANT_NAMES) do
 			local selector = building_definition.selectors[reactant_name]
@@ -531,7 +533,7 @@ end
 
 -- Event handling
 local function on_built_entity(event)
-	local entity = event.created_entity
+	local entity = event.created_entity or event.entity
 	local building_definition = BUILDING_DEFINITIONS[entity.name]
 	if building_definition then
 		build_molecule_reaction_building(entity, building_definition)
@@ -583,8 +585,11 @@ end
 
 script.on_event(defines.events.on_built_entity, on_built_entity)
 script.on_event(defines.events.on_robot_built_entity, on_built_entity)
+script.on_event(defines.events.script_raised_built, on_built_entity)
+script.on_event(defines.events.script_raised_revive, on_built_entity)
 script.on_event(defines.events.on_player_mined_entity, on_mined_entity)
 script.on_event(defines.events.on_robot_mined_entity, on_mined_entity)
+script.on_event(defines.events.script_raised_destroy, on_mined_entity)
 script.on_event(defines.events.on_entity_settings_pasted, on_entity_settings_pasted)
 script.on_event(defines.events.on_marked_for_deconstruction, on_marked_for_deconstruction)
 script.on_event(defines.events.on_player_pipette, on_player_pipette)
