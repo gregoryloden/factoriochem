@@ -21,7 +21,11 @@ local BUILDING_OVERLAY_ICON_SIZE = 64
 local BASE_BUILDING_PROTOTYPE = table.deepcopy(data.raw["assembling-machine"]["assembling-machine-3"])
 BASE_BUILDING_PROTOTYPE.energy_source = {type = "void"}
 BASE_BUILDING_PROTOTYPE.crafting_speed = 1
-BASE_BUILDING_PROTOTYPE.fluid_boxes = nil
+-- needed to prevent buildings from flipping in blueprints
+BASE_BUILDING_PROTOTYPE.fluid_boxes = {
+	{production_type = "input", pipe_connections = {{type = "input", position = {1, 3}}}},
+	off_when_no_fluid_recipe = true,
+}
 BASE_BUILDING_PROTOTYPE.module_specification = nil
 BASE_BUILDING_PROTOTYPE.allowed_effects = nil
 BASE_BUILDING_PROTOTYPE.fast_replaceable_group = nil
