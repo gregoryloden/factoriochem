@@ -31,4 +31,12 @@ data:extend({
 		default_value = false,
 		order = "d",
 	},
+	{
+		type = "int-setting",
+		name = "factoriochem-science-pack-output",
+		setting_type = "startup",
+		default_value = 3,
+		minimum_value = 1,
+		order = "e",
+	},
 })

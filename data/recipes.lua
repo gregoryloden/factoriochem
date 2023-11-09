@@ -2,7 +2,7 @@
 local MOLECULIFY_PREFIX = "moleculify-"
 local DEMOLECULIFY_SUBGROUP_NAME = "demoleculify"
 local DEMOLECULIFY_PREFIX = "demoleculify-"
-local SCIENCE_RESULT_COUNT = 3
+local SCIENCE_RESULT_COUNT = settings.startup["factoriochem-science-pack-output"].value
 
 
 -- Global utilities
