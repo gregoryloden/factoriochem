@@ -8,21 +8,6 @@ local TECHNOLOGY_ICON_MIPMAPS = 3
 
 
 -- Helpers
-local function table_remove_value(t, rv)
-	for i, v in ipairs(t) do
-		if v == rv then
-			table.remove(t, i)
-			break
-		end
-	end
-end
-
-local function unlock_tips_and_tricks_item(name)
-	local tips_and_tricks_item = data.raw["tips-and-tricks-item"][name]
-	tips_and_tricks_item.starting_status = "unlocked"
-	tips_and_tricks_item.trigger = nil
-end
-
 local function add_science_prerequisites(technology)
 	-- collect all the science prerequisites needed to research this technology
 	local new_prerequisites = {}
@@ -248,15 +233,6 @@ for science_pack, _ in pairs(future_science_packs) do
 	technology.prerequisites = {}
 	add_science_prerequisites(technology)
 end
-
-
--- Make splitters and underground belts available by default
-data.raw.technology["logistics"] = nil
-table_remove_value(data.raw.technology["logistics-2"].prerequisites, "logistics")
-data.raw.recipe["underground-belt"].enabled = nil
-data.raw.recipe["splitter"].enabled = nil
-unlock_tips_and_tricks_item("splitters")
-unlock_tips_and_tricks_item("underground-belts")
 
 
 -- Add technologies to unlock molecule building recipes and make them prerequisites for sciences, recipes will add themselves as
