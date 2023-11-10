@@ -1031,14 +1031,17 @@ BUILDING_DEFINITIONS = {
 			if not verify_bond_count(source) then return false end
 
 			local target_mutation = reaction.selectors[MODIFIER_NAME]
+			local target_catalyst = reaction.reactants[MODIFIER_NAME]
+			-- if we have a target mutation, make sure that we have a valid target and process the mutation
 			if target_mutation then
 				local target_x, target_y = get_target(center_x, center_y, direction)
 				local target = shape[target_y][target_x]
 				if not target then return false end
-
-				local target_catalyst = reaction.reactants[MODIFIER_NAME]
 				if not maybe_perform_mutation(target, target_mutation, target_catalyst) then return false end
 				if not verify_bond_count(target) then return false end
+			-- if we don't have a target mutation, make sure that we don't have a target catalyst
+			else
+				if target_catalyst then return false end
 			end
 
 			-- everything is valid, write the output
