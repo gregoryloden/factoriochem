@@ -2,6 +2,7 @@
 	- "FactorioChem - Pure simplicity" - Launch a rocket without ever creating a complex molecule
 		- Alternatively: "FactorioChem - Within the limits"
 	- "FactorioChem - Only one step at a time" - Launch a rocket without using fission or fusion in any Debonder, Bonder, Severer, or Splicer buildings
+	- "FactorioChem - Sustainability" - Launch a rocket without moleculifying anything other than water and air
 - Mod settings
 	- Have sciences take complex molecules; those molecules will actually generate as simple molecules
 	- Disable simple molecules for faster loading
