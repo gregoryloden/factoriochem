@@ -1,5 +1,5 @@
 # FactorioChem
-FactorioChem Proof-of-Concept - SpaceChem in Factorio. Factorio by Wube. SpaceChem by Zachtronics Industries.
+FactorioChem Proof-of-Concept puzzle mod - SpaceChem in Factorio. Factorio by Wube. SpaceChem by Zachtronics Industries.
 
 Design and shape molecules in 2D space within the confines of a single item slot.
 
