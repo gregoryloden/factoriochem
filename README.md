@@ -100,3 +100,7 @@ I don't currently have anything I'm planning on adding but definitely leave a su
 ![Blueprint to convert 12 water per second to Neon](https://raw.githubusercontent.com/gregoryloden/factoriochem/main/overview/gallery4.png)
 
 ![A mess of belts and buildings making science molecules](https://raw.githubusercontent.com/gregoryloden/factoriochem/main/overview/gallery5.png)
+
+![The Periodic Table GUI](https://raw.githubusercontent.com/gregoryloden/factoriochem/main/graphics/tips-and-tricks/gui-periodic-table.png)
+
+![The Molecule Builder GUI](https://raw.githubusercontent.com/gregoryloden/factoriochem/main/graphics/tips-and-tricks/gui-molecule-builder.png)
