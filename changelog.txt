@@ -1,4 +1,26 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.1
+Date: 2023-11-10
+  Changes:
+    - Moved Molecule Detector to be unlocked by its own (cheap) technology to better alert players that it exists
+    - Added a setting to modify how many science packs each of the recipes produce
+  Ease of use:
+    - Added button next to "Examples" label that loads an example into the demo
+    - Added buttons to copy the main reaction to the Demo reaction and vice versa
+    - Show molecule contents for simple molecules in the Molecule Reaction GUI
+    - Add examples with complex molecules, only shown when settings allow complex molecules
+    - More Tips-and-Tricks entries
+      - Demo copy buttons
+      - Molecule Reaction buildings
+      - Sorting molecules with filter inserters and splitters
+  Bugfixes:
+    - Fixed sorter demos not working with the default comparatison selector state
+    - Added a workaround to be able to pipette-select a building ghost if it's behind a building-settings ghost
+    - Fixed Intra-Molecule Mutator ignoring a target fusion catalyst if the selector wasn't specified
+  Compatibility:
+    - Fixed buildings getting built/revived/destroyed by other scripts (for mods that raise script_raise_*** events)
+    - Moved the removal of the "logistics" technology to data-updates.lua for compatibility with mods that use it as a prerequisite technology in data.lua
+---------------------------------------------------------------------------------------------------
 Version: 1.1.0
 Date: 2023-10-12
   Minor Features:
