@@ -10,7 +10,7 @@ end
 
 local function remove_technology(technology)
 	for _, effect in ipairs(data.raw.technology[technology].effects) do
-		if effect == "unlock-recipe" then data.recipes[effect.recipe].enabled = nil end
+		if effect.type == "unlock-recipe" then data.raw.recipe[effect.recipe].enabled = nil end
 	end
 	data.raw.technology[technology] = nil
 	for _, other_technology in pairs(data.raw.technology) do
